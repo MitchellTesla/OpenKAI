@@ -8,7 +8,7 @@
 #ifndef OpenKAI_src_RobotArm__PickingArm_H_
 #define OpenKAI_src_RobotArm__PickingArm_H_
 
-#include "../../Mission/_MissionBase.h"
+#include "../../State/_StateBase.h"
 #include "../../Universe/_Universe.h"
 #include "../../Control/PID.h"
 #include "../../Actuator/_ActuatorBase.h"
@@ -31,7 +31,7 @@ struct PICKINGARM_CLASS
 
 };
 
-struct PICKINGARM_MISSION
+struct PICKINGARM_STATE 
 {
 	int8_t EXTERNAL;
 	int8_t RECOVER;
@@ -55,7 +55,7 @@ struct PICKINGARM_MISSION
 	}
 };
 
-class _PickingArm: public _MissionBase
+class _PickingArm: public _StateBase
 {
 public:
 	_PickingArm(void);
@@ -85,7 +85,7 @@ private:
 	bool bTargetClass(int iClass);
 	void updateArm(void);
 	void update(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_PickingArm *) This)->update();
 		return NULL;
@@ -119,7 +119,7 @@ public:
 	uint64_t m_oTstamp;
 	uint64_t m_oTimeout;
 
-	PICKINGARM_MISSION m_iMission;
+	PICKINGARM_STATE m_iState;
 };
 
 }

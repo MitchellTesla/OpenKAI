@@ -19,7 +19,7 @@ struct AP_SERVO
 	}
 };
 
-class _AP_servo: public _MissionBase
+class _AP_servo: public _StateBase
 {
 public:
 	_AP_servo();
@@ -33,7 +33,7 @@ public:
 
 private:
 	void updateServo(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_AP_servo*) This)->update();
 		return NULL;

@@ -44,7 +44,7 @@ _Lane::~_Lane()
 
 bool _Lane::init(void* pKiss)
 {
-	IF_F(!this->_ThreadBase::init(pKiss));
+	IF_F(!this->_ModuleBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
 	pK->v("bDrawOverhead",&m_bDrawOverhead);
@@ -121,10 +121,9 @@ bool _Lane::init(void* pKiss)
 		m_pNp[i] = m_sizeOverhead.y;
 	}
 
-	//link
-	string iName = "";
-	F_ERROR_F(pK->v("_VisionBase", &iName));
-	m_pV = (_VisionBase*) (pK->getInst(iName));
+	string n = "";
+	F_ERROR_F(pK->v("_VisionBase", &n));
+	m_pV = (_VisionBase*) (pK->getInst(n));
 	NULL_Fl(m_pV, "_VisionBase is NULL");
 
 	return true;
@@ -132,26 +131,19 @@ bool _Lane::init(void* pKiss)
 
 bool _Lane::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _Lane::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		detect();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -160,7 +152,7 @@ int _Lane::check(void)
 	NULL__(m_pV, -1);
 	IF__(m_pV->BGR()->m()->empty(),-1);
 
-	return 0;
+	return this->_ModuleBase::check();
 }
 
 void _Lane::detect(void)
@@ -229,7 +221,7 @@ void _Lane::updateVisionSize(void)
 
 void _Lane::draw(void)
 {
-	this->_ThreadBase::draw();
+	this->_ModuleBase::draw();
 
 	int i,j;
 	LANE* pL;
@@ -245,7 +237,7 @@ void _Lane::draw(void)
 
 	IF_(!checkWindow());
 	IF_(m_mPerspectiveInv.empty());
-	Mat* pMat = ((Window*) this->m_pWindow)->getFrame()->m();
+	Mat* pMat = ((_WindowCV*) this->m_pWindow)->getFrame()->m();
 
 	//visualization of the lane
 	Mat mLane = Mat::zeros(m_mOverhead.size(), CV_8UC1);

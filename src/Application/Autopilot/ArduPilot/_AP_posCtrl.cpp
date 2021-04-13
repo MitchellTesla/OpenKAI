@@ -17,7 +17,7 @@ _AP_posCtrl::_AP_posCtrl()
 	m_pRoll = NULL;
 	m_pPitch = NULL;
 	m_pAlt = NULL;
-	m_bYaw = false;
+	m_pYaw = NULL;
 
 	m_sptLocal.vx = 0.0;
 	m_sptLocal.vy = 0.0;
@@ -26,7 +26,7 @@ _AP_posCtrl::_AP_posCtrl()
 	m_sptLocal.y = 0.0;
 	m_sptLocal.z = 0.0;
 	m_sptLocal.yaw = 0.0;
-	m_sptLocal.yaw_rate = 90.0 * DEG_2_RAD;
+	m_sptLocal.yaw_rate = 0.0;
 
 	m_sptGlobal.vx = 0.0;
 	m_sptGlobal.vy = 0.0;
@@ -45,53 +45,42 @@ _AP_posCtrl::~_AP_posCtrl()
 
 bool _AP_posCtrl::init(void* pKiss)
 {
-	IF_F(!this->_MissionBase::init(pKiss));
+	IF_F(!this->_StateBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
 	pK->v("vTargetP", &m_vTargetP);
 	pK->v("vTargetGlobal", &m_vTargetGlobal);
-	pK->v("bYaw", &m_bYaw);
-	float yawRate;
-	if(pK->v("yawRate", &yawRate))
-	{
-		m_sptLocal.yaw_rate = yawRate * DEG_2_RAD;
-		m_sptGlobal.yaw_rate = yawRate * DEG_2_RAD;
-	}
 
-	string iName;
+	string n;
 
-	iName = "";
-	pK->v("PIDroll", &iName);
-	m_pRoll = ( PID*) (pK->getInst(iName));
+	n = "";
+	pK->v("PIDroll", &n);
+	m_pRoll = ( PID*) (pK->getInst(n));
 
-	iName = "";
-	pK->v("PIDpitch", &iName);
-	m_pPitch = ( PID*) (pK->getInst(iName));
+	n = "";
+	pK->v("PIDpitch", &n);
+	m_pPitch = ( PID*) (pK->getInst(n));
 
-	iName = "";
-	pK->v("PIDalt", &iName);
-	m_pAlt = ( PID*) (pK->getInst(iName));
+	n = "";
+	pK->v("PIDalt", &n);
+	m_pAlt = ( PID*) (pK->getInst(n));
 
-	iName = "";
-	pK->v("_AP_base", &iName);
-	m_pAP = (_AP_base*) (pK->getInst(iName));
-	IF_Fl(!m_pAP, iName + ": not found");
+	n = "";
+	pK->v("PIDyaw", &n);
+	m_pYaw = ( PID*) (pK->getInst(n));
+
+	n = "";
+	pK->v("_AP_base", &n);
+	m_pAP = (_AP_base*) (pK->getInst(n));
+	IF_Fl(!m_pAP, n + ": not found");
 
 	return true;
 }
 
 bool _AP_posCtrl::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG(ERROR) << "Return code: " << retCode;
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _AP_posCtrl::check(void)
@@ -99,19 +88,19 @@ int _AP_posCtrl::check(void)
 	NULL__(m_pAP, -1);
 	NULL__(m_pAP->m_pMav, -1);
 
-	return this->_MissionBase::check();
+	return this->_StateBase::check();
 }
 
 void _AP_posCtrl::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
-		this->_MissionBase::update();
+		m_pT->autoFPSfrom();
+		this->_StateBase::update();
 
 		setPosLocal();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -119,27 +108,29 @@ void _AP_posCtrl::setPosLocal(void)
 {
 	IF_(check()<0);
 
-	float p = 0, r = 0, a = 0;
+	float dTs = m_pT->getDt() * USEC_2_SEC;
+	float p = 0, r = 0, a = 0, y = 0;
 	if (m_pRoll)
-		r = m_pRoll->update(m_vP.x, m_vTargetP.x, m_tStamp);
+		r = m_pRoll->update(m_vP.x, m_vTargetP.x, dTs);
 
 	if (m_pPitch)
-		p = m_pPitch->update(m_vP.y, m_vTargetP.y, m_tStamp);
+		p = m_pPitch->update(m_vP.y, m_vTargetP.y, dTs);
 
 	if (m_pAlt)
-		a = m_pAlt->update(m_vP.z, m_vTargetP.z, m_tStamp);
+		a = m_pAlt->update(m_vP.z, m_vTargetP.z, dTs);
 	else
 		a = m_vP.z;
 
+	if(m_pYaw)
+		y = m_pYaw->update(dHdg<float>(m_vTargetP.w, m_vP.w), 0.0, dTs);
 
 	m_sptLocal.coordinate_frame = MAV_FRAME_BODY_OFFSET_NED;
 	m_sptLocal.vx = p;		//forward
 	m_sptLocal.vy = r;		//right
 	m_sptLocal.vz = a;		//down
-	m_sptLocal.yaw = (float) m_vP.w * DEG_2_RAD;
-	m_sptLocal.type_mask = 0b0000000111000111;	//set velocity
-	if(!m_bYaw)
-		m_sptLocal.type_mask |= 0b0000110000000000;
+	m_sptLocal.yaw = 0.0;
+	m_sptLocal.yaw_rate = y * DEG_2_RAD;
+	m_sptLocal.type_mask = 0b0000010111000111;	//set velocity
 
 	m_pAP->m_pMav->setPositionTargetLocalNED(m_sptLocal);
 }
@@ -157,8 +148,8 @@ void _AP_posCtrl::setPosGlobal(void)
 	m_sptGlobal.vz = 0.0;
 	m_sptGlobal.yaw = (float) m_vTargetGlobal.w * DEG_2_RAD;
 	m_sptGlobal.type_mask = 0b0000000111111000; //set position
-	if(!m_bYaw)
-		m_sptGlobal.type_mask |= 0b0000110000000000;
+//	if(!m_bYaw)
+//		m_sptGlobal.type_mask |= 0b0000110000000000;
 
 	m_pAP->m_pMav->setPositionTargetGlobalINT(m_sptGlobal);
 }
@@ -171,6 +162,8 @@ void _AP_posCtrl::clear(void)
 		m_pPitch->reset();
 	if (m_pAlt)
 		m_pAlt->reset();
+	if (m_pYaw)
+		m_pYaw->reset();
 }
 
 void _AP_posCtrl::releaseCtrl(void)
@@ -184,14 +177,14 @@ void _AP_posCtrl::releaseCtrl(void)
 	m_sptLocal.vx = 0;
 	m_sptLocal.vy = 0;
 	m_sptLocal.vz = 0;
-	m_sptLocal.type_mask = 0b0000110111000111;
+	m_sptLocal.yaw_rate = 0.0;
+	m_sptLocal.type_mask = 0b0000010111000111;
 	m_pAP->m_pMav->setPositionTargetLocalNED(m_sptLocal);
 }
 
 void _AP_posCtrl::draw(void)
 {
-	this->_MissionBase::draw();
-	drawActive();
+	this->_StateBase::draw();
 
 	addMsg( "Local NED:");
 	addMsg(	"vTargetP = (" + f2str(m_vTargetP.x) + ", "

@@ -19,7 +19,7 @@ _AP_actuator::~_AP_actuator()
 
 bool _AP_actuator::init(void* pKiss)
 {
-	IF_F(!this->_MissionBase::init(pKiss));
+	IF_F(!this->_StateBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
     pK->v ( "iRCmodeChan", &m_rcMode.m_iChan );
@@ -46,16 +46,8 @@ bool _AP_actuator::init(void* pKiss)
 
 bool _AP_actuator::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG(ERROR)<< "Return code: "<< retCode;
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _AP_actuator::check(void)
@@ -64,19 +56,19 @@ int _AP_actuator::check(void)
 	NULL__(m_pAP->m_pMav, -1);
 	NULL__(m_pAB, -1);
 
-	return this->_MissionBase::check();
+	return this->_StateBase::check();
 }
 
 void _AP_actuator::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
-		this->_MissionBase::update();
+		this->_StateBase::update();
 		updateActuator();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -117,7 +109,7 @@ void _AP_actuator::updateActuator(void)
 void _AP_actuator::draw(void)
 {
 	IF_(check() < 0);
-	this->_MissionBase::draw();
+	this->_StateBase::draw();
 	drawActive();
 
 	addMsg("iMode: "+i2str(m_rcMode.i()), 1);

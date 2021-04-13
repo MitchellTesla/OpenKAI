@@ -28,8 +28,8 @@ _AProver_BRfollow::~_AProver_BRfollow()
 
 bool _AProver_BRfollow::init ( void* pKiss )
 {
-    IF_F ( !this->_MissionBase::init ( pKiss ) );
-    NULL_F( m_pMC );
+    IF_F ( !this->_StateBase::init ( pKiss ) );
+    NULL_F( m_pSC );
 
     Kiss* pK = ( Kiss* ) pKiss;
     pK->v ( "targetX", &m_tagTargetX );
@@ -70,16 +70,8 @@ bool _AProver_BRfollow::init ( void* pKiss )
 
 bool _AProver_BRfollow::start ( void )
 {
-    m_bThreadON = true;
-    int retCode = pthread_create ( &m_threadID, 0, getUpdateThread, this );
-    if ( retCode != 0 )
-    {
-        LOG ( ERROR ) << "Return code: " << retCode;
-        m_bThreadON = false;
-        return false;
-    }
-
-    return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _AProver_BRfollow::check ( void )
@@ -90,19 +82,19 @@ int _AProver_BRfollow::check ( void )
     NULL__ ( m_pPIDtagHdg, -1 );
     NULL__ ( m_pU, -1 );
 
-    return this->_MissionBase::check();
+    return this->_StateBase::check();
 }
 
 void _AProver_BRfollow::update ( void )
 {
-    while ( m_bThreadON )
+    while(m_pT->bRun())
     {
-        this->autoFPSfrom();
-        this->_MissionBase::update();
+        m_pT->autoFPSfrom();
+        this->_StateBase::update();
 
         updateFollow();
 
-        this->autoFPSto();
+        m_pT->autoFPSto();
     }
 }
 
@@ -129,7 +121,7 @@ void _AProver_BRfollow::updateFollow ( void )
             m_pD->setSteering(0.0);
             m_pD->setSpeed(0.0);
             m_iTag = iTag;
-            this->sleepTime(m_tStop * USEC_1SEC);
+            m_pT->sleepT (m_tStop * SEC_2_USEC);
             return;
         }
         else
@@ -140,8 +132,8 @@ void _AProver_BRfollow::updateFollow ( void )
         
     }
 
-    m_nStr = dir * m_pPIDtagX->update ( m_errX, 0.0, m_tStamp )
-             + dir * m_pPIDtagHdg->update ( m_errHdg, 0.0, m_tStamp );
+    m_nStr = m_pPIDtagX->update ( m_errX, 0.0, m_pT->getTfrom())
+             + m_pPIDtagHdg->update ( m_errHdg, 0.0, m_pT->getTfrom());
 
     m_pD->setSteering(m_nStr);
     m_pD->setSpeed(nSpd);
@@ -169,7 +161,7 @@ _Object* _AProver_BRfollow::findTarget ( void )
 
 void _AProver_BRfollow::draw ( void )
 {
-    this->_MissionBase::draw();
+    this->_StateBase::draw();
     drawActive();
 
    	addMsg("nSpd=" + f2str(m_nSpd) + ", nStr=" + f2str(m_nStr));

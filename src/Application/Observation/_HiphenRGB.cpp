@@ -32,7 +32,7 @@ _HiphenRGB::~_HiphenRGB()
 
 bool _HiphenRGB::init(void* pKiss)
 {
-	IF_F(!this->_ThreadBase::init(pKiss));
+	IF_F(!this->_ModuleBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
 	pK->v("bFlip", &m_bFlip);
@@ -40,48 +40,41 @@ bool _HiphenRGB::init(void* pKiss)
 	m_compress.push_back(IMWRITE_JPEG_QUALITY);
 	m_compress.push_back(m_quality);
 
-	string iName;
+	string n;
 
-	iName = "";
-	F_ERROR_F(pK->v("_GPS", &iName));
-	m_pGPS = (_GPS*) (pK->getInst(iName));
-	IF_Fl(!m_pGPS, iName + " not found");
+	n = "";
+	F_ERROR_F(pK->v("_GPS", &n));
+	m_pGPS = (_GPS*) (pK->getInst(n));
+	IF_Fl(!m_pGPS, n + " not found");
 
-	iName = "";
-	F_ERROR_F(pK->v("_Camera", &iName));
-	m_pCam = (_Camera*) (pK->getInst(iName));
-	IF_Fl(!m_pCam, iName + " not found");
+	n = "";
+	F_ERROR_F(pK->v("_Camera", &n));
+	m_pCam = (_Camera*) (pK->getInst(n));
+	IF_Fl(!m_pCam, n + " not found");
 
-	iName = "";
-	F_ERROR_F(pK->v("_HiphenServer", &iName));
-	m_pHiphen = (_HiphenServer*) (pK->getInst(iName));
-	IF_Fl(!m_pHiphen, iName + " not found");
+	n = "";
+	F_ERROR_F(pK->v("_HiphenServer", &n));
+	m_pHiphen = (_HiphenServer*) (pK->getInst(n));
+	IF_Fl(!m_pHiphen, n + " not found");
 
 	return true;
 }
 
 bool _HiphenRGB::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _HiphenRGB::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		take();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -91,7 +84,7 @@ int _HiphenRGB::check(void)
 	NULL__(m_pCam,-1);
 	NULL__(m_pHiphen,-1);
 
-	return 0;
+	return this->_ModuleBase::check();
 }
 
 void _HiphenRGB::take(void)
@@ -112,7 +105,7 @@ void _HiphenRGB::take(void)
 	fBGR.m()->copyTo(mBGR);
 	IF_(mBGR.empty());
 
-	IF_(mBGR.cols*mBGR.rows < m_pCam->m_w*m_pCam->m_h);
+	IF_(mBGR.cols*mBGR.rows < m_pCam->getSize().area());
 
 	string fName = m_pHiphen->getDir() + i2str(m_iImg) + "_rgb" + ".tiff";
 	cv::imwrite(fName, mBGR, m_compress);
@@ -124,7 +117,7 @@ void _HiphenRGB::take(void)
 
 void _HiphenRGB::draw(void)
 {
-	this->_ThreadBase::draw();
+	this->_ModuleBase::draw();
 
 	addMsg("iImg: "+i2str(m_iImg));
 }

@@ -36,7 +36,7 @@ _AP_GPS::~_AP_GPS()
 
 bool _AP_GPS::init(void* pKiss)
 {
-	IF_F(!this->_MissionBase::init(pKiss));
+	IF_F(!this->_StateBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
 	pK->v("yaw", &m_yaw);
@@ -56,33 +56,25 @@ bool _AP_GPS::init(void* pKiss)
 	pK->v("vdop",&m_D.vdop);
 	pK->v("fIgnore",&m_D.ignore_flags);
 
-	string iName;
+	string n;
 
-	iName = "";
-	F_ERROR_F(pK->v("_AP_base", &iName));
-	m_pAP = (_AP_base*) (pK->getInst(iName));
-	IF_Fl(!m_pAP, iName + ": not found");
+	n = "";
+	F_ERROR_F(pK->v("_AP_base", &n));
+	m_pAP = (_AP_base*) (pK->getInst(n));
+	IF_Fl(!m_pAP, n + ": not found");
 
-	iName = "";
-	F_ERROR_F(pK->v("_SlamBase", &iName));
-	m_pSB = (_SlamBase*) (pK->getInst(iName));
-	IF_Fl(!m_pSB, iName + ": not found");
+	n = "";
+	F_ERROR_F(pK->v("_SlamBase", &n));
+	m_pSB = (_SlamBase*) (pK->getInst(n));
+	IF_Fl(!m_pSB, n + ": not found");
 
 	return true;
 }
 
 bool _AP_GPS::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG(ERROR)<< "Return code: "<< retCode;
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _AP_GPS::check(void)
@@ -91,19 +83,19 @@ int _AP_GPS::check(void)
 	NULL__(m_pAP->m_pMav,-1);
 	NULL__(m_pSB,-1);
 
-	return 0;
+	return this->_StateBase::check();
 }
 
 void _AP_GPS::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
-		this->_MissionBase::update();
+		m_pT->autoFPSfrom();
+		this->_StateBase::update();
 
 		updateGPS();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -138,13 +130,13 @@ void _AP_GPS::updateGPS(void)
 
 	vFloat3 vRSt = m_pSB->t();
 	vFloat3 vT;
-	vT.x = vRSt.v(m_vAxisIdx.x) * m_vAxisK.x;
-	vT.y = vRSt.v(m_vAxisIdx.y) * m_vAxisK.y;
-	vT.z = vRSt.v(m_vAxisIdx.z) * m_vAxisK.z;
+	vT.x = *vRSt.v(m_vAxisIdx.x) * m_vAxisK.x;
+	vT.y = *vRSt.v(m_vAxisIdx.y) * m_vAxisK.y;
+	vT.z = *vRSt.v(m_vAxisIdx.z) * m_vAxisK.z;
 	UTM_POS pUTM = m_GPS.offset(m_utmOrigin, vT);
 	m_llPos = m_GPS.UTM2LL(pUTM);
 
-	double tBase = (double)USEC_1SEC/(double)m_dTime;
+	double tBase = (double)SEC_2_USEC/(double)m_pT->getDt();
 	vFloat3 vV;
 	vV.x = (pUTM.m_northing - m_utmPos.m_northing)*tBase;
 	vV.y = (pUTM.m_easting - m_utmPos.m_easting)*tBase;
@@ -175,7 +167,7 @@ bool _AP_GPS::reset(void)
 
 void _AP_GPS::draw(void)
 {
-	this->_MissionBase::draw();
+	this->_StateBase::draw();
 
 	addMsg("lat=" + lf2str(m_llPos.m_lat,7) + ", lon=" + lf2str(m_llPos.m_lng,7) + ", yaw=" + f2str(m_yaw));
 }

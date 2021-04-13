@@ -3,13 +3,13 @@
 
 #include "../../../Base/common.h"
 #include "../../../Sensor/_DistSensorBase.h"
-#include "../../../Mission/RTH.h"
+#include "../../../State/RTH.h"
 #include "../ArduPilot/_AP_base.h"
 
 namespace kai
 {
 
-class _AP_RTH: public _MissionBase
+class _AP_RTH: public _StateBase
 {
 public:
 	_AP_RTH();

@@ -22,9 +22,9 @@
 
 #include "../Application/Autopilot/ArduPilot/_AP_base.h"
 #include "../Application/Autopilot/ArduPilot/_AP_actuator.h"
-#include "../Application/Autopilot/ArduPilot/_AP_CETCUS.h"
 #include "../Application/Autopilot/ArduPilot/_AP_distLidar.h"
 #include "../Application/Autopilot/ArduPilot/_AP_goto.h"
+#include "../Application/Autopilot/ArduPilot/_AP_gcs.h"
 #include "../Application/Autopilot/ArduPilot/_AP_GPS.h"
 #include "../Application/Autopilot/ArduPilot/_AP_link.h"
 #include "../Application/Autopilot/ArduPilot/_AP_mission.h"
@@ -44,11 +44,18 @@
 #include "../Application/KUphenoRover/_AProver_KUfollowTag.h"
 #include "../Application/BenchRover/_AProver_BR.h"
 #include "../Application/BenchRover/_AProver_BRfollow.h"
+#include "../Application/TagRover/_AProver_tag.h"
+#include "../Application/TagRover/_AProver_followTag.h"
+#include "../Application/DroneBox/_DroneBox.h"
+#include "../Application/DroneBox/_DroneBoxJSON.h"
+#include "../Application/DroneBox/_AP_droneBoxJSON.h"
+
+#include "../Arithmetic/Destimator.h"
 
 #include "../Control/PID.h"
 #include "../Control/_Drive.h"
 
-#include "../Mission/_MissionControl.h"
+#include "../State/_StateControl.h"
 
 #include "../Navigation/_Path.h"
 #include "../Navigation/_GPS.h"
@@ -68,10 +75,8 @@
 #include "../Protocol/_Modbus.h"
 #include "../Sensor/_LeddarVu.h"
 #include "../Sensor/_TOFsense.h"
-#include "../Sensor/RPLIDAR/_RPLIDAR.h"
-#include "../SLAM/_ORB_SLAM2.h"
 
-#include "../UI/Console.h"
+#include "../UI/_Console.h"
 
 #include "../Universe/_Object.h"
 #include "../Universe/_Universe.h"
@@ -79,9 +84,13 @@
 #include "../Vision/Hiphen/_HiphenServer.h"
 #include "../Vision/Hiphen/_HiphenCMD.h"
 
+#ifdef USE_OPENCL
+#include "../Compute/OpenCL/clBase.h"
+#endif
+
 #ifdef USE_OPENCV
 
-#include "../UI/Window.h"
+#include "../UI/_WindowCV.h"
 #include "../Vision/_Camera.h"
 #include "../Vision/_VideoFile.h"
 #include "../Vision/_ImgFile.h"
@@ -115,14 +124,14 @@
 #include "../Detector/_IRLock.h"
 #include "../Detector/_Line.h"
 #include "../Detector/_OpenPose.h"
+#include "../Detector/_HandKey.h"
 #include "../Detector/_SlideWindow.h"
 #include "../Detector/_Thermal.h"
 
 #include "../Application/Autopilot/ArduPilot/_AP_avoid.h"
 #include "../Application/Autopilot/ArduPilot/_AP_depthVision.h"
-#include "../Application/Autopilot/ArduPilot/_AP_descent.h"
+#include "../Application/Autopilot/ArduPilot/_AP_land.h"
 #include "../Application/Autopilot/ArduPilot/_AP_follow.h"
-#include "../Application/Autopilot/ArduPilot/_AP_followClient.h"
 #include "../Application/Autopilot/ArduPilot/_APcopter_photo.h"
 
 #include "../Application/Observation/_HiphenRGB.h"
@@ -133,7 +142,6 @@
 #include "../Application/RobotArm/_PickingArm.h"
 #include "../Application/RobotArm/_SortingArm.h"
 #include "../Application/RobotArm/_SortingCtrlServer.h"
-#include "../Application/RobotArm/_SortingCtrlClient.h"
 
 #ifdef USE_OPENCV_CONTRIB
 #include "../Detector/_ArUco.h"
@@ -150,12 +158,6 @@
 #ifdef USE_REALSENSE
 #include "../Vision/_RealSense.h"
 #endif
-
-#ifdef USE_OPEN3D
-#ifdef USE_REALSENSE
-#include "../PointCloud/_PCrsCV.h"
-#endif
-#endif	//USE_OPEN3D
 
 #ifdef USE_MYNTEYE
 #include "../Vision/_Mynteye.h"
@@ -196,18 +198,29 @@
 #include "../Detector/_Chilitags.h"
 #endif
 
+#ifdef USE_ORB_SLAM
+#include "../SLAM/_ORB_SLAM.h"
+#endif
+
 #endif	//USE_OPENCV
 
 #ifdef USE_OPEN3D
+#include "../PointCloud/_PCstream.h"
+#include "../PointCloud/_PCframe.h"
+#include "../PointCloud/_PClattice.h"
 #include "../PointCloud/_PCfile.h"
-#include "../PointCloud/_PCfilter.h"
 #include "../PointCloud/_PCmerge.h"
-#include "../PointCloud/_PCregistration.h"
-#include "../PointCloud/_PCtransform.h"
 #include "../PointCloud/_PCviewer.h"
 #include "../PointCloud/_PCsend.h"
 #include "../PointCloud/_PCrecv.h"
-#include "../PointCloud/_PCui.h"
+#include "../PointCloud/PCfilter/_PCtransform.h"
+#include "../PointCloud/PCfilter/_PCcrop.h"
+#include "../PointCloud/PCfilter/_PCremove.h"
+#include "../PointCloud/PCfilter/_PCdownSample.h"
+#include "../PointCloud/PCregistration/_PCregistCol.h"
+#include "../PointCloud/PCregistration/_PCregistICP.h"
+#include "../PointCloud/PCregistration/_PCregistGlobal.h"
+#include "../Application/PCscan/_PCscan.h"
 #ifdef USE_REALSENSE
 #include "../PointCloud/_PCrs.h"
 #endif
@@ -227,9 +240,17 @@
 #endif
 
 #ifdef USE_LIVOX
-#include "../Sensor/_Livox.h"
+#include "../Sensor/Livox/_Livox.h"
+#include "../Sensor/Livox/LivoxLidar.h"
 #endif
 
+#ifdef USE_XARM
+#include "../Actuator/Articulated/_xArm.h"
+#endif
+
+#ifdef USE_GUI
+#include "../UI/_WindowGUI.h"
+#endif
 
 #define ADD_MODULE(x) if(pK->m_class == #x){return createInst<x>(pK);}
 

@@ -38,7 +38,7 @@ _PickingArm::_PickingArm()
 	m_vPdescend.init(-200, 300.0, -100.0);
 
 	m_oTstamp = 0;
-	m_oTimeout = USEC_1SEC;
+	m_oTimeout = SEC_2_USEC;
 }
 
 _PickingArm::~_PickingArm()
@@ -47,7 +47,7 @@ _PickingArm::~_PickingArm()
 
 bool _PickingArm::init(void *pKiss)
 {
-	IF_F(!this->_MissionBase::init(pKiss));
+	IF_F(!this->_StateBase::init(pKiss));
 	Kiss *pK = (Kiss*) pKiss;
 
 	pK->v("vPtarget", &m_vPtarget);
@@ -76,67 +76,60 @@ bool _PickingArm::init(void *pKiss)
 		m_vClass.push_back(pc);
 	}
 
-	IF_F(!m_pMC);
-	m_iMission.EXTERNAL = m_pMC->getMissionIdx("EXTERNAL");
-	m_iMission.RECOVER = m_pMC->getMissionIdx("RECOVER");
-	m_iMission.FOLLOW = m_pMC->getMissionIdx("FOLLOW");
-	m_iMission.ASCEND = m_pMC->getMissionIdx("ASCEND");
-	m_iMission.DELIVER = m_pMC->getMissionIdx("DELIVER");
-	m_iMission.DESCEND = m_pMC->getMissionIdx("DESCEND");
-	m_iMission.DROP = m_pMC->getMissionIdx("DROP");
-	IF_F(!m_iMission.bValid());
+	IF_F(!m_pSC);
+	m_iState.EXTERNAL = m_pSC->getStateIdxByName ("EXTERNAL");
+	m_iState.RECOVER = m_pSC->getStateIdxByName ("RECOVER");
+	m_iState.FOLLOW = m_pSC->getStateIdxByName ("FOLLOW");
+	m_iState.ASCEND = m_pSC->getStateIdxByName ("ASCEND");
+	m_iState.DELIVER = m_pSC->getStateIdxByName ("DELIVER");
+	m_iState.DESCEND = m_pSC->getStateIdxByName ("DESCEND");
+	m_iState.DROP = m_pSC->getStateIdxByName ("DROP");
+	IF_F(!m_iState.bValid());
 
-	string iName;
+	string n;
 
-	iName = "";
-	F_ERROR_F(pK->v("_ActuatorBase", &iName));
-	m_pA = (_ActuatorBase*) (pK->getInst(iName));
-	NULL_Fl(m_pA, iName + " not found");
+	n = "";
+	F_ERROR_F(pK->v("_ActuatorBase", &n));
+	m_pA = (_ActuatorBase*) (pK->getInst(n));
+	NULL_Fl(m_pA, n + " not found");
 
-	iName = "";
-	F_ERROR_F(pK->v("_StepperGripper", &iName));
-	m_pG = (_StepperGripper*)pK->getInst(iName);
-	NULL_Fl(m_pG, iName + ": not found");
+	n = "";
+	F_ERROR_F(pK->v("_StepperGripper", &n));
+	m_pG = (_StepperGripper*)pK->getInst(n);
+	NULL_Fl(m_pG, n + ": not found");
 
-	iName = "";
-	F_ERROR_F(pK->v("_Universe", &iName));
-	m_pU = (_Universe*) (pK->getInst(iName));
-	NULL_Fl(m_pU, iName + " not found");
+	n = "";
+	F_ERROR_F(pK->v("_Universe", &n));
+	m_pU = (_Universe*) (pK->getInst(n));
+	NULL_Fl(m_pU, n + " not found");
 
-	iName = "";
-	F_ERROR_F(pK->v("_DistSensorBase", &iName));
-	m_pD = (_DistSensorBase*) (pK->getInst(iName));
-	NULL_Fl(m_pD, iName + " not found");
+	n = "";
+	F_ERROR_F(pK->v("_DistSensorBase", &n));
+	m_pD = (_DistSensorBase*) (pK->getInst(n));
+	NULL_Fl(m_pD, n + " not found");
 
-	iName = "";
-	F_ERROR_F(pK->v("PIDx", &iName));
-	m_pXpid = ( PID*) (pK->getInst(iName));
-	NULL_Fl(m_pXpid, iName + " not found");
+	n = "";
+	F_ERROR_F(pK->v("PIDx", &n));
+	m_pXpid = ( PID*) (pK->getInst(n));
+	NULL_Fl(m_pXpid, n + " not found");
 
-	iName = "";
-	F_ERROR_F(pK->v("PIDy", &iName));
-	m_pYpid = ( PID*) (pK->getInst(iName));
-	NULL_Fl(m_pYpid, iName + " not found");
+	n = "";
+	F_ERROR_F(pK->v("PIDy", &n));
+	m_pYpid = ( PID*) (pK->getInst(n));
+	NULL_Fl(m_pYpid, n + " not found");
 
-	iName = "";
-	F_ERROR_F(pK->v("PIDz", &iName));
-	m_pZpid = ( PID*) (pK->getInst(iName));
-	NULL_Fl(m_pZpid, iName + " not found");
+	n = "";
+	F_ERROR_F(pK->v("PIDz", &n));
+	m_pZpid = ( PID*) (pK->getInst(n));
+	NULL_Fl(m_pZpid, n + " not found");
 
 	return true;
 }
 
 bool _PickingArm::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _PickingArm::check(void)
@@ -149,19 +142,19 @@ int _PickingArm::check(void)
 	NULL__(m_pYpid, -1);
 	NULL__(m_pZpid, -1);
 
-	return this->_MissionBase::check();
+	return this->_StateBase::check();
 }
 
 void _PickingArm::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
-		this->_MissionBase::update();
+		this->_StateBase::update();
 		updateArm();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -169,34 +162,34 @@ void _PickingArm::updateArm(void)
 {
 	IF_(check() < 0);
 
-	int iM = m_pMC->getMissionIdx();
+	int iM = m_pSC->getStateIdx();
 	bool bTransit = false;
 
-	if(iM == m_iMission.EXTERNAL)
+	if(iM == m_iState.EXTERNAL)
 	{
 		external();
 	}
-	else if(iM == m_iMission.RECOVER)
+	else if(iM == m_iState.RECOVER)
 	{
 		bTransit = recover();
 	}
-	else if(iM == m_iMission.FOLLOW)
+	else if(iM == m_iState.FOLLOW)
 	{
 		bTransit = follow();
 	}
-	else if(iM == m_iMission.ASCEND)
+	else if(iM == m_iState.ASCEND)
 	{
 		bTransit = ascend();
 	}
-	else if(iM == m_iMission.DELIVER)
+	else if(iM == m_iState.DELIVER)
 	{
 		bTransit = deliver();
 	}
-	else if(iM == m_iMission.DESCEND)
+	else if(iM == m_iState.DESCEND)
 	{
 		bTransit = descend();
 	}
-	else if(iM == m_iMission.DROP)
+	else if(iM == m_iState.DROP)
 	{
 		bTransit = drop();
 	}
@@ -206,7 +199,7 @@ void _PickingArm::updateArm(void)
 	}
 
 	if(bTransit)
-		m_pMC->transit();
+		m_pSC->transit();
 }
 
 void _PickingArm::stop(void)
@@ -298,9 +291,9 @@ bool _PickingArm::follow(void)
 	m_vP.x = x*c - y*s + m_vPtarget.x;
 	m_vP.y = x*s + y*c + m_vPtarget.y;
 
-	m_vS.y = 0.5 + m_pXpid->update(m_vP.x, m_vPtarget.x, m_tStamp);
-	m_vS.x = 0.5 + m_pYpid->update(m_vP.y, m_vPtarget.y, m_tStamp);
-	m_vS.z = 0.5 + m_pZpid->update(m_vP.z, m_vPtarget.z, m_tStamp) * constrain(1.0 - r*m_zrK, 0.0, 1.0);
+	m_vS.y = 0.5 + m_pXpid->update(m_vP.x, m_vPtarget.x, m_pT->getTfrom());
+	m_vS.x = 0.5 + m_pYpid->update(m_vP.y, m_vPtarget.y, m_pT->getTfrom());
+	m_vS.z = 0.5 + m_pZpid->update(m_vP.z, m_vPtarget.z, m_pT->getTfrom()) * constrain(1.0 - r*m_zrK, 0.0, 1.0);
 	speed(m_vS);
 
 	return false;
@@ -332,11 +325,11 @@ _Object* _PickingArm::findTarget(void)
 	if(tO)
 	{
 		m_o = *tO;
-		m_oTstamp = m_tStamp;
+		m_oTstamp = m_pT->getTfrom();
 		return &m_o;
 	}
 
-	if(m_tStamp - m_oTstamp < m_oTimeout)
+	if(m_pT->getTfrom() - m_oTstamp < m_oTimeout)
 	{
 		return &m_o;
 	}
@@ -432,7 +425,7 @@ void _PickingArm::grip(bool bOpen)
 
 void _PickingArm::draw(void)
 {
-	this->_MissionBase::draw();
+	this->_StateBase::draw();
 
 	addMsg("vS = (" + f2str(m_vS.x) + ", " + f2str(m_vS.y) + ", " + f2str(m_vS.z) + ")");
 	addMsg("vR = (" + f2str(m_vR.x) + ", " + f2str(m_vR.y) + ", " + f2str(m_vR.z) + ")");
@@ -441,7 +434,7 @@ void _PickingArm::draw(void)
 	addMsg("baseAngle = " + f2str(m_baseAngle));
 
 	IF_(!checkWindow());
-	Mat* pM = ((Window*) this->m_pWindow)->getFrame()->m();
+	Mat* pM = ((_WindowCV*) this->m_pWindow)->getFrame()->m();
 	Point pC = Point(m_vP.x * pM->cols, m_vP.y * pM->rows);
 	circle(*pM, pC, 5.0, Scalar(255, 255, 0), 2);
 }

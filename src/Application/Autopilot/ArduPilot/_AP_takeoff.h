@@ -7,7 +7,7 @@
 namespace kai
 {
 
-class _AP_takeoff: public _MissionBase
+class _AP_takeoff: public _StateBase
 {
 public:
 	_AP_takeoff();
@@ -21,7 +21,7 @@ public:
 
 private:
 	void updateMission(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_AP_takeoff*) This)->update();
 		return NULL;

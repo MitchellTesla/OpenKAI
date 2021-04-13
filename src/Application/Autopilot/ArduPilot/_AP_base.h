@@ -3,7 +3,7 @@
 
 #include "../../../Base/common.h"
 #include "../../../Protocol/_Mavlink.h"
-#include "../../../Mission/_MissionBase.h"
+#include "../../../State/_StateBase.h"
 
 #define AP_N_CUSTOM_MODE 28
 
@@ -91,7 +91,7 @@ struct AP_MOUNT
 	}
 };
 
-class _AP_base: public _MissionBase
+class _AP_base: public _StateBase
 {
 public:
 	_AP_base();
@@ -109,7 +109,7 @@ public:
 
 	bool bApArmed(void);
 
-	uint32_t getApMode(void);
+	int getApMode(void);
 	string getApModeName(void);
 	vDouble3 getHomePos(void);
 	vDouble4 getGlobalPos(void);
@@ -119,7 +119,7 @@ public:
 
 private:
 	void updateBase(void);
-	static void* getUpdateThread(void *This)
+	static void* getUpdate(void *This)
 	{
 		((_AP_base*) This)->update();
 		return NULL;
@@ -132,7 +132,7 @@ public:
 	int m_freqSendHeartbeat;
 
 	AP_TYPE m_apType;
-	uint32_t m_apMode;
+	int m_apMode;
 	bool m_bApArmed;
 
 	bool m_bHomeSet;

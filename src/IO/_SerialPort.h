@@ -28,25 +28,27 @@ public:
 	bool open(void);
 	void close(void);
 	bool start(void);
+    void draw(void);
 
 private:
 	bool setup(void);
 
 	void updateW(void);
-	static void* getUpdateThreadW(void* This)
+	static void* getUpdateW(void* This)
 	{
 		((_SerialPort*) This)->updateW();
 		return NULL;
 	}
 
 	void updateR(void);
-	static void* getUpdateThreadR(void* This)
+	static void* getUpdateR(void* This)
 	{
 		((_SerialPort*) This)->updateR();
 		return NULL;
 	}
 
 private:
+    _Thread* m_pTr;
 	int m_fd;
 	string m_port;
 	int m_baud;

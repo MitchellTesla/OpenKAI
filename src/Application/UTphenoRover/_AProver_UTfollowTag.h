@@ -30,21 +30,21 @@ struct UTPR_MISSIOIN
 		return true;
 	}
 	
-	bool assign(_MissionControl* pMC)
+	bool assign(_StateControl* pMC)
     {
         NULL_F(pMC);
-        DRIVE = pMC->getMissionIdx("DRIVE");
-        DIVIDER = pMC->getMissionIdx("DIVIDER");
-        EXTRACT = pMC->getMissionIdx("EXTRACT");
-        FOLLOW = pMC->getMissionIdx("FOLLOW");
-        RECOVER = pMC->getMissionIdx("RECOVER");
+        DRIVE = pMC->getStateIdxByName ("DRIVE");
+        DIVIDER = pMC->getStateIdxByName ("DIVIDER");
+        EXTRACT = pMC->getStateIdxByName ("EXTRACT");
+        FOLLOW = pMC->getStateIdxByName ("FOLLOW");
+        RECOVER = pMC->getStateIdxByName ("RECOVER");
         
         return bValid();
     }
 };
 
 
-class _AProver_UTfollowTag: public _MissionBase
+class _AProver_UTfollowTag: public _StateBase
 {
 public:
 	_AProver_UTfollowTag();
@@ -58,7 +58,7 @@ public:
 
 private:
 	void updateFollow (void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		(( _AProver_UTfollowTag *) This)->update();
 		return NULL;
@@ -85,7 +85,7 @@ private:
 	float   m_nSpd;
     float   m_nStr;
     
-    UTPR_MISSIOIN m_iMission;
+    UTPR_MISSIOIN m_iState;
 };
 
 }

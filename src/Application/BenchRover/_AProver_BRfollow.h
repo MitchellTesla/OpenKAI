@@ -10,7 +10,7 @@
 namespace kai
 {
 
-class _AProver_BRfollow: public _MissionBase
+class _AProver_BRfollow: public _StateBase
 {
 public:
 	_AProver_BRfollow();
@@ -25,7 +25,7 @@ public:
 private:
 	void updateFollow (void);
     _Object* findTarget(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		(( _AProver_BRfollow *) This)->update();
 		return NULL;

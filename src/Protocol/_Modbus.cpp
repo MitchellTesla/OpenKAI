@@ -12,6 +12,8 @@ _Modbus::_Modbus()
 	m_parity = 'E';
 	m_baud = 115200;
 	m_bOpen = false;
+    m_tOutSec = 1;
+    m_tOutUSec = 0;
 }
 
 _Modbus::~_Modbus()
@@ -26,12 +28,14 @@ _Modbus::~_Modbus()
 
 bool _Modbus::init(void* pKiss)
 {
-	IF_F(!this->_ThreadBase::init(pKiss));
+	IF_F(!this->_ModuleBase::init(pKiss));
 	Kiss* pK = (Kiss*)pKiss;
 
-	pK->v<string>("port",&m_port);
-	pK->v<string>("parity",&m_parity);
-	pK->v<int>("baud",&m_baud);
+	pK->v("port",&m_port);
+	pK->v("parity",&m_parity);
+	pK->v("baud",&m_baud);
+	pK->v("tOutSec",&m_tOutSec);
+	pK->v("tOutUSec",&m_tOutUSec);
 
 	return true;
 }
@@ -47,6 +51,7 @@ bool _Modbus::open(void)
 	}
 
 	modbus_set_debug(m_pMb, false);
+    IF_F(modbus_set_response_timeout(m_pMb, m_tOutSec, m_tOutUSec) != 0);
 
 	if (modbus_connect(m_pMb) != 0)
 	{
@@ -67,34 +72,26 @@ bool _Modbus::bOpen(void)
 
 bool _Modbus::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG_E(retCode);
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _Modbus::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
 		if(!m_pMb)
 		{
 			if(!open())
 			{
-				this->sleepTime(USEC_1SEC);
+				m_pT->sleepT (SEC_2_USEC);
 				continue;
 			}
 		}
 
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -197,7 +194,7 @@ int _Modbus::writeRegisters(int iSlave, int addr, int nRegister, uint16_t* pB)
 
 void _Modbus::draw(void)
 {
-	this->_ThreadBase::draw();
+	this->_ModuleBase::draw();
 }
 
 }

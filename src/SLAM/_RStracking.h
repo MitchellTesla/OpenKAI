@@ -8,9 +8,8 @@
 #ifndef OpenKAI_src_Vision_RStracking_H_
 #define OpenKAI_src_Vision_RStracking_H_
 
-#include "_SlamBase.h"
-
 #ifdef USE_REALSENSE
+#include "_SlamBase.h"
 #include <librealsense2/rs.hpp>
 
 namespace kai
@@ -30,7 +29,7 @@ public:
 
 private:
     void update(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_RStracking *) This)->update();
 		return NULL;

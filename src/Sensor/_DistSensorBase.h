@@ -8,7 +8,7 @@
 #ifndef OpenKAI_src_Sensor__DistSensorBase_H_
 #define OpenKAI_src_Sensor__DistSensorBase_H_
 
-#include "../Base/_ThreadBase.h"
+#include "../Base/_ModuleBase.h"
 #include "../Filter/Median.h"
 #include "../Filter/Average.h"
 
@@ -27,15 +27,15 @@ enum DIST_SENSOR_TYPE
 
 struct DIST_SENSOR_DIV
 {
-	float m_d;	//raw input
+	float m_d; //raw input
 	float m_a; //amplitude
-	Median m_fMed;
-	Average m_fAvr;
+	Median<float> m_fMed;
+	Average<float> m_fAvr;
 
 	void init(int nAvr, int nMed)
 	{
-		m_fMed.init(nMed,0);
-		m_fAvr.init(nAvr,0);
+		m_fMed.init(nMed);
+		m_fAvr.init(nAvr);
 		m_d = -1.0;
 		m_a = -1.0;
 	}
@@ -46,8 +46,7 @@ struct DIST_SENSOR_DIV
 		m_d = d;
 		if(d >= 0.0)
 		{
-			m_fMed.input(d);
-			m_fAvr.input(m_fMed.v());
+			m_fAvr.update(m_fMed.update(&m_d));
 			return;
 		}
 
@@ -83,7 +82,7 @@ struct DIST_SENSOR_DIV
 	}
 };
 
-class _DistSensorBase: public _ThreadBase
+class _DistSensorBase: public _ModuleBase
 {
 public:
 	_DistSensorBase();

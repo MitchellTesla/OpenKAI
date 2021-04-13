@@ -8,10 +8,10 @@
 #ifndef OpenKAI_src_Detector__ArUco_H_
 #define OpenKAI_src_Detector__ArUco_H_
 
-#include "../Detector/_DetectorBase.h"
-
 #ifdef USE_OPENCV
 #ifdef USE_OPENCV_CONTRIB
+#include "../Detector/_DetectorBase.h"
+#include "../Arithmetic/Destimator.h"
 
 namespace kai
 {
@@ -30,7 +30,7 @@ public:
 private:
 	void detect(void);
 	void update(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_ArUco*) This)->update();
 		return NULL;
@@ -40,6 +40,7 @@ public:
 	cv::Ptr<cv::aruco::Dictionary> m_pDict;
 
 	uint8_t m_dict;
+	Destimator* m_pDe;
 
 };
 

@@ -15,35 +15,27 @@ _AP_mission::~_AP_mission()
 
 bool _AP_mission::init(void* pKiss)
 {
-	IF_F(!this->_MissionBase::init(pKiss));
+	IF_F(!this->_StateBase::init(pKiss));
 	Kiss* pK = (Kiss*)pKiss;
 
-	string iName;
-	iName = "";
-	pK->v("_AP_base", &iName);
-	m_pAP = (_AP_base*) (pK->getInst(iName));
-	IF_Fl(!m_pAP, iName + ": not found");
+	string n;
+	n = "";
+	pK->v("_AP_base", &n);
+	m_pAP = (_AP_base*) (pK->getInst(n));
+	IF_Fl(!m_pAP, n + ": not found");
 
-//	iName = "";
-//	pK->v("_AP_descent", &iName);
-//	m_pAPdescent = (_AP_descent*) (pK->getInst(iName));
-//	IF_Fl(!m_pAPdescent, iName + ": not found");
+//	n = "";
+//	pK->v("_AP_descent", &n);
+//	m_pAPdescent = (_AP_descent*) (pK->getInst(n));
+//	IF_Fl(!m_pAPdescent, n + ": not found");
 
 	return true;
 }
 
 bool _AP_mission::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG(ERROR) << "Return code: "<< retCode;
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _AP_mission::check(void)
@@ -52,19 +44,19 @@ int _AP_mission::check(void)
 	NULL__(m_pAP->m_pMav, -1);
 //	NULL__(m_pAPdescent, -1);
 
-	return this->_MissionBase::check();
+	return this->_StateBase::check();
 }
 
 void _AP_mission::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
-		this->_MissionBase::update();
+		this->_StateBase::update();
 		updateMission();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -73,31 +65,31 @@ void _AP_mission::updateMission(void)
 	IF_(check()<0);
 
 	int apMode = m_pAP->getApMode();
-	string mission = m_pMC->getMissionName();
+	string mission = m_pSC->getStateName();
 
 	if(apMode != AP_COPTER_GUIDED)
 	{
-		m_pMC->transit("STANDBY");
+		m_pSC->transit("STANDBY");
 		return;
 	}
 
 	if(mission == "STANDBY")
 	{
-		m_pMC->transit("TAKEOFF");
+		m_pSC->transit("TAKEOFF");
 		return;
 	}
 
 //	if(mission == "FOLLOW")
 //	{
 //		if(m_pAPdescent->m_bTarget)
-//			m_pMC->transit("DESCENT");
+//			m_pSC->transit("DESCENT");
 //		return;
 //	}
 //
 //	if(mission == "DESCENT")
 //	{
 //		if(!m_pAPdescent->m_bTarget)
-//			m_pMC->transit("FOLLOW");
+//			m_pSC->transit("FOLLOW");
 //		return;
 //	}
 
@@ -113,7 +105,7 @@ void _AP_mission::updateMission(void)
 
 void _AP_mission::draw(void)
 {
-	this->_MissionBase::draw();
+	this->_StateBase::draw();
 
 }
 

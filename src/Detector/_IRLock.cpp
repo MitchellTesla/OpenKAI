@@ -37,11 +37,11 @@ bool _IRLock::init(void *pKiss)
 		m_vOvCamSize.y = 1.0 / vCamSize.y;
 	}
 
-	string iName;
-	iName = "";
-	F_ERROR_F(pK->v("_IOBase", &iName));
-	m_pIO = (_IOBase*) (pK->getInst(iName));
-	NULL_Fl(m_pIO, iName + ": not found");
+	string n;
+	n = "";
+	F_ERROR_F(pK->v("_IOBase", &n));
+	m_pIO = (_IOBase*) (pK->getInst(n));
+	NULL_Fl(m_pIO, n + ": not found");
 
 	return true;
 }
@@ -50,37 +50,30 @@ int _IRLock::check(void)
 {
 	NULL__(m_pU, -1);
 
-	return 0;
+	return this->_DetectorBase::check();
 }
 
 bool _IRLock::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _IRLock::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		if (check() >= 0)
 		{
 			detect();
 
-			if (m_bGoSleep)
+			if (m_pT->bGoSleep())
 				m_pU->m_pPrev->clear();
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -89,7 +82,7 @@ void _IRLock::detect(void)
 	IF_(!readPacket());
 
 	_Object o;
-	o.m_tStamp = m_tStamp;
+//	o.m_tStamp = m_pT->getTfrom();
 	o.setTopClass(INT_MAX, 1.0);
 
 	uint16_t x = unpack_uint16(&m_pBuf[8], false);

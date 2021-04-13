@@ -1,7 +1,7 @@
 #ifndef OpenKAI_src_Protocol__CETCUS_H_
 #define OpenKAI_src_Protocol__CETCUS_H_
 
-#include "../Base/_ThreadBase.h"
+#include "../Base/_ModuleBase.h"
 #include "../IO/_TCPclient.h"
 
 using namespace picojson;
@@ -60,7 +60,7 @@ struct CETCUS_WAYPOINT
 	}
 };
 
-class _CETCUS: public _ThreadBase
+class _CETCUS: public _ModuleBase
 {
 public:
 	_CETCUS();
@@ -91,20 +91,21 @@ private:
 
 
 	void updateW(void);
-	static void* getUpdateThreadW(void* This)
+	static void* getUpdateW(void* This)
 	{
 		((_CETCUS*) This)->updateW();
 		return NULL;
 	}
 
 	void updateR(void);
-	static void* getUpdateThreadR(void* This)
+	static void* getUpdateR(void* This)
 	{
 		((_CETCUS*) This)->updateR();
 		return NULL;
 	}
 
 public:
+    _Thread* m_pTr;
 	_IOBase* m_pIO;
 
 	string m_msgFinishSend;
@@ -132,11 +133,6 @@ public:
 	CETCUS_WAYPOINT m_wpStart;
 	CETCUS_WAYPOINT m_wpEnd;
 	vector<CETCUS_WAYPOINT> m_vWP;
-
-
-	pthread_t m_rThreadID;
-	bool	m_bRThreadON;
-
 
 };
 

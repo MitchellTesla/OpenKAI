@@ -5,9 +5,8 @@
  *      Author: yankai
  */
 
-#include "_PCrecv.h"
-
 #ifdef USE_OPEN3D
+#include "_PCrecv.h"
 
 namespace kai
 {
@@ -24,7 +23,7 @@ _PCrecv::~_PCrecv()
 
 bool _PCrecv::init(void *pKiss)
 {
-	IF_F(!_PCbase::init(pKiss));
+	IF_F(!_PCstream::init(pKiss));
 	Kiss *pK = (Kiss*) pKiss;
 
     int nB = 256;
@@ -42,17 +41,8 @@ bool _PCrecv::init(void *pKiss)
 
 bool _PCrecv::start(void)
 {
-	IF_F(!this->_ThreadBase::start());
-
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _PCrecv::check(void)
@@ -60,14 +50,14 @@ int _PCrecv::check(void)
 	NULL__(m_pIO, -1);
 	IF__(!m_pIO->isOpen(),-1);
 
-	return 0;
+	return this->_PCstream::check();
 }
 
 void _PCrecv::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		while(readCMD())
 		{
@@ -75,7 +65,7 @@ void _PCrecv::update(void)
 			m_nCMDrecv++;
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -84,20 +74,20 @@ bool _PCrecv::readCMD(void)
     IF_F(check()<0);
     
 	uint8_t	b;
-	int		nB;
-	while ((nB = m_pIO->read(&b,1)) > 0)
+	while (m_pIO->read(&b,1) > 0)
 	{
 		if (m_recvMsg.m_cmd != 0)
 		{
 			m_recvMsg.m_pB[m_recvMsg.m_iB] = b;
 			m_recvMsg.m_iB++;
 
-			if (m_recvMsg.m_iB == 3)
+			if (m_recvMsg.m_iB == 4)
 			{
-				m_recvMsg.m_nPayload = m_recvMsg.m_pB[2];
+				m_recvMsg.m_nPayload = unpack_int16(&m_recvMsg.m_pB[2], false);
 			}
 			
-			IF_T(m_recvMsg.m_iB == m_recvMsg.m_nPayload + PB_N_HDR );
+			IF_T(m_recvMsg.m_iB >= m_recvMsg.m_nPayload + PC_N_HDR );
+            IF_T(m_recvMsg.m_iB >= m_recvMsg.m_nB);
 		}
 		else if (b == PB_BEGIN )
 		{
@@ -112,9 +102,7 @@ bool _PCrecv::readCMD(void)
 }
 
 void _PCrecv::handleCMD(void)
-{
-	PointCloud* pPC = m_sPC.next();
-        
+{        
 	switch (m_recvMsg.m_pB[1])
 	{
 	case PC_STREAM:
@@ -124,16 +112,6 @@ void _PCrecv::handleCMD(void)
     }
 	case PC_FRAME_END:
     {
-		m_sPC.update();
-        m_sPC.next()->points_.clear();
-        m_sPC.next()->colors_.clear();
-        m_sPC.next()->normals_.clear();
-        
-   		if(m_pViewer)
-		{
-			m_pViewer->updateGeometry(m_iV, getPC());
-		}
-
 		break;
     }
     default:
@@ -147,25 +125,26 @@ void _PCrecv::decodeStream(void)
 {
     const double PC_SCALE_INV = 0.001;
    	int16_t x,y,z;
-	PointCloud* pPC = m_sPC.next();
 
-    for(int i=3; i<m_recvMsg.m_nPayload + PB_N_HDR; i+=12)
+    for(int i=PC_N_HDR; i<m_recvMsg.m_nPayload + PC_N_HDR; i+=12)
     {
+        IF_(i + 12 > m_recvMsg.m_nB);
+        
         x = unpack_int16(&m_recvMsg.m_pB[i], false);
         y = unpack_int16(&m_recvMsg.m_pB[i+2], false);
         z = unpack_int16(&m_recvMsg.m_pB[i+4], false);
-        Eigen::Vector3d vp(((double)x)*PC_SCALE_INV,
+        Eigen::Vector3d vP(((double)x)*PC_SCALE_INV,
                             ((double)y)*PC_SCALE_INV,
                             ((double)z)*PC_SCALE_INV);
-        pPC->points_.push_back(vp);
 
         x = unpack_int16(&m_recvMsg.m_pB[i+6], false);
         y = unpack_int16(&m_recvMsg.m_pB[i+8], false);
         z = unpack_int16(&m_recvMsg.m_pB[i+10], false);
-        Eigen::Vector3d vc(((double)x)*PC_SCALE_INV,
+        Eigen::Vector3d vC(((double)x)*PC_SCALE_INV,
                             ((double)y)*PC_SCALE_INV,
                             ((double)z)*PC_SCALE_INV);
-        pPC->colors_.push_back(vc);
+
+		add(vP, vC, m_pT->getTfrom());
     }
 }
 

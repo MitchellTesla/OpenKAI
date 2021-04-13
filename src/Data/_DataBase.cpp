@@ -27,7 +27,7 @@ _DataBase::~_DataBase()
 
 bool _DataBase::init(void* pKiss)
 {
-	IF_F(!this->_ThreadBase::init(pKiss));
+	IF_F(!this->_ModuleBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
 	pK->v("dirIn",&m_dirIn);
@@ -54,15 +54,8 @@ bool _DataBase::init(void* pKiss)
 
 bool _DataBase::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _DataBase::update(void)

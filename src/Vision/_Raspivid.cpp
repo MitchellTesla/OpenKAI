@@ -50,8 +50,8 @@ bool _Raspivid::init(void* pKiss)
 
 	//round up resolution for Raspividyuv output
 	//https://picamera.readthedocs.io/en/latest/recipes2.html#unencoded-image-capture-yuv-format
-	m_w = (m_w + 31) / 32 * 32;
-	m_h = (m_h + 15) / 16 * 16;
+	m_vSize.x = (m_vSize.x + 31) / 32 * 32;
+	m_vSize.y = (m_vSize.y + 15) / 16 * 16;
 
 	string cMode = "rgb";
 	F_INFO(pK->v("cMode", &cMode));
@@ -59,12 +59,12 @@ bool _Raspivid::init(void* pKiss)
 	if (cMode == "rgb")
 	{
 		m_cMode = raspivid_rgb;
-		m_nFB = m_w * m_h * 3;
+		m_nFB = m_vSize.x * m_vSize.y * 3;
 	}
 	else
 	{
 		m_cMode = raspivid_y;
-		m_nFB = m_w * m_h;
+		m_nFB = m_vSize.x * m_vSize.y;
 	}
 
 	m_pFB = new uint8_t[m_nFB];
@@ -74,8 +74,8 @@ bool _Raspivid::init(void* pKiss)
 
 bool _Raspivid::open(void)
 {
-	string cmdR = m_cmd + " " + "-w " + i2str(m_w) + " " + "-h " + i2str(m_h)
-			+ " " + "-fps " + i2str(m_targetFPS) + " " + "-t 0 " + "-o - "
+	string cmdR = m_cmd + " " + "-w " + i2str(m_vSize.x) + " " + "-h " + i2str(m_vSize.y)
+			+ " " + "-fps " + i2str((int)m_pT->getTargetFPS()) + " " + "-t 0 " + "-o - "
 			+ m_option + " ";
 
 	if (m_cMode == raspivid_rgb)
@@ -102,46 +102,39 @@ bool _Raspivid::open(void)
 
 bool _Raspivid::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _Raspivid::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
 		if (!m_bOpen)
 		{
 			if (!open())
 			{
-				this->sleepTime(USEC_1SEC);
+				m_pT->sleepT (SEC_2_USEC);
 				continue;
 			}
 		}
 
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		while (read(m_iFr, m_pFB, m_nFB) != m_nFB);
 
 		if (m_cMode == raspivid_y)
 		{
-			m_fBGR.copy(Mat(m_h, m_w, CV_8UC1, m_pFB));
+			m_fBGR.copy(Mat(m_vSize.y, m_vSize.x, CV_8UC1, m_pFB));
 		}
 		else
 		{
 			Frame fRGB;
-			fRGB = Mat(m_h, m_w, CV_8UC3, m_pFB);
+			fRGB = Mat(m_vSize.y, m_vSize.x, CV_8UC3, m_pFB);
 			m_fBGR.copy(fRGB.cvtColor(COLOR_RGB2BGR));
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 

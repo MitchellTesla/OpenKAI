@@ -5,9 +5,8 @@
  *      Author: yankai
  */
 
-#include "_PCfile.h"
-
 #ifdef USE_OPEN3D
+#include "_PCfile.h"
 
 namespace kai
 {
@@ -22,7 +21,7 @@ _PCfile::~_PCfile()
 
 bool _PCfile::init(void *pKiss)
 {
-	IF_F(!_PCbase::init(pKiss));
+	IF_F(!_PCframe::init(pKiss));
 	Kiss *pK = (Kiss*) pKiss;
 
 	pK->v("fName", &m_fName);
@@ -36,50 +35,36 @@ bool _PCfile::open(void)
 	IF_F(m_fName.empty());
 
 //	io::ReadPointCloudOption ro;
-	IF_F(!io::ReadPointCloud(m_fName, *m_sPC.prev()));
-
-	NULL_T(m_pViewer);
-	m_pViewer->updateGeometry(m_iV, getPC());
+	IF_F(!io::ReadPointCloud(m_fName, m_pc));	
+	*m_sPC.next() = m_pc;
+	updatePC();
+	m_nPread = m_pc.points_.size();
 
 	return true;
 }
 
 bool _PCfile::start(void)
 {
-	IF_F(!this->_ThreadBase::start());
-
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _PCfile::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
-//        if(m_pViewer)
-//        {
-//            m_pViewer->updateGeometry(m_iV, getPC());
-//        }
+		*m_sPC.next() = m_pc;
+		updatePC();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
 void _PCfile::draw(void)
 {
-	this->_ThreadBase::draw();
-
-//	NULL_(m_pViewer);
-//	m_pViewer->updateGeometry(m_iV, getPC());
+	this->_ModuleBase::draw();
 }
 
 }

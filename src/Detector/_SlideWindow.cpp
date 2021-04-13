@@ -43,14 +43,14 @@ bool _SlideWindow::init(void *pKiss)
 	pK->v("dRange", &m_dRange);
 	pK->v("dMinArea", &m_dMinArea);
 
-	string iName = "";
-//	F_ERROR_F(pK->v("_DNNclassifier", &iName));
-//	m_pC = (_DNNclassifier*) (pK->getInst(iName));
-//	NULL_Fl(m_pC, iName + " not found");
+	string n = "";
+//	F_ERROR_F(pK->v("_DNNclassifier", &n));
+//	m_pC = (_DNNclassifier*) (pK->getInst(n));
+//	NULL_Fl(m_pC, n + " not found");
 
-	F_ERROR_F(pK->v("_DepthVisionBase", &iName));
-	m_pD = (_DepthVisionBase*) (pK->getInst(iName));
-	NULL_Fl(m_pD, iName + " not found");
+	F_ERROR_F(pK->v("_DepthVisionBase", &n));
+	m_pD = (_DepthVisionBase*) (pK->getInst(n));
+	NULL_Fl(m_pD, n + " not found");
 
 	m_nW = 0;
 	while (m_vRoi.x + m_nW * m_dW * m_vRoi.width() + m_w * m_vRoi.width()
@@ -69,32 +69,25 @@ bool _SlideWindow::init(void *pKiss)
 
 bool _SlideWindow::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _SlideWindow::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		if (check() >= 0)
 		{
 			detect();
 
-			if (m_bGoSleep)
+			if (m_pT->bGoSleep())
 				m_pU->m_pPrev->clear();
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -106,7 +99,7 @@ int _SlideWindow::check(void)
 	NULL__(m_pD, -1);
 	IF__(m_pD->BGR()->bEmpty(), -1);
 
-	return 0;
+	return this->_DetectorBase::check();
 }
 
 void _SlideWindow::detect(void)
@@ -115,8 +108,7 @@ void _SlideWindow::detect(void)
 	m_pD->BGR()->m()->copyTo(m_mD);
 	cv::inRange(m_mD, 1, m_maxD * 255.0, m_mDin);
 
-	vInt2 cs;
-	m_pD->info(&cs, NULL, NULL);
+	vInt2 cs = m_pD->getSize();
 
 	_Object o;
 	float rW = m_vRoi.width();
@@ -156,7 +148,7 @@ void _SlideWindow::draw(void)
 
 	if (checkWindow())
 	{
-		Window *pWin = (Window*) this->m_pWindow;
+		_WindowCV *pWin = (_WindowCV*) this->m_pWindow;
 		Mat *pM = pWin->getFrame()->m();
 
 		Rect r = bb2Rect(bbScale(m_vRoi,pM->cols,pM->rows));

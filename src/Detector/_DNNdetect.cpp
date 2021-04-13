@@ -84,23 +84,15 @@ bool _DNNdetect::init(void *pKiss)
 
 bool _DNNdetect::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG_E(retCode);
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _DNNdetect::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		if (check() >= 0)
 		{
@@ -110,11 +102,11 @@ void _DNNdetect::update(void)
 			else if (m_dnnType == dnn_tf || m_dnnType == dnn_caffe)
 				detect();
 
-			if (m_bGoSleep)
+			if (m_pT->bGoSleep())
 				m_pU->m_pPrev->clear();
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -127,7 +119,7 @@ int _DNNdetect::check(void)
 	IF__(pBGR->bEmpty(), -1);
 	IF__(pBGR->tStamp() <= m_fBGR.tStamp(), -1);
 
-	return 0;
+	return this->_DetectorBase::check();
 }
 
 void _DNNdetect::detectYolo(void)
@@ -192,7 +184,7 @@ void _DNNdetect::detectYolo(void)
 
 		_Object o;
 		o.init();
-		o.m_tStamp = m_tStamp;
+//		o.m_tStamp = m_pT->getTfrom();
 		o.setTopClass(vClassID[idx], (float) vConfidence[idx]);
 		o.setBB2D(rect2BB<vFloat4>(vRect[idx]));
 		o.scale(kx, ky);
@@ -231,7 +223,7 @@ void _DNNdetect::detect(void)
 
 		_Object o;
 		o.init();
-		o.m_tStamp = m_tStamp;
+//		o.m_tStamp = m_pT->getTfrom();
 		o.setTopClass(0.0, 1.0);
 		o.setBB2D(bb);
 
@@ -246,9 +238,9 @@ void _DNNdetect::draw(void)
 {
 	IF_(check() < 0);
 
-	this->_ThreadBase::draw();
+	this->_ModuleBase::draw();
 	IF_(!checkWindow());
-	Mat *pMat = ((Window*) this->m_pWindow)->getFrame()->m();
+	Mat *pMat = ((_WindowCV*) this->m_pWindow)->getFrame()->m();
 
 	Scalar col = Scalar(0, 0, 255);
 

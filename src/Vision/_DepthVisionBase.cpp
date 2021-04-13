@@ -15,8 +15,7 @@ namespace kai
 _DepthVisionBase::_DepthVisionBase()
 {
 	m_pDepthWin = NULL;
-	m_wD = 1280;
-	m_hD = 720;
+    m_vDsize.init(1280,720);
 
 	m_nHistLev = 128;
 	m_iHistFrom = 0;
@@ -40,16 +39,15 @@ bool _DepthVisionBase::init(void* pKiss)
 	IF_F(!this->_VisionBase::init(pKiss));
 	Kiss* pK = (Kiss*)pKiss;
 
-	pK->v("wD",&m_wD);
-	pK->v("hD",&m_hD);
+	pK->v("vDsize",&m_vDsize);
 	pK->v("nHistLev",&m_nHistLev);
 	pK->v("minHistD",&m_minHistD);
 	pK->v("vRange", &m_vRange);
 	pK->v("vKpos", &m_vKpos);
 
-	string iName = "";
-	F_INFO(pK->v("depthWindow", &iName));
-	m_pDepthWin = (Window*) (pK->getInst(iName));
+	string n = "";
+	F_INFO(pK->v("depthWindow", &n));
+	m_pDepthWin = (_WindowCV*) (pK->getInst(n));
 
 	return true;
 }
@@ -119,7 +117,7 @@ void _DepthVisionBase::draw(void)
 
 	if(checkWindow())
 	{
-		Window* pWin = (Window*)this->m_pWindow;
+		_WindowCV* pWin = (_WindowCV*)this->m_pWindow;
 		Frame* pFrame = pWin->getFrame();
 		Mat* pM = pFrame->m();
 

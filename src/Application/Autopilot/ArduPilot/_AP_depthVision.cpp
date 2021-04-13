@@ -18,20 +18,20 @@ _AP_depthVision::~_AP_depthVision()
 
 bool _AP_depthVision::init(void* pKiss)
 {
-	IF_F(!this->_MissionBase::init(pKiss));
+	IF_F(!this->_StateBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
 	//link
-	string iName;
+	string n;
 
-	iName = "";
-	F_INFO(pK->v("APcopter_base", &iName));
-	m_pAP = (_AP_base*) (pK->getInst(iName));
+	n = "";
+	F_INFO(pK->v("APcopter_base", &n));
+	m_pAP = (_AP_base*) (pK->getInst(n));
 
-	iName = "";
-	F_INFO(pK->v("_DepthVisionBase", &iName));
-	m_pDV = (_DepthVisionBase*) (pK->getInst(iName));
-	IF_Fl(!m_pDV, iName + " not found");
+	n = "";
+	F_INFO(pK->v("_DepthVisionBase", &n));
+	m_pDV = (_DepthVisionBase*) (pK->getInst(n));
+	IF_Fl(!m_pDV, n + " not found");
 
 	m_nROI = 0;
 	while (1)
@@ -56,7 +56,7 @@ bool _AP_depthVision::init(void* pKiss)
 
 void _AP_depthVision::update(void)
 {
-	this->_MissionBase::update();
+	this->_StateBase::update();
 
 	NULL_(m_pAP);
 	NULL_(m_pAP->m_pMav);
@@ -89,13 +89,13 @@ void _AP_depthVision::update(void)
 
 void _AP_depthVision::draw(void)
 {
-	this->_MissionBase::draw();
+	this->_StateBase::draw();
 	addMsg("nROI=" + i2str(m_nROI));
 
 	IF_(!checkWindow());
 	NULL_(m_pDV);
 
-	Mat* pMat = ((Window*) this->m_pWindow)->getFrame()->m();
+	Mat* pMat = ((_WindowCV*) this->m_pWindow)->getFrame()->m();
 
 	for(int i=0; i<m_nROI; i++)
 	{

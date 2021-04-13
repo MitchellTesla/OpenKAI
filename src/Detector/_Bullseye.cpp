@@ -44,22 +44,15 @@ bool _Bullseye::init(void* pKiss)
 
 bool _Bullseye::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _Bullseye::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		if(check() >= 0)
 		{
@@ -69,7 +62,7 @@ void _Bullseye::update(void)
 				m_pU->m_pPrev->clear();
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -79,7 +72,7 @@ int _Bullseye::check(void)
 	NULL__(m_pV,-1);
 	IF__(m_pV->BGR()->bEmpty(),-1);
 
-	return 0;
+	return this->_DetectorBase::check();
 }
 
 void _Bullseye::detect(void)
@@ -122,7 +115,7 @@ void _Bullseye::detect(void)
 		Rect r = boundingRect(vPoly);
 
 		o.init();
-		o.m_tStamp = m_tStamp;
+		o.setTstamp(m_pT->getTfrom());
 		o.setBB2D(rect2BB<vFloat4>(r));
 		o.scale(kx,ky);
 		o.setTopClass(0, o.area());

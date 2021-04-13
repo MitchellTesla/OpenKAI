@@ -8,7 +8,7 @@
 namespace kai
 {
 
-struct APROVER_BR_MODE
+struct BENCHROVER_STATE   
 {
 	int8_t MANUAL;
 	int8_t FORWARD;
@@ -23,18 +23,18 @@ struct APROVER_BR_MODE
 		return true;
 	}
 	
-	bool assign(_MissionControl* pMC)
+	bool assign(_StateControl* pMC)
     {
         NULL_F(pMC);
-        MANUAL = pMC->getMissionIdx("MANUAL");
-        FORWARD = pMC->getMissionIdx("FORWARD");
-        BACKWARD = pMC->getMissionIdx("BACKWARD");
+        MANUAL = pMC->getStateIdxByName ("MANUAL");
+        FORWARD = pMC->getStateIdxByName ("FORWARD");
+        BACKWARD = pMC->getStateIdxByName ("BACKWARD");
         
         return bValid();
     }
 };
 
-class _AProver_BR: public _MissionBase
+class _AProver_BR: public _StateBase
 {
 public:
 	_AProver_BR();
@@ -48,7 +48,7 @@ public:
 
 private:
 	void updateMode(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_AProver_BR*) This)->update();
 		return NULL;
@@ -59,7 +59,7 @@ public:
     _Drive*    m_pD;
     
     RC_CHANNEL m_rcMode;
-    APROVER_BR_MODE m_iMode;
+    BENCHROVER_STATE m_iMode;
      
     RC_CHANNEL m_rcStickV;
     RC_CHANNEL m_rcStickH;

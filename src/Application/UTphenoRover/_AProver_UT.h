@@ -25,7 +25,7 @@ struct APROVER_UT_MODE
 	}
 };
 
-class _AProver_UT: public _MissionBase
+class _AProver_UT: public _StateBase
 {
 public:
 	_AProver_UT();
@@ -39,7 +39,7 @@ public:
 
 protected:
 	void updateMode(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_AProver_UT *) This)->update();
 		return NULL;

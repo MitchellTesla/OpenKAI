@@ -9,7 +9,7 @@
 namespace kai
 {
 
-class _UTprArmL: public _MissionBase
+class _UTprArmL: public _StateBase
 {
 public:
 	_UTprArmL(void);
@@ -31,7 +31,7 @@ private:
 	_Object* findTarget(void);
 	void updateArm(void);
 	void update(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_UTprArmL *) This)->update();
 		return NULL;
@@ -54,7 +54,7 @@ public:
 	vFloat2 m_vZgoal;
 	vFloat3 m_vPrecover;//arm stock pos
 
-	UTPR_MISSIOIN m_iMission;
+	UTPR_MISSIOIN m_iState;
 };
 
 }

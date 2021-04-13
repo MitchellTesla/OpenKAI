@@ -8,15 +8,13 @@
 #ifndef OpenKAI_src_PointCloud_PCfile_H_
 #define OpenKAI_src_PointCloud_PCfile_H_
 
-#include "../Base/common.h"
-
 #ifdef USE_OPEN3D
-#include "_PCbase.h"
+#include "_PCframe.h"
 
 namespace kai
 {
 
-class _PCfile: public _PCbase
+class _PCfile: public _PCframe
 {
 public:
 	_PCfile();
@@ -29,7 +27,7 @@ public:
 
 private:
 	void update(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_PCfile *) This)->update();
 		return NULL;
@@ -37,6 +35,7 @@ private:
 
 public:
 	string m_fName;
+	PointCloud m_pc;
 
 };
 

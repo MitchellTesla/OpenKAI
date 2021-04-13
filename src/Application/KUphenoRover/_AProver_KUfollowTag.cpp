@@ -26,8 +26,8 @@ _AProver_KUfollowTag::~_AProver_KUfollowTag()
 
 bool _AProver_KUfollowTag::init ( void* pKiss )
 {
-    IF_F ( !this->_MissionBase::init ( pKiss ) );
-    NULL_F( m_pMC );
+    IF_F ( !this->_StateBase::init ( pKiss ) );
+    NULL_F( m_pSC );
 
     Kiss* pK = ( Kiss* ) pKiss;
     pK->v ( "nSpd", &m_nSpd );
@@ -67,16 +67,8 @@ bool _AProver_KUfollowTag::init ( void* pKiss )
 
 bool _AProver_KUfollowTag::start ( void )
 {
-    m_bThreadON = true;
-    int retCode = pthread_create ( &m_threadID, 0, getUpdateThread, this );
-    if ( retCode != 0 )
-    {
-        LOG ( ERROR ) << "Return code: " << retCode;
-        m_bThreadON = false;
-        return false;
-    }
-
-    return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _AProver_KUfollowTag::check ( void )
@@ -87,19 +79,19 @@ int _AProver_KUfollowTag::check ( void )
     NULL__ ( m_pPIDtagX, -1 );
     NULL__ ( m_pPIDtagHdg, -1 );
 
-    return this->_MissionBase::check();
+    return this->_StateBase::check();
 }
 
 void _AProver_KUfollowTag::update ( void )
 {
-    while ( m_bThreadON )
+    while(m_pT->bRun())
     {
-        this->autoFPSfrom();
-        this->_MissionBase::update();
+        m_pT->autoFPSfrom();
+        this->_StateBase::update();
 
         updateFollow();
 
-        this->autoFPSto();
+        m_pT->autoFPSto();
     }
 }
 
@@ -128,8 +120,8 @@ void _AProver_KUfollowTag::updateFollow ( void )
         m_errHdg = dHdg<float>(0.0, pO->getRoll());
     }
 
-    m_nStr = dir * m_pPIDtagX->update ( m_errX, 0.0, m_tStamp )
-             + dir * m_pPIDtagHdg->update ( m_errHdg, 0.0, m_tStamp );
+    m_nStr = dir * m_pPIDtagX->update ( m_errX, 0.0, m_pT->getTfrom())
+             + dir * m_pPIDtagHdg->update ( m_errHdg, 0.0, m_pT->getTfrom());
     m_pD->setSteering(m_nStr);
     m_pD->setSpeed(nSpd);
 
@@ -146,7 +138,7 @@ _Object* _AProver_KUfollowTag::findTarget ( void )
     while ( ( pO = m_pU->get ( i++ ) ) != NULL )
     {
         vFloat3 p = pO->getPos();
-        IF_CONT ( p.y > topY );
+        IF_CONT ( p.y * m_pD->getDirection() > topY );
 
         tO = pO;
         topY = p.x;
@@ -157,7 +149,7 @@ _Object* _AProver_KUfollowTag::findTarget ( void )
 
 void _AProver_KUfollowTag::draw ( void )
 {
-    this->_MissionBase::draw();
+    this->_StateBase::draw();
     drawActive();
 
    	addMsg("nSpd=" + f2str(m_nSpd) + ", nStr=" + f2str(m_nStr));
@@ -245,8 +237,8 @@ void _AProver_KUfollowTag::draw ( void )
 	"class":"_GPhoto",
 	"FPS":30,
 	"bInst":1,
-	"Window":"OKview",
-	"Console":"OKconsole",
+	"_WindowCV":"OKview",
+	"_Console":"OK_Console",
 	"cmdUnmount":"gio mount -s gphoto2",
 }
 

@@ -10,7 +10,7 @@
 namespace kai
 {
 
-class _AP_avoid: public _MissionBase
+class _AP_avoid: public _StateBase
 {
 public:
 	_AP_avoid();
@@ -24,7 +24,7 @@ public:
 
 private:
 	void updateTarget(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_AP_avoid*) This)->update();
 		return NULL;

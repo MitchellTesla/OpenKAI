@@ -49,16 +49,8 @@ bool _ImageNet::init(void* pKiss)
 
 bool _ImageNet::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG_E(retCode);
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _ImageNet::update(void)
@@ -82,13 +74,13 @@ void _ImageNet::update(void)
 
 	IF_(m_mode == noThread);
 
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		detect();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -168,7 +160,7 @@ void _ImageNet::detect(void)
 void _ImageNet::classifyBatch(int iBatchFrom, int nBatch)
 {
 	m_pIN->ClassifyBatch(nBatch, m_pmClass, m_piClass, (float)m_minConfidence);
-	uint64_t tStamp = getTimeUsec();
+	uint64_t tStamp = getApproxTbootUs();
 
 	for(int i=0; i<nBatch; i++)
 	{

@@ -28,21 +28,23 @@ public:
 
 public:
 	void updateW(void);
-	static void* getUpdateThreadW(void* This)
+	static void* getUpdateW(void* This)
 	{
 		((_TCPclient*) This)->updateW();
 		return NULL;
 	}
 
 	void updateR(void);
-	static void* getUpdateThreadR(void* This)
+	static void* getUpdateR(void* This)
 	{
 		((_TCPclient*) This)->updateR();
 		return NULL;
 	}
 
 public:
-	struct sockaddr_in m_serverAddr;
+    _Thread* m_pTr;
+	
+    struct sockaddr_in m_serverAddr;
 	string	m_strAddr;
 	uint16_t m_port;
 

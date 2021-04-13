@@ -5,8 +5,7 @@ namespace kai
 
 _CETCUS::_CETCUS()
 {
-	m_rThreadID = 0;
-	m_bRThreadON = false;
+    m_pTr = NULL;
 	m_pIO = NULL;
 
 	m_msgFinishSend = "SWOOLEFN";
@@ -35,55 +34,43 @@ _CETCUS::_CETCUS()
 
 _CETCUS::~_CETCUS()
 {
+    DEL(m_pTr);
 }
 
 bool _CETCUS::init(void* pKiss)
 {
-	IF_F(!this->_ThreadBase::init(pKiss));
+	IF_F(!this->_ModuleBase::init(pKiss));
 	Kiss* pK = (Kiss*)pKiss;
 
 	pK->v("msgFinishSend", &m_msgFinishSend);
 	pK->v("msgFinishRecv", &m_msgFinishRecv);
 	pK->v("uavNo", &m_uavNo);
 
-	string iName;
-	iName = "";
-	F_ERROR_F(pK->v("_IOBase", &iName));
-	m_pIO = (_IOBase*) (pK->getInst(iName));
+	string n;
+	n = "";
+	F_ERROR_F(pK->v("_IOBase", &n));
+	m_pIO = (_IOBase*) (pK->getInst(n));
 	NULL_Fl(m_pIO,"_IOBase not found");
+    
+    Kiss* pKt = pK->child("threadR");
+    IF_F(pKt->empty());
+    
+    m_pTr = new _Thread();
+    if(!m_pTr->init(pKt))
+    {
+        DEL(m_pTr);
+        return false;
+    }
 
 	return true;
 }
 
 bool _CETCUS::start(void)
 {
-	int retCode;
-
-	if(!m_bThreadON)
-	{
-		m_bThreadON = true;
-		retCode = pthread_create(&m_threadID, 0, getUpdateThreadW, this);
-		if (retCode != 0)
-		{
-			LOG_E(retCode);
-			m_bThreadON = false;
-			return false;
-		}
-	}
-
-	if(!m_bRThreadON)
-	{
-		m_bRThreadON = true;
-		retCode = pthread_create(&m_rThreadID, 0, getUpdateThreadR, this);
-		if (retCode != 0)
-		{
-			LOG_E(retCode);
-			m_bRThreadON = false;
-			return false;
-		}
-	}
-
-	return true;
+    NULL_F(m_pT);
+    NULL_F(m_pTr);
+    IF_F(!m_pT->start(getUpdateW, this));
+	return m_pTr->start(getUpdateR, this);
 }
 
 int _CETCUS::check(void)
@@ -96,11 +83,11 @@ int _CETCUS::check(void)
 
 void _CETCUS::updateW(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
 		if(!m_pIO)
 		{
-			this->sleepTime(USEC_1SEC);
+			m_pT->sleepT (SEC_2_USEC);
 			continue;
 		}
 
@@ -108,16 +95,16 @@ void _CETCUS::updateW(void)
 		{
 			if(!m_pIO->open())
 			{
-				this->sleepTime(USEC_1SEC);
+				m_pT->sleepT (SEC_2_USEC);
 				continue;
 			}
 		}
 
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		updateMission();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -143,10 +130,10 @@ void _CETCUS::updateMission(void)
 
 void _CETCUS::updateR(void)
 {
-	while (m_bRThreadON)
+	while(m_pTr->bRun())
 	{
 		recv();
-		this->sleepTime(0);
+		m_pT->sleepT (0);
 	}
 }
 
@@ -410,7 +397,7 @@ void _CETCUS::endFly(void)
 
 void _CETCUS::draw(void)
 {
-	this->_ThreadBase::draw();
+	this->_ModuleBase::draw();
 
 	string msg = *this->getName();
 	if (m_pIO->isOpen())

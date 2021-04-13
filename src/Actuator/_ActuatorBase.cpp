@@ -18,7 +18,7 @@ _ActuatorBase::_ActuatorBase()
 
 	m_lastCmdType = actCmd_standby;
 	m_tLastCmd = 0;
-	m_tCmdTimeout = USEC_1SEC;
+	m_tCmdTimeout = SEC_2_USEC;
 
 	pthread_mutex_init(&m_mutex, NULL);
 	m_pParent = NULL;
@@ -31,7 +31,7 @@ _ActuatorBase::~_ActuatorBase()
 
 bool _ActuatorBase::init(void* pKiss)
 {
-	IF_F(!this->_ThreadBase::init(pKiss));
+	IF_F(!this->_ModuleBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
 	pK->v("tCmdTimeout", &m_tCmdTimeout);
@@ -95,26 +95,19 @@ bool _ActuatorBase::power(bool bON)
 
 bool _ActuatorBase::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG_E(retCode);
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _ActuatorBase::update(void)
 {
-	m_tStamp = getTimeUsec();
+    IF_(check() < 0);
+//	m_pT->setTstamp(getApproxTbootUs());
 }
 
 bool _ActuatorBase::bCmdTimeout(void)
 {
-	uint64_t t = getTimeUsec();
+	uint64_t t = getApproxTbootUs();
 	IF_F(t - m_tLastCmd < m_tCmdTimeout);
 
 	return true;
@@ -144,7 +137,7 @@ void _ActuatorBase::setPtarget(int i, float p)
 	pA->m_p.setTarget(p);
 
 	m_lastCmdType = actCmd_pos;
-	m_tLastCmd = m_tStamp;
+	m_tLastCmd = m_pT->getTfrom();
 }
 
 void _ActuatorBase::setStarget(int i, float s)
@@ -156,7 +149,7 @@ void _ActuatorBase::setStarget(int i, float s)
 	pA->m_s.setTarget(s);
 
 	m_lastCmdType = actCmd_spd;
-	m_tLastCmd = m_tStamp;
+	m_tLastCmd = m_pT->getTfrom();
 }
 
 void _ActuatorBase::gotoOrigin(void)
@@ -168,7 +161,7 @@ void _ActuatorBase::gotoOrigin(void)
 	}
 
 	m_lastCmdType = actCmd_pos;
-	m_tLastCmd = m_tStamp;
+	m_tLastCmd = m_pT->getTfrom();
 }
 
 bool _ActuatorBase::bComplete(void)
@@ -219,7 +212,7 @@ float _ActuatorBase::getStarget(int i)
 
 void _ActuatorBase::draw(void)
 {
-	this->_ThreadBase::draw();
+	this->_ModuleBase::draw();
 
 	for(int i=0; i<m_vAxis.size(); i++)
 	{

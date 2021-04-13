@@ -23,7 +23,7 @@ _ANR::_ANR()
 	m_cnBB.init();
 	m_tStampCNprefix = 0;
 	m_tStampCN = 0;
-	m_timeOut = USEC_1SEC;
+	m_timeOut = SEC_2_USEC;
 	m_nCNdigit = 6;
 	m_offsetRdigit = 0.01;
 	m_wRdigit = 0.05;
@@ -52,7 +52,7 @@ _ANR::~_ANR()
 
 bool _ANR::init(void* pKiss)
 {
-	IF_F(!this->_ThreadBase::init(pKiss));
+	IF_F(!this->_ModuleBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
 	pK->v("cnPrefix",&m_cnPrefix);
@@ -81,36 +81,36 @@ bool _ANR::init(void* pKiss)
 #endif
 
 	if(pK->v("timeOut",&m_timeOut))
-		m_timeOut *= USEC_1SEC;
+		m_timeOut *= SEC_2_USEC;
 
 	vector<string> vPrefix;
 	pK->a("vPrefix", &vPrefix);
 	for(int i=0; i<vPrefix.size(); i++)
 		m_vPrefixCandidate.push_back(vPrefix[i]);
 
-	string iName;
+	string n;
 
-	iName = "";
-	F_ERROR_F(pK->v("_DetectorBaseCN", &iName));
-	m_pDcn = (_DetectorBase*) (pK->getInst(iName));
-	IF_Fl(!m_pDcn, iName + " not found");
+	n = "";
+	F_ERROR_F(pK->v("_DetectorBaseCN", &n));
+	m_pDcn = (_DetectorBase*) (pK->getInst(n));
+	IF_Fl(!m_pDcn, n + " not found");
 
-	iName = "";
-	F_ERROR_F(pK->v("_DetectorBaseLP", &iName));
-	m_pDlp = (_DetectorBase*) (pK->getInst(iName));
-	IF_Fl(!m_pDlp, iName + " not found");
+	n = "";
+	F_ERROR_F(pK->v("_DetectorBaseLP", &n));
+	m_pDlp = (_DetectorBase*) (pK->getInst(n));
+	IF_Fl(!m_pDlp, n + " not found");
 
-	iName = "";
-	F_INFO(pK->v("_WebSocket", &iName));
-	m_pWS = (_WebSocket*) (pK->getInst(iName));
-	IF_Fl(!m_pWS, iName + " not found");
+	n = "";
+	F_INFO(pK->v("_WebSocket", &n));
+	m_pWS = (_WebSocket*) (pK->getInst(n));
+	IF_Fl(!m_pWS, n + " not found");
 
 #ifdef USE_OCR
 	IF_T(!m_bOCR);
-	iName = "";
-	F_INFO(pK->v("OCR", &iName));
-	m_pOCR = (OCR*) (pK->getInst(iName));
-	IF_Fl(!m_pOCR, iName + " not found");
+	n = "";
+	F_INFO(pK->v("OCR", &n));
+	m_pOCR = (OCR*) (pK->getInst(n));
+	IF_Fl(!m_pOCR, n + " not found");
 #endif
 
 	return true;
@@ -118,22 +118,15 @@ bool _ANR::init(void* pKiss)
 
 bool _ANR::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _ANR::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		if(cn())
 		{
@@ -142,7 +135,7 @@ void _ANR::update(void)
 
 //		lp();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -210,12 +203,12 @@ bool _ANR::cn(void)
 		if(bMatch)
 		{
 			m_cnPrefixBB = pO->getBB2D();
-			m_tStampCNprefix = getTimeUsec();
+			m_tStampCNprefix = getApproxTbootUs();
 			break;
 		}
 	}
 
-	if(getTimeUsec() - m_tStampCNprefix > m_timeOut)
+	if(getApproxTbootUs() - m_tStampCNprefix > m_timeOut)
 	{
 		m_cn = "";
 		return false;
@@ -238,10 +231,10 @@ bool _ANR::cn(void)
 
 		cn = m_cnPrefix + s.substr(0,m_nCNdigit);
 		m_cnBB = bb;
-		m_tStampCN = getTimeUsec();
+		m_tStampCN = getApproxTbootUs();
 	}
 
-	if(getTimeUsec() - m_tStampCN > m_timeOut)
+	if(getApproxTbootUs() - m_tStampCN > m_timeOut)
 	{
 		m_cn = "";
 		return false;
@@ -311,7 +304,7 @@ void _ANR::lpO(void)
 			cStr.length(),
 			WS_MODE_TXT);
 
-	if (getTimeUsec() - m_tStampLP > m_timeOut)
+	if (getApproxTbootUs() - m_tStampLP > m_timeOut)
 	{
 		m_lp = "";
 		return;
@@ -372,14 +365,14 @@ void _ANR::lp(void)
 				m_lp = m_pOCR->scan(&r);
 			}
 
-			m_tStampLP = getTimeUsec();
+			m_tStampLP = getApproxTbootUs();
 		}
 	}
 #endif
 
 	LOG_I("L Number: " + m_lp);
 
-	if(getTimeUsec() - m_tStampLP > m_timeOut)
+	if(getApproxTbootUs() - m_tStampLP > m_timeOut)
 	{
 		m_lp = "";
 		return;
@@ -388,18 +381,18 @@ void _ANR::lp(void)
 
 void _ANR::draw(void)
 {
-	this->_ThreadBase::draw();
+	this->_ModuleBase::draw();
 
-	if(getTimeUsec() - m_tStampCN > m_timeOut)
+	if(getApproxTbootUs() - m_tStampCN > m_timeOut)
 		addMsg("CN unrecognized");
 	else
 		addMsg("CN: " + m_cn);
 
 	IF_(!checkWindow());
-	Window* pWin = (Window*) this->m_pWindow;
+	_WindowCV* pWin = (_WindowCV*) this->m_pWindow;
 	Mat* pMat = pWin->getFrame()->m();
 
-	IF_(getTimeUsec() - m_tStampCN > m_timeOut);
+	IF_(getApproxTbootUs() - m_tStampCN > m_timeOut);
 
 	Scalar col = Scalar(0,0,255);
 

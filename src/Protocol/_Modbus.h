@@ -1,13 +1,13 @@
 #ifndef OpenKAI_src_Protocol__Modbus_H_
 #define OpenKAI_src_Protocol__Modbus_H_
 
-#include "../Base/_ThreadBase.h"
+#include "../Base/_ModuleBase.h"
 #include "../Dependency/libmodbus/modbus.h"
 
 namespace kai
 {
 
-class _Modbus: public _ThreadBase
+class _Modbus: public _ModuleBase
 {
 public:
 	_Modbus();
@@ -28,7 +28,7 @@ public:
 
 private:
 	void update(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_Modbus*) This)->update();
 		return NULL;
@@ -40,6 +40,9 @@ public:
 	string	m_parity;
 	int		m_baud;
 	bool	m_bOpen;
+    
+    uint32_t m_tOutSec;
+    uint32_t m_tOutUSec;
 
 	pthread_mutex_t m_mutex;
 

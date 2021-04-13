@@ -16,20 +16,19 @@ _AP_distLidar::~_AP_distLidar()
 
 bool _AP_distLidar::init(void* pKiss)
 {
-	IF_F(!this->_MissionBase::init(pKiss));
+	IF_F(!this->_StateBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
-	//link
-	string iName;
+	string n;
 
-	iName = "";
-	F_INFO(pK->v("APcopter_base", &iName));
-	m_pAP = (_AP_base*) (pK->getInst(iName));
+	n = "";
+	F_INFO(pK->v("APcopter_base", &n));
+	m_pAP = (_AP_base*) (pK->getInst(n));
 
-	iName = "";
-	F_INFO(pK->v("_DistSensorBase", &iName));
-	m_pDS = (_DistSensorBase*) (pK->getInst(iName));
-	IF_Fl(!m_pDS,iName + " not found");
+	n = "";
+	F_INFO(pK->v("_DistSensorBase", &n));
+	m_pDS = (_DistSensorBase*) (pK->getInst(n));
+	IF_Fl(!m_pDS,n + " not found");
 
 	m_nSection = 0;
 	while (1)
@@ -58,7 +57,7 @@ bool _AP_distLidar::init(void* pKiss)
 
 void _AP_distLidar::update(void)
 {
-	this->_MissionBase::update();
+	this->_StateBase::update();
 
 	updateMavlink();
 }
@@ -100,12 +99,12 @@ void _AP_distLidar::updateMavlink(void)
 
 void _AP_distLidar::draw(void)
 {
-	this->_MissionBase::draw();
+	this->_StateBase::draw();
 
 #ifdef USE_OPENCV
 	IF_(!checkWindow());
 
-	Window* pWin = (Window*) this->m_pWindow;
+	_WindowCV* pWin = (_WindowCV*) this->m_pWindow;
 	Mat* pMat = pWin->getFrame()->m();
 
 	Point pCenter(pMat->cols / 2, pMat->rows / 2);

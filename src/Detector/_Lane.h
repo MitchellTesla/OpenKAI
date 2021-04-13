@@ -54,8 +54,8 @@ struct LANE_FILTER
 struct LANE
 {
 	int m_n;
-	Median* m_pMed = NULL;
-	Average* m_pAvr = NULL;
+	Median<float>* m_pMed = NULL;
+	Average<float>* m_pAvr = NULL;
 	double m_deviation;
 	vDouble4 m_ROI;
 
@@ -74,13 +74,13 @@ struct LANE
 		m_ROI.init();
 		m_ROI.z = 1.0;
 		m_ROI.w = 1.0;
-		m_pMed = new Median[n];
-		m_pAvr = new Average[n];
+		m_pMed = new Median<float>[n];
+		m_pAvr = new Average<float>[n];
 
 		for (int i = 0; i < n; i++)
 		{
-			m_pMed[i].init(nMed, 0);
-			m_pAvr[i].init(nAvr, 0);
+			m_pMed[i].init(nMed);
+			m_pAvr[i].init(nAvr);
 		}
 
 		m_pX = new double[n];
@@ -109,10 +109,9 @@ struct LANE
 		gsl_vector_free(m_gC);
 	}
 
-	void input(int i, double v)
+	void input(int i, float v)
 	{
-		m_pMed[i].input(v);
-		m_pAvr[i].input(m_pMed[i].v());
+		m_pAvr[i].update(m_pMed[i].update(&v));
 	}
 
 	double vFilter(int i)
@@ -197,7 +196,7 @@ struct LANE
 
 };
 
-class _Lane: public _ThreadBase
+class _Lane: public _ModuleBase
 {
 public:
 	_Lane();
@@ -213,7 +212,7 @@ private:
 	void filterBin(void);
 	void detect(void);
 	void update(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_Lane*) This)->update();
 		return NULL;

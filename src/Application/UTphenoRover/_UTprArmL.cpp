@@ -30,7 +30,7 @@ _UTprArmL::~_UTprArmL()
 
 bool _UTprArmL::init(void *pKiss)
 {
-	IF_F(!this->_MissionBase::init(pKiss));
+	IF_F(!this->_StateBase::init(pKiss));
 	Kiss *pK = (Kiss*) pKiss;
 
 	pK->v("vPextract", &m_vPextract);
@@ -40,8 +40,8 @@ bool _UTprArmL::init(void *pKiss)
 	pK->v("vZgoal", &m_vZgoal);
 	pK->v("vPrecover", &m_vPrecover);
 
-	IF_F(!m_pMC);
-	IF_F(!m_iMission.assign(m_pMC));
+	IF_F(!m_pSC);
+	IF_F(!m_iState.assign(m_pSC));
 
 	string n;
 
@@ -80,15 +80,8 @@ bool _UTprArmL::init(void *pKiss)
 
 bool _UTprArmL::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _UTprArmL::check(void)
@@ -100,19 +93,19 @@ int _UTprArmL::check(void)
 	NULL__(m_pXpid, -1);
 	NULL__(m_pYpid, -1);
 
-	return this->_MissionBase::check();
+	return this->_StateBase::check();
 }
 
 void _UTprArmL::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
-		this->_MissionBase::update();
+		this->_StateBase::update();
 		updateArm();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -121,18 +114,18 @@ void _UTprArmL::updateArm(void)
 	IF_(check() < 0);
 	IF_(!bActive());
 
-	int iM = m_pMC->getMissionIdx();
+	int iM = m_pSC->getStateIdx();
 	bool bTransit = false;
     
-	if(iM == m_iMission.EXTRACT)
+	if(iM == m_iState.EXTRACT)
 	{
 		bTransit = extract();
 	}
-	else if(iM == m_iMission.FOLLOW)
+	else if(iM == m_iState.FOLLOW)
 	{
 		bTransit = follow();
 	}
-	else if(iM == m_iMission.RECOVER)
+	else if(iM == m_iState.RECOVER)
 	{
 		bTransit = recover();
 	}
@@ -142,7 +135,7 @@ void _UTprArmL::updateArm(void)
 	}
 
 	if(bTransit)
-		m_pMC->transit();
+		m_pSC->transit();
 }
 
 bool _UTprArmL::extract(void)
@@ -150,16 +143,16 @@ bool _UTprArmL::extract(void)
     //extract rot axis first
 	m_pAy->setPtarget(0, m_vPextract.y);
 	while(!m_pAy->bComplete(0))
-        this->sleepTime(100000);
+        m_pT->sleepT (100000);
 
     m_pAx->setPtarget(0, m_vPextract.x);
     m_pAz->setPtarget(0, m_vPextract.z);
 
 	while(!m_pAx->bComplete(0))
-        this->sleepTime(100000);
+        m_pT->sleepT (100000);
 
     while(!m_pAz->bComplete(0))
-        this->sleepTime(100000);
+        m_pT->sleepT (100000);
 
 	return true;
 }
@@ -192,8 +185,8 @@ bool _UTprArmL::follow(void)
 	float y = m_vP.y - m_vPtarget.y;
 	float r = sqrt(x*x + y*y);
 
-	float sX = m_pXpid->update(m_vP.x, m_vPtarget.x, m_tStamp);
-	float sY = m_pYpid->update(m_vP.y, m_vPtarget.y, m_tStamp);
+	float sX = m_pXpid->update(m_vP.x, m_vPtarget.x, m_pT->getTfrom());
+	float sY = m_pYpid->update(m_vP.y, m_vPtarget.y, m_pT->getTfrom());
 	float sZ = m_zSpeed * constrain(1.0 - r*m_zrK, 0.0, 1.0);
 
 	m_pAx->setStarget(0, sX);
@@ -229,15 +222,15 @@ bool _UTprArmL::recover(void)
     m_pAz->setPtarget(0, m_vPrecover.z);
 
     while(!m_pAz->bComplete(0))
-        this->sleepTime(100000);
+        m_pT->sleepT (100000);
 
     m_pAx->setPtarget(0, m_vPrecover.x);
     while(!m_pAx->bComplete(0))
-        this->sleepTime(100000);
+        m_pT->sleepT (100000);
 
     m_pAy->setPtarget(0, m_vPrecover.y);
 	while(!m_pAy->bComplete(0))
-        this->sleepTime(100000);
+        m_pT->sleepT (100000);
 
 	return true;
 }
@@ -251,15 +244,17 @@ void _UTprArmL::stop(void)
 
 void _UTprArmL::draw(void)
 {
-	this->_MissionBase::draw();
+	this->_StateBase::draw();
 
 	addMsg("vP = (" + f2str(m_vP.x) + ", " + f2str(m_vP.y) + ", " + f2str(m_vP.z) + ")");
 	addMsg("vPtarget = (" + f2str(m_vPtarget.x) + ", " + f2str(m_vPtarget.y) + ", " + f2str(m_vPtarget.z) + ")");
 
+#ifdef USE_OPENCV
 	IF_(!checkWindow());
-	Mat* pM = ((Window*) this->m_pWindow)->getFrame()->m();
+	Mat* pM = ((_WindowCV*) this->m_pWindow)->getFrame()->m();
 	Point pC = Point(m_vP.x * pM->cols, m_vP.y * pM->rows);
 	circle(*pM, pC, 5.0, Scalar(255, 255, 0), 2);
+#endif
 }
 
 }

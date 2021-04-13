@@ -47,7 +47,7 @@ _Mavlink::~_Mavlink()
 
 bool _Mavlink::init(void* pKiss)
 {
-	IF_F(!this->_ThreadBase::init(pKiss));
+	IF_F(!this->_ModuleBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
 	pK->v("mySystemID", &m_mySystemID);
@@ -58,7 +58,7 @@ bool _Mavlink::init(void* pKiss)
 	pK->v("devComponentID", &m_devComponentID);
 	pK->v("devType", &m_devType);
 
-	uint64_t tTimeout = USEC_1SEC * 10;
+	uint64_t tTimeout = SEC_2_USEC * 10;
 	pK->v("tTimeout", &tTimeout);
 	for(MavMsgBase* pM : m_vpMsg)
 	{
@@ -67,29 +67,33 @@ bool _Mavlink::init(void* pKiss)
 
 	m_status.packet_rx_drop_count = 0;
 
-	string iName;
+	string n;
 
-	iName = "";
-	pK->v("_IOBase", &iName);
-	m_pIO = (_IOBase*) (pK->getInst(iName));
+	n = "";
+	pK->v("_IOBase", &n );
+	m_pIO = (_IOBase*) (pK->getInst( n ));
 	IF_Fl(!m_pIO, "_IOBase not found");
 
+    
+    Kiss* pR = pK->child("routing");
+    IF_T(pR->empty());
+    
 	int i = 0;
 	while (1)
 	{
 		IF_F(i >= MAV_N_PEER);
-		Kiss* pP = pK->child(i++);
+		Kiss* pP = pR->child(i++);
 		if(pP->empty())break;
 
 		MAVLINK_PEER mP;
 		mP.init();
 
-		iName = "";
-		F_ERROR_F(pP->v("_Mavlink", &iName));
-		mP.m_pPeer = pK->getInst(iName);
+		n = "";
+		F_ERROR_F(pP->v("_Mavlink", &n ));
+		mP.m_pPeer = pK->getInst( n );
 		if (!mP.m_pPeer)
 		{
-			LOG_I("_Mavlink not found: " + iName);
+			LOG_I("_Mavlink not found: " + n );
 			continue;
 		}
 
@@ -109,40 +113,31 @@ bool _Mavlink::init(void* pKiss)
 
 bool _Mavlink::start(void)
 {
-	//Start thread
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG_E(retCode);
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _Mavlink::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
 		if (!m_pIO)
 		{
-			this->sleepTime(USEC_1SEC);
+			m_pT->sleepT (SEC_2_USEC);
 			continue;
 		}
 
 		if (!m_pIO->isOpen())
 		{
-			this->sleepTime(USEC_1SEC);
+			m_pT->sleepT (SEC_2_USEC);
 			continue;
 		}
 
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		handleMessages();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -194,7 +189,7 @@ void _Mavlink::distanceSensor(mavlink_distance_sensor_t& D)
 	 */
 
 	D.id = 0;
-	D.time_boot_ms = getTimeBootMs();
+	D.time_boot_ms = getTbootMs();
 
 	mavlink_message_t msg;
 	mavlink_msg_distance_sensor_encode(m_mySystemID, m_myComponentID, &msg, &D);
@@ -221,7 +216,7 @@ void _Mavlink::globalVisionPositionEstimate(
 	 */
 
 	mavlink_message_t msg;
-	D.usec = getTimeBootMs();
+	D.usec = getTbootMs();
 
 	mavlink_msg_global_vision_position_estimate_encode(m_mySystemID,
 			m_myComponentID, &msg, &D);
@@ -265,7 +260,7 @@ void _Mavlink::gpsInput(mavlink_gps_input_t& D)
 	 */
 
 	D.time_week = 1;
-	D.time_week_ms = getTimeBootMs();
+	D.time_week_ms = getTbootMs();
 
 	mavlink_message_t msg;
 	mavlink_msg_gps_input_encode(m_mySystemID, m_myComponentID, &msg, &D);
@@ -278,7 +273,7 @@ void _Mavlink::gpsInput(mavlink_gps_input_t& D)
 
 void _Mavlink::globalPositionInt(mavlink_global_position_int_t& D)
 {
-	D.time_boot_ms = getTimeBootMs();
+	D.time_boot_ms = getTbootMs();
 
 	mavlink_message_t msg;
 	mavlink_msg_global_position_int_encode(m_mySystemID, m_myComponentID, &msg,
@@ -295,7 +290,7 @@ void _Mavlink::globalPositionInt(mavlink_global_position_int_t& D)
 
 void _Mavlink::landingTarget(mavlink_landing_target_t& D)
 {
-	D.time_usec = getTimeUsec();
+	D.time_usec = getApproxTbootUs();
 
 	mavlink_message_t msg;
 	mavlink_msg_landing_target_encode(m_mySystemID, m_myComponentID, &msg, &D);
@@ -381,7 +376,7 @@ void _Mavlink::param_set(mavlink_param_set_t& D)
 
 void _Mavlink::positionTargetLocalNed(mavlink_position_target_local_ned_t& D)
 {
-	D.time_boot_ms = getTimeBootMs();
+	D.time_boot_ms = getTbootMs();
 
 	mavlink_message_t msg;
 	mavlink_msg_position_target_local_ned_encode(m_mySystemID, m_myComponentID,
@@ -469,7 +464,7 @@ void _Mavlink::setAttitudeTarget(mavlink_set_attitude_target_t& D)
 	//	D.thrust = thrust;
 	//	D.type_mask = mask;
 
-	D.time_boot_ms = getTimeBootMs();
+	D.time_boot_ms = getTbootMs();
 	D.target_system = m_devSystemID;
 	D.target_component = m_devComponentID;
 
@@ -498,7 +493,7 @@ void _Mavlink::setMode(mavlink_set_mode_t& D)
 void _Mavlink::setPositionTargetLocalNED(
 		mavlink_set_position_target_local_ned_t& D)
 {
-	D.time_boot_ms = getTimeBootMs();
+	D.time_boot_ms = getTbootMs();
 	D.target_system = m_devSystemID;
 	D.target_component = m_devComponentID;
 
@@ -516,7 +511,7 @@ void _Mavlink::setPositionTargetLocalNED(
 void _Mavlink::setPositionTargetGlobalINT(
 		mavlink_set_position_target_global_int_t& D)
 {
-	D.time_boot_ms = getTimeBootMs();
+	D.time_boot_ms = getTbootMs();
 	D.target_system = m_devSystemID;
 	D.target_component = m_devComponentID;
 
@@ -545,7 +540,7 @@ void _Mavlink::visionPositionEstimate(mavlink_vision_position_estimate_t& D)
 	 */
 
 	mavlink_message_t msg;
-	D.usec = getTimeBootMs();
+	D.usec = getTbootMs();
 
 	mavlink_msg_vision_position_estimate_encode(m_mySystemID, m_myComponentID,
 			&msg, &D);
@@ -695,7 +690,7 @@ void _Mavlink::sendSetMsgInterval(void)
 	for(MavMsgBase* pM : m_vpMsg)
 	{
 		IF_CONT(pM->m_tInterval < 0);
-		IF_CONT(pM->bReceiving(m_tStamp));
+		IF_CONT(pM->bReceiving(m_pT->getTfrom()));
 		clSetMessageInterval(pM->m_id, pM->m_tInterval, 0);
 	}
 }
@@ -798,16 +793,17 @@ void _Mavlink::setCmdRoute(uint32_t iCmd, bool bON)
 
 void _Mavlink::draw(void)
 {
-	this->_ThreadBase::draw();
+	this->_ModuleBase::draw();
 
 	if (!m_pIO->isOpen())
 	{
-		addMsg("Not Connected", 1);
+		addMsg("Not Connected", 0);
 		return;
 	}
 
-	addMsg("mySysID=" + i2str(m_mySystemID) + " myComID=" + i2str(m_myComponentID) + " myType=" + i2str(m_myType), 1);
-	addMsg("devSysID=" + i2str(m_devSystemID) + " devComID=" + i2str(m_devComponentID) + " devType=" + i2str(m_devType), 1);
+    addMsg("Connected", 0);
+	addMsg("mySysID=" + i2str(m_mySystemID) + " myComID=" + i2str(m_myComponentID) + " myType=" + i2str(m_myType));
+	addMsg("devSysID=" + i2str(m_devSystemID) + " devComID=" + i2str(m_devComponentID) + " devType=" + i2str(m_devType));
 }
 
 }

@@ -49,28 +49,20 @@ int _Cascade::check(void)
 	NULL__(m_pV, -1);
 	NULL__(m_pU, -1);
 
-	return 0;
+	return this->_DetectorBase::check();
 }
 
 bool _Cascade::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG_E(retCode);
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _Cascade::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		if (check() >= 0)
 		{
@@ -80,7 +72,7 @@ void _Cascade::update(void)
 				detectCPU();
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 
 }
@@ -118,7 +110,7 @@ void _Cascade::detectGPU(void)
 		o.setTopClass(0, 1.0);
 		o.setZ(0.0);
 		o.setText(m_className);
-		o.m_tStamp = m_tStamp;
+		o.setTstamp(m_pT->getTfrom());
 
 		m_pU->add(o);
 	}
@@ -153,7 +145,7 @@ void _Cascade::detectCPU(void)
 		o.setTopClass(0, 1.0);
 		o.setZ(0.0);
 		o.setText(m_className);
-		o.m_tStamp = m_tStamp;
+		o.setTstamp(m_pT->getTfrom());
 
 		m_pU->add(o);
 	}

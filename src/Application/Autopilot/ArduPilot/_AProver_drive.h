@@ -7,7 +7,7 @@
 namespace kai
 {
 
-class _AProver_drive: public _MissionBase
+class _AProver_drive: public _StateBase
 {
 public:
 	_AProver_drive();
@@ -23,7 +23,7 @@ public:
 
 protected:
 	bool updateDrive(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_AProver_drive *) This)->update();
 		return NULL;

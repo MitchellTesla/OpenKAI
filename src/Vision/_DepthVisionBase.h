@@ -11,7 +11,6 @@
 #include "../Base/common.h"
 
 #ifdef USE_OPENCV
-#include "../Base/_ThreadBase.h"
 #include "_VisionBase.h"
 #include "../Filter/Median.h"
 
@@ -32,8 +31,7 @@ public:
 	float d(vFloat4* pROI);
 
 public:
-	int		m_wD;
-	int		m_hD;
+    vInt2   m_vDsize;
 	Frame	m_fDepth;
 	int		m_nHistLev;
 	int		m_iHistFrom;
@@ -45,7 +43,7 @@ public:
 	float	m_minHistD;
 
 	Frame	m_depthShow;
-	Window* m_pDepthWin;
+	_WindowCV* m_pDepthWin;
 
 };
 

@@ -7,8 +7,8 @@ namespace kai
 
 _AP_follow::_AP_follow()
 {
-	m_pDet = NULL;
-	m_pT = NULL;
+	m_pU = NULL;
+	m_pTracker = NULL;
 	m_iClass = -1;
 
 	m_bTarget = false;
@@ -33,7 +33,19 @@ bool _AP_follow::init(void* pKiss)
 	IF_F(!this->_AP_posCtrl::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
-	pK->v("iClass",&m_iClass);
+	int nWmed = 0;
+	int nWpred = 0;
+	uint64_t dThold = 0.0;
+	pK->v("nWmed", &nWmed);
+	pK->v("nWpred", &nWpred);
+	pK->v("dThold", &dThold);
+
+	IF_F(!m_fX.init(nWmed, nWpred, dThold));
+	IF_F(!m_fY.init(nWmed, nWpred, dThold));
+	IF_F(!m_fR.init(nWmed, nWpred, dThold));
+	IF_F(!m_fH.init(nWmed, nWpred, dThold));
+
+	pK->v("iClass", &m_iClass);
 //	pK->v("tIntSend",&m_ieSend.m_tInterval);
 
 	Kiss* pG = pK->child("mount");
@@ -57,45 +69,37 @@ bool _AP_follow::init(void* pKiss)
 		pG->v("mountMode", &m_apMount.m_config.mount_mode);
 	}
 
-	string iName;
+	string n;
 
-	iName = "";
-	pK->v("_TrackerBase", &iName);
-	m_pT = (_TrackerBase*)pK->getInst(iName);
+	n = "";
+	pK->v("_TrackerBase", &n);
+	m_pTracker = (_TrackerBase*)pK->getInst(n);
 
-	iName = "";
-	pK->v("_DetectorBase", &iName);
-	m_pDet = (_DetectorBase*)pK->getInst(iName);
+	n = "";
+	pK->v("_Universe", &n);
+	m_pU = (_Universe*)pK->getInst(n);
 
 	return true;
 }
 
 bool _AP_follow::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG(ERROR) << "Return code: " << retCode;
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F( m_pT );
+	return m_pT->start(getUpdate, this);
 }
 
 int _AP_follow::check(void)
 {
-	NULL__(m_pDet,-1);
+	NULL__( m_pU,-1);
 
 	return this->_AP_posCtrl::check();
 }
 
 void _AP_follow::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		this->_AP_posCtrl::update();
 		if(updateTarget())
@@ -107,7 +111,7 @@ void _AP_follow::update(void)
 			releaseCtrl();
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -117,8 +121,8 @@ bool _AP_follow::updateTarget(void)
 	if(!bActive())
 	{
 		m_bTarget = false;
-		if(m_pT)
-			m_pT->stopTrack();
+		if( m_pTracker )
+			m_pTracker->stopTrack();
 
 		return false;
 	}
@@ -127,14 +131,14 @@ bool _AP_follow::updateTarget(void)
 		m_pAP->setMount(m_apMount);
 
 	m_bTarget = findTarget();
-	if(m_pT)
+	if( m_pTracker )
 	{
 		if(m_bTarget)
-			m_pT->startTrack(m_vTargetBB);
+			m_pTracker->startTrack(m_vTargetBB);
 
-		if(m_pT->trackState() == track_update)
+		if( m_pTracker->trackState() == track_update)
 		{
-			m_vTargetBB = *m_pT->getBB();
+			m_vTargetBB = *m_pTracker->getBB();
 			m_bTarget = true;
 		}
 	}
@@ -157,7 +161,7 @@ bool _AP_follow::findTarget(void)
 	_Object* tO = NULL;
 	float topProb = 0.0;
 	int i=0;
-	while((pO = m_pDet->m_pU->get(i++)) != NULL)
+	while((pO = m_pU->get(i++)) != NULL)
 	{
 		IF_CONT(pO->getTopClass() != m_iClass);
 		IF_CONT(pO->getTopClassProb() < topProb);

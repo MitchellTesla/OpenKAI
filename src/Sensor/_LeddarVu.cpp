@@ -73,32 +73,24 @@ bool _LeddarVu::init(void* pKiss)
 
 bool _LeddarVu::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG_E(retCode);
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _LeddarVu::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
 		if (!m_pMb)
 		{
 			if (!open())
 			{
-				this->sleepTime(USEC_1SEC);
+				m_pT->sleepT (SEC_2_USEC);
 				continue;
 			}
 		}
 
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		if (m_bUse0x41)
 		{
@@ -109,7 +101,7 @@ void _LeddarVu::update(void)
 			updateLidar();
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -220,7 +212,7 @@ bool _LeddarVu::updateLidar(void)
 	m_nDiv = reg[1];
 	m_nDetection = reg[10];
 	m_lightSrcPwr = reg[11];
-	m_tStamp = reg[13] + (reg[14] << 16);
+//	m_tStamp = reg[13] + (reg[14] << 16);
 
 	const static float BASE_D = 1.0 / 100.0;
 	const static float BASE_A = 1.0 / 64.0;
@@ -304,13 +296,13 @@ DIST_SENSOR_TYPE _LeddarVu::type(void)
 
 void _LeddarVu::draw(void)
 {
-	this->_ThreadBase::draw();
+	this->_ModuleBase::draw();
 
 	string msg;
 	msg += "nDiv=" + i2str(m_nDiv);
 	msg += ", nDet=" + i2str(m_nDetection);
 	msg += ", lightSrcPwr=" + i2str(m_lightSrcPwr);
-	msg += ", tStamp=" + i2str(m_tStamp);
+	msg += ", tStamp=" + i2str((int)m_pT->getTfrom());
 	addMsg(msg);
 
 	int i;
@@ -325,7 +317,7 @@ void _LeddarVu::draw(void)
 
 #ifdef USE_OPENCV
 	IF_(!checkWindow());
-	Mat* pMat = ((Window*) this->m_pWindow)->getFrame()->m();
+	Mat* pMat = ((_WindowCV*) this->m_pWindow)->getFrame()->m();
 
 	Point pCenter(pMat->cols * m_showOriginOffsetX, pMat->rows * m_showOriginOffsetY);
 	Scalar col = Scalar(0, 255, 0);

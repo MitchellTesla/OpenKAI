@@ -28,13 +28,16 @@ public:
 
 	bool init(void* pKiss);
 	bool start(void);
+    int check(void);
 	void draw(void);
 	bool open(void);
 	void close(void);
 
 private:
+    void hardwareReset(void);
 	void update(void);
-	static void* getUpdateThread(void* This)
+	bool updateRS(void);
+	static void* getUpdate(void* This)
 	{
 		((_RealSense *) This)->update();
 		return NULL;
@@ -49,6 +52,8 @@ private:
 
 public:
 	string m_rsSN;
+    rs2::config m_rsConfig;
+	rs2::pipeline_profile m_rsProfile;
 	rs2::pipeline m_rsPipe;
 	rs2::frame m_rsColor;
 	rs2::frame m_rsDepth;
@@ -71,7 +76,7 @@ public:
 	rs2_intrinsics m_dIntrinsics;
 
 	//depth filter processing thread
-	_ThreadBase* m_pTPP;
+    _Thread* m_pTPP;
 
 };
 

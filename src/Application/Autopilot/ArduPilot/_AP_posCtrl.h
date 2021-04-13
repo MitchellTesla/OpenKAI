@@ -7,7 +7,7 @@
 namespace kai
 {
 
-class _AP_posCtrl: public _MissionBase
+class _AP_posCtrl: public _StateBase
 {
 public:
 	_AP_posCtrl();
@@ -25,7 +25,7 @@ public:
 	void setPosGlobal(void);
 
 private:
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_AP_posCtrl *) This)->update();
 		return NULL;
@@ -45,9 +45,7 @@ public:
 	PID* m_pRoll;
 	PID* m_pPitch;
 	PID* m_pAlt;
-
-	bool	m_bYaw;
-
+	PID* m_pYaw;
 };
 
 }

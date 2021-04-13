@@ -32,46 +32,38 @@ bool _ArduServo::init(void* pKiss)
 		m_vServo.push_back(c);
 	}
 
-	string iName;
-	iName = "";
-	F_ERROR_F(pK->v("_IOBase", &iName));
-	m_pIO = (_IOBase*) (pK->getInst(iName));
-	NULL_Fl(m_pIO, iName + ": not found");
+	string n;
+	n = "";
+	F_ERROR_F(pK->v("_IOBase", &n));
+	m_pIO = (_IOBase*) (pK->getInst(n));
+	NULL_Fl(m_pIO, n + ": not found");
 
 	return true;
 }
 
 bool _ArduServo::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG(ERROR) << "Return code: "<< retCode;
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _ArduServo::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
 		if(!m_pIO)
 		{
-			this->sleepTime(USEC_1SEC);
+			m_pT->sleepT (SEC_2_USEC);
 			continue;
 		}
 
 		if(!m_pIO->isOpen())
 		{
-			this->sleepTime(USEC_1SEC);
+			m_pT->sleepT (SEC_2_USEC);
 			continue;
 		}
 
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		updatePWM();
 
@@ -81,7 +73,7 @@ void _ArduServo::update(void)
 			m_nCMDrecv++;
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 

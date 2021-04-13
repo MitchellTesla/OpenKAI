@@ -43,19 +43,19 @@ void FrameGPU::updateTstampG(uint64_t t)
 void FrameGPU::operator=(const Mat& m)
 {
 	m_mat = m;
-	updateTstamp(getTimeUsec());
+	updateTstamp(getApproxTbootUs());
 }
 
 void FrameGPU::operator=(const GpuMat& m)
 {
 	m_matG = m;
-	updateTstampG(getTimeUsec());
+	updateTstampG(getApproxTbootUs());
 }
 
 void FrameGPU::allocate(int w, int h)
 {
 	m_mat = Mat::zeros(Size(w,h), CV_8UC3);
-	updateTstamp(getTimeUsec());
+	updateTstamp(getApproxTbootUs());
 }
 
 void FrameGPU::copy(const FrameGPU& f)
@@ -63,7 +63,7 @@ void FrameGPU::copy(const FrameGPU& f)
 	if(f.m_tStamp > f.m_tStampG)
 	{
 		f.m_mat.copyTo(m_mat);
-		updateTstamp(f.m_tStamp);
+		updateTstamp(f.m_pT->getTfrom());
 	}
 	else
 	{
@@ -75,13 +75,13 @@ void FrameGPU::copy(const FrameGPU& f)
 void FrameGPU::copy(const Mat& m)
 {
 	m.copyTo(m_mat);
-	updateTstamp(getTimeUsec());
+	updateTstamp(getApproxTbootUs());
 }
 
 void FrameGPU::copy(const GpuMat& m)
 {
 	m.copyTo(m_matG);
-	updateTstampG(getTimeUsec());
+	updateTstampG(getApproxTbootUs());
 }
 
 Mat* FrameGPU::m(void)
@@ -117,7 +117,7 @@ FrameGPU FrameGPU::crop(Rect bb)
 	if(m_tStamp > m_tStampG)
 	{
 		fb.m_mat = m_mat(bb);
-		fb.updateTstamp(m_tStamp);
+		fb.updateTstamp(m_pT->getTfrom());
 	}
 	else
 	{
@@ -221,7 +221,7 @@ void FrameGPU::updateG(void)
 	IF_(m_tStamp <= m_tStampG);
 
 	m_matG.upload(m_mat);
-	m_tStampG = m_tStamp;
+	m_tStampG = m_pT->getTfrom();
 }
 
 void FrameGPU::sync(void)

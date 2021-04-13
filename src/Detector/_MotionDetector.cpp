@@ -55,31 +55,24 @@ bool _MotionDetector::init(void *pKiss)
 //	}
 //
 
-	string iName = "";
-	F_ERROR_F(pK->v("_VisionBase", &iName));
-	m_pVision = (_VisionBase*) (pK->getInst(iName));
+	string n = "";
+	F_ERROR_F(pK->v("_VisionBase", &n));
+	m_pVision = (_VisionBase*) (pK->getInst(n));
 
 	return true;
 }
 
 bool _MotionDetector::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _MotionDetector::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		if (check() >= 0)
 		{
@@ -87,7 +80,7 @@ void _MotionDetector::update(void)
 			detect();
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -97,7 +90,7 @@ int _MotionDetector::check(void)
 	NULL__(m_pV, -1);
 	IF__(m_pV->BGR()->bEmpty(), -1);
 
-	return 0;
+	return this->_DetectorBase::check();
 }
 
 void _MotionDetector::detect(void)
@@ -123,7 +116,7 @@ void _MotionDetector::detect(void)
 
 		o.init();
 		o.setTopClass(-1, 0);
-		o.m_tStamp = m_tStamp;
+//		o.m_tStamp = m_pT->getTfrom();
 		o.setBB2D(rect2BB < vFloat4 > (r));
 		o.scale(kx,ky);
 
@@ -135,7 +128,7 @@ void _MotionDetector::draw(void)
 {
 	this->_DetectorBase::draw();
 	IF_(!checkWindow());
-	Mat *pM = ((Window*) this->m_pWindow)->getFrame()->m();
+	Mat *pM = ((_WindowCV*) this->m_pWindow)->getFrame()->m();
 
 	if (!m_mFG.empty())
 	{

@@ -56,49 +56,41 @@ bool _InnfosGluon::power(bool bON)
 
 bool _InnfosGluon::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG_E(retCode);
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _InnfosGluon::check(void)
 {
     IF__(!m_bPower, -1);
     
-	return 0;
+	return this->_ActuatorBase::check();
 }
 
 void _InnfosGluon::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
         readStatus();
 		updateGluon();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
 void _InnfosGluon::checkAlarm(void)
 {
 	IF_(check()<0);
-	IF_(!m_ieCheckAlarm.update(m_tStamp));
+	IF_(!m_ieCheckAlarm.update(m_pT->getTfrom()));
 
 }
 
 void _InnfosGluon::updateGluon (void)
 {
 	IF_(check()<0);
-	IF_(!m_ieSendCMD.update(m_tStamp));
+	IF_(!m_ieSendCMD.update(m_pT->getTfrom()));
 //    IF_(!m_bReady);
     
     double pJoint[7];
@@ -123,7 +115,7 @@ void _InnfosGluon::updateGluon (void)
 void _InnfosGluon::readStatus(void)
 {
 	IF_(check()<0);
-	IF_(!m_ieReadStatus.update(m_tStamp));
+	IF_(!m_ieReadStatus.update(m_pT->getTfrom()));
     return;//
     int nAxis = m_gluon.GetAxisNum();
     double pJoint[7];

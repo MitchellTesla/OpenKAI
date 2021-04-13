@@ -8,7 +8,7 @@
 #ifndef OpenKAI_src_Vision__VisionBase_H_
 #define OpenKAI_src_Vision__VisionBase_H_
 
-#include "../Base/_ThreadBase.h"
+#include "../Base/_ModuleBase.h"
 
 #ifdef USE_OPENCV
 #include "../Base/cv.h"
@@ -43,7 +43,7 @@ enum VISION_TYPE
 	vision_gphoto,
 };
 
-class _VisionBase: public _ThreadBase
+class _VisionBase: public _ModuleBase
 {
 public:
 	_VisionBase();
@@ -59,19 +59,14 @@ public:
 	virtual vInt2 getSize(void);
 	virtual VISION_TYPE getType(void);
 	virtual Frame* BGR(void);
-	virtual void info(vInt2* pSize, vInt2* pCenter, vDouble2* pAngle);
 
 public:
 	bool m_bOpen;
 	VISION_TYPE m_type;
 
-	int m_w;
-	int m_h;
-	int m_cW;
-	int m_cH;
-	double m_fovW;
-	double m_fovH;
-
+    vInt2 m_vSize;
+    vFloat2 m_vFov;
+    
 	Frame	m_fBGR;
 	vFloat4	m_bbDraw;
 };

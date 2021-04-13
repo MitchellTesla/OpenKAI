@@ -18,6 +18,7 @@ _Universe::_Universe()
 	m_bMerge = false;
 	m_mergeOverlap = 0.8;
 	m_vRoi.init(0.0, 0.0, 1.0, 1.0);
+    m_vClassRange.init(-INT_MAX, INT_MAX);
 
 	m_bDrawStatistics = false;
 	m_classLegendPos.init(25,100,15);
@@ -34,7 +35,7 @@ _Universe::~_Universe()
 
 bool _Universe::init(void* pKiss)
 {
-	IF_F(!this->_ThreadBase::init(pKiss));
+	IF_F(!this->_ModuleBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
 	//general
@@ -46,6 +47,7 @@ bool _Universe::init(void* pKiss)
 	pK->v("bMerge", &m_bMerge);
 	pK->v("mergeOverlap", &m_mergeOverlap);
 	pK->v("vRoi", &m_vRoi);
+    pK->v("vClassRange", &m_vClassRange );
 
 	//draw
 	pK->v("bDrawStatistics", &m_bDrawStatistics);
@@ -78,24 +80,17 @@ void _Universe::updateObj(void)
 
 bool _Universe::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _Universe::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -104,7 +99,8 @@ _Object* _Universe::add(_Object& o)
 	IF_N(o.area() < m_rArea.x || o.area() > m_rArea.y);
 	IF_N(o.getWidth() < m_rW.x || o.getWidth() > m_rW.y);
 	IF_N(o.getHeight() < m_rH.x || o.getHeight() > m_rH.y);
-
+	IF_N(o.getTopClass() < m_vClassRange.x || o.getTopClass() > m_vClassRange.y);
+    
 	vFloat3 p = o.getPos();
 	IF_N(p.x < m_vRoi.x);
 	IF_N(p.x > m_vRoi.z);
@@ -172,7 +168,7 @@ void _Universe::updateStatistics(void)
 
 void _Universe::draw(void)
 {
-	this->_ThreadBase::draw();
+	this->_ModuleBase::draw();
 
 	addMsg("nObj=" + i2str(m_pPrev->size()), 1);
 
@@ -182,7 +178,7 @@ void _Universe::draw(void)
 #ifdef USE_OPENCV
 	if(checkWindow())
 	{
-		Mat* pMat = ((Window*) this->m_pWindow)->getFrame()->m();
+		Mat* pMat = ((_WindowCV*) this->m_pWindow)->getFrame()->m();
 
 		Scalar oCol;
 		Scalar bCol = Scalar(100,100,100);

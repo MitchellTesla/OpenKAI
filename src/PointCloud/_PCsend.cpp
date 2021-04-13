@@ -15,6 +15,7 @@ namespace kai
 _PCsend::_PCsend()
 {
 	m_pIO = NULL;
+    m_iPsent = 0;
 	m_pB = NULL;
 	m_nB = 256;
     m_tInt = 100000;
@@ -45,58 +46,47 @@ bool _PCsend::init(void *pKiss)
 
 bool _PCsend::start(void)
 {
-	IF_F(!this->_ThreadBase::start());
-
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _PCsend::check(void)
 {
-	NULL__(m_pPCB, -1);
+	NULL__(m_pInCtx.m_pPCB, -1);
 	NULL__(m_pIO, -1);
 	IF__(!m_pIO->isOpen(),-1);
 
-	return 0;
+	return this->_PCbase::check();
 }
 
 void _PCsend::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
         sendPC();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
 void _PCsend::sendPC(void)
 {
 	IF_(check()<0);
-
-	PointCloud pOut = *m_pPCB->getPC();
-	int nP = pOut.points_.size();
+//    IF_(m_iPsent == m_ring.m_iP);
 
     const double PC_SCALE = 1000;
     const int PC_DB = 2;
-    int iB = PB_N_HDR;
     m_pB[0] = PB_BEGIN;
     m_pB[1] = PC_STREAM;
+    int iB = PC_N_HDR;
     
-	for (int i = 0; i < nP; i++)
+//	while(m_iPsent != m_ring.m_iP)
 	{
-        Eigen::Vector3d vP = pOut.points_[i];
-        Eigen::Vector3d vC = pOut.colors_[i];
-        Eigen::Vector3d vN = pOut.normals_[i];
+        Vector3d vP;
+        Vector3d vC;
+//        IF_CONT(!m_ring.get(&vP, &vC, &m_iPsent));
         
         pack_int16(&m_pB[iB], (int16_t)(vP.x() * PC_SCALE), false);
         iB += PC_DB;
@@ -114,29 +104,30 @@ void _PCsend::sendPC(void)
 
         if(iB + PC_DB * 6 > m_nB)
         {
-            m_pB[2] = iB - PB_N_HDR;
+            pack_int16(&m_pB[2], (int16_t)(iB - PC_N_HDR), false);
             while(!m_pIO->write(m_pB, iB))
-                this->sleepTime(m_tInt);
+                m_pT->sleepT (m_tInt);
 
-            iB = PB_N_HDR;
+            iB = PC_N_HDR;
         }
     }
     
-    if(iB > PB_N_HDR)
+    if(iB > PC_N_HDR)
     {
-        m_pB[2] = iB - PB_N_HDR;
+        pack_int16(&m_pB[2], (int16_t)(iB - PC_N_HDR), false);
         while(!m_pIO->write(m_pB, iB))
-            this->sleepTime(m_tInt);
+            m_pT->sleepT (m_tInt);
     }
 
-    this->sleepTime(m_tInt);
+    m_pT->sleepT (m_tInt);
 
     //frame sync
     m_pB[0] = PB_BEGIN;
     m_pB[1] = PC_FRAME_END;
     m_pB[2] = 0;
-    while(!m_pIO->write(m_pB, PB_N_HDR))
-        this->sleepTime(m_tInt);
+    m_pB[3] = 0;
+    while(!m_pIO->write(m_pB, PC_N_HDR))
+        m_pT->sleepT (m_tInt);
 
 }
 

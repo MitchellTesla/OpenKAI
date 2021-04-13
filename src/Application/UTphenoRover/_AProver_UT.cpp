@@ -17,8 +17,8 @@ _AProver_UT::~_AProver_UT()
 
 bool _AProver_UT::init(void* pKiss)
 {
-	IF_F(!this->_MissionBase::init(pKiss));
-   	NULL_F(m_pMC);
+	IF_F(!this->_StateBase::init(pKiss));
+   	NULL_F(m_pSC);
 
 	Kiss* pK = (Kiss*) pKiss;
 
@@ -26,9 +26,9 @@ bool _AProver_UT::init(void* pKiss)
     pK->a ( "vRCmodeDiv", &m_rcMode.m_vDiv );
     m_rcMode.setup();
 
-    m_iMode.MANUAL = m_pMC->getMissionIdx ( "MANUAL" );
-    m_iMode.FORWARD = m_pMC->getMissionIdx ( "FORWARD" );
-    m_iMode.BACKWARD = m_pMC->getMissionIdx ( "BACKWARD" );
+    m_iMode.MANUAL = m_pSC->getStateIdxByName ( "MANUAL" );
+    m_iMode.FORWARD = m_pSC->getStateIdxByName ( "FORWARD" );
+    m_iMode.BACKWARD = m_pSC->getStateIdxByName ( "BACKWARD" );
     IF_F ( !m_iMode.bValid() );
 
 	string n;
@@ -48,37 +48,29 @@ bool _AProver_UT::init(void* pKiss)
 
 bool _AProver_UT::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG(ERROR)<< "Return code: " << retCode;
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _AProver_UT::check(void)
 {
 	NULL__(m_pAP, -1);
 	NULL__(m_pAP->m_pMav, -1);
-	NULL__(m_pMC, -1);
+	NULL__(m_pSC, -1);
 
-	return this->_MissionBase::check();
+	return this->_StateBase::check();
 }
 
 void _AProver_UT::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
-		this->_MissionBase::update();
+		m_pT->autoFPSfrom();
+		this->_StateBase::update();
 
 		updateMode();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -89,7 +81,7 @@ void _AProver_UT::updateMode(void)
     uint32_t apMode = m_pAP->getApMode();
     if ( apMode != AP_ROVER_MANUAL )
     {
-        m_pMC->transit ( m_iMode.MANUAL );
+        m_pSC->transit ( m_iMode.MANUAL );
         return;
     }
     
@@ -102,18 +94,18 @@ void _AProver_UT::updateMode(void)
     switch ( iMode )
     {
     case 0:
-        m_pMC->transit ( m_iMode.BACKWARD );
+        m_pSC->transit ( m_iMode.BACKWARD );
         dir = -1.0;
         break;
     case 1:
-        m_pMC->transit ( m_iMode.MANUAL );
+        m_pSC->transit ( m_iMode.MANUAL );
         break;
     case 2:
-        m_pMC->transit ( m_iMode.FORWARD );
+        m_pSC->transit ( m_iMode.FORWARD );
         dir = 1.0;
         break;
     default:
-        m_pMC->transit ( m_iMode.MANUAL );
+        m_pSC->transit ( m_iMode.MANUAL );
         break;
     }
     
@@ -122,7 +114,7 @@ void _AProver_UT::updateMode(void)
 
 void _AProver_UT::draw(void)
 {
-	this->_MissionBase::draw();
+	this->_StateBase::draw();
     drawActive();
 
    	addMsg("rcMode pwm=" + i2str(m_rcMode.m_pwm) + ", i=" + i2str(m_rcMode.i()));

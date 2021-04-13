@@ -12,7 +12,7 @@
 namespace kai
 {
 
-class _APcopter_photo: public _MissionBase
+class _APcopter_photo: public _StateBase
 {
 public:
 	_APcopter_photo();
@@ -28,7 +28,7 @@ private:
 	void autoMode(void);
 	void manualMode(void);
 	void shutter(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_APcopter_photo *) This)->update();
 		return NULL;

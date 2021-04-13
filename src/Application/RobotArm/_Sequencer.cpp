@@ -25,7 +25,7 @@ _Sequencer::~_Sequencer()
 
 bool _Sequencer::init(void* pKiss)
 {
-	IF_F(!this->_ThreadBase::init(pKiss));
+	IF_F(!this->_ModuleBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
 	Kiss* pAction = pK->child("action");
@@ -51,9 +51,9 @@ bool _Sequencer::init(void* pKiss)
 			SEQ_ACTUATOR aA;
 			aA.init();
 
-			string iName = "";
-			F_ERROR_F(pActuatorI->v("_ActuatorBase", &iName));
-			aA.m_pA = (_ActuatorBase*) (pK->getInst(iName));
+			string n = "";
+			F_ERROR_F(pActuatorI->v("_ActuatorBase", &n));
+			aA.m_pA = (_ActuatorBase*) (pK->getInst(n));
 			IF_CONT(!aA.m_pA);
 
 			pActuatorI->v("pos", &aA.m_vPos);
@@ -72,26 +72,19 @@ bool _Sequencer::init(void* pKiss)
 
 bool _Sequencer::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _Sequencer::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		updateAction();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -123,7 +116,7 @@ void _Sequencer::updateAction(void)
 	//wait if still in delay time
 	if(m_tResume > 0)
 	{
-		IF_(m_tStamp < m_tResume);
+		IF_(m_pT->getTfrom() < m_tResume);
 		m_tResume = 0;
 	}
 
@@ -158,7 +151,7 @@ void _Sequencer::updateAction(void)
 
 	//delay time after motion complete
 	if(pAction->m_dT > 0)
-		m_tResume = m_tStamp + pAction->m_dT;
+		m_tResume = m_pT->getTfrom() + pAction->m_dT;
 	else if(pAction->m_dT < 0)
 		m_tResume = UINT64_MAX;
 
@@ -211,7 +204,7 @@ void _Sequencer::gotoAction(const string& name)
 
 void _Sequencer::draw(void)
 {
-	this->_ThreadBase::draw();
+	this->_ModuleBase::draw();
 }
 
 }

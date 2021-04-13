@@ -3,12 +3,12 @@
 
 #include "../../../Base/common.h"
 #include "../ArduPilot/_AP_base.h"
-#include "../ArduPilot/_AP_descent.h"
+#include "../ArduPilot/_AP_land.h"
 
 namespace kai
 {
 
-class _AP_mission: public _MissionBase
+class _AP_mission: public _StateBase
 {
 public:
 	_AP_mission();
@@ -22,7 +22,7 @@ public:
 
 private:
 	void updateMission(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_AP_mission*) This)->update();
 		return NULL;

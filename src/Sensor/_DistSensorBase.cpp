@@ -37,7 +37,7 @@ _DistSensorBase::~_DistSensorBase()
 
 bool _DistSensorBase::init(void* pKiss)
 {
-	IF_F(!this->_ThreadBase::init(pKiss));
+	IF_F(!this->_ModuleBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
 	pK->v("fovH",&m_fovH);
@@ -311,7 +311,7 @@ float _DistSensorBase::dAvr(float degFrom, float degTo)
 
 void _DistSensorBase::draw(void)
 {
-	this->_ThreadBase::draw();
+	this->_ModuleBase::draw();
 
 	string msg = "| ";
 	for (int i = 0; i < m_nDiv; i++)
@@ -324,7 +324,7 @@ void _DistSensorBase::draw(void)
 	IF_(!checkWindow());
 	IF_(!m_bReady);
 	IF_(m_nDiv <= 0);
-	Mat* pMat = ((Window*) this->m_pWindow)->getFrame()->m();
+	Mat* pMat = ((_WindowCV*) this->m_pWindow)->getFrame()->m();
 
 	//Plot center as vehicle position
 	Point pCenter(pMat->cols / 2, pMat->rows / 2);

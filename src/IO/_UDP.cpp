@@ -12,6 +12,7 @@ namespace kai
 
 _UDP::_UDP()
 {
+    m_pTr = NULL;
 	m_socket = -1;
 	m_addr = "";
 	m_port = DEFAULT_UDP_PORT;
@@ -24,6 +25,7 @@ _UDP::_UDP()
 _UDP::~_UDP()
 {
 	close();
+    DEL(m_pTr);
 }
 
 bool _UDP::init(void* pKiss)
@@ -33,6 +35,16 @@ bool _UDP::init(void* pKiss)
 
 	pK->v("addr",&m_addr);
 	pK->v("port", &m_port);
+    
+    Kiss* pKt = pK->child("threadR");
+    IF_F(pKt->empty());
+    
+    m_pTr = new _Thread();
+    if(!m_pTr->init(pKt))
+    {
+        DEL(m_pTr);
+        return false;
+    }
 
 	return true;
 }
@@ -73,49 +85,26 @@ void _UDP::close(void)
 
 bool _UDP::start(void)
 {
-	int retCode;
-
-	if(!m_bThreadON)
-	{
-		m_bThreadON = true;
-		retCode = pthread_create(&m_threadID, 0, getUpdateThreadW, this);
-		if (retCode != 0)
-		{
-			LOG_E(retCode);
-			m_bThreadON = false;
-			return false;
-		}
-	}
-
-	if(!m_bRThreadON)
-	{
-		m_bRThreadON = true;
-		retCode = pthread_create(&m_rThreadID, 0, getUpdateThreadR, this);
-		if (retCode != 0)
-		{
-			LOG_E(retCode);
-			m_bRThreadON = false;
-			return false;
-		}
-	}
-
-	return true;
+    NULL_F(m_pT);
+    NULL_F(m_pTr);
+	IF_F(!m_pT->start(getUpdateW, this));
+	return m_pTr->start(getUpdateR, this);
 }
 
 void _UDP::updateW(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
 		if (!isOpen())
 		{
 			if (!open())
 			{
-				this->sleepTime(USEC_1SEC);
+				m_pT->sleepT (SEC_2_USEC);
 				continue;
 			}
 		}
 
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		uint8_t pB[N_IO_BUF];
 		int nB;
@@ -132,13 +121,13 @@ void _UDP::updateW(void)
 			LOG_I("send: " + i2str(nSend) + " bytes to " + string(inet_ntoa(m_sAddr.sin_addr)) + ", port:" + i2str(ntohs(m_sAddr.sin_port)));
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
 void _UDP::updateR(void)
 {
-	while (m_bRThreadON)
+	while(m_pTr->bRun())
 	{
 		while(!isOpen())
 		{
@@ -155,7 +144,6 @@ void _UDP::updateR(void)
 		}
 
 		m_fifoR.input(pB,nR);
-		this->wakeUpLinked();
 
 		LOG_I("Received "+ i2str(nR) +" bytes from ip:" + string(inet_ntoa(m_sAddr.sin_addr)) + ", port:" + i2str(ntohs(m_sAddr.sin_port)));
 	}
@@ -163,8 +151,12 @@ void _UDP::updateR(void)
 
 void _UDP::draw(void)
 {
-	this->_ThreadBase::draw();
-	addMsg("Port:" + i2str(m_port),1);
+	this->_IOBase::draw();
+    
+    NULL_(m_pTr);
+    m_pTr->draw();
+
+	addMsg("Port:" + i2str(m_port));
 }
 
 }

@@ -16,32 +16,24 @@ _AP_takeoff::~_AP_takeoff()
 
 bool _AP_takeoff::init(void* pKiss)
 {
-	IF_F(!this->_MissionBase::init(pKiss));
+	IF_F(!this->_StateBase::init(pKiss));
 	Kiss* pK = (Kiss*)pKiss;
 
 	pK->v("apMode", &m_apMode);
 
-	string iName;
-	iName = "";
-	pK->v("_AP_base", &iName);
-	m_pAP = (_AP_base*) (pK->getInst(iName));
-	IF_Fl(!m_pAP, iName + ": not found");
+	string n;
+	n = "";
+	pK->v("_AP_base", &n);
+	m_pAP = (_AP_base*) (pK->getInst(n));
+	IF_Fl(!m_pAP, n + ": not found");
 
 	return true;
 }
 
 bool _AP_takeoff::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG(ERROR) << "Return code: "<< retCode;
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _AP_takeoff::check(void)
@@ -49,19 +41,19 @@ int _AP_takeoff::check(void)
 	NULL__(m_pAP, -1);
 	NULL__(m_pAP->m_pMav, -1);
 
-	return this->_MissionBase::check();
+	return this->_StateBase::check();
 }
 
 void _AP_takeoff::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
-		this->_MissionBase::update();
+		this->_StateBase::update();
 		updateMission();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -74,9 +66,9 @@ void _AP_takeoff::updateMission(void)
 		IF_(m_pAP->getApMode() != m_apMode);
 	}
 
-	Mission* pM = m_pMC->getMission();
+	State* pM = m_pSC->getState();
 	NULL_(pM);
-	IF_(pM->type() != mission_takeoff);
+	IF_(pM->type() != state_takeoff);
 
 	Takeoff* pTO = (Takeoff*)pM;
 	m_dAlt = (float)m_pAP->m_vGlobalPos.w - pTO->m_alt;
@@ -92,8 +84,7 @@ void _AP_takeoff::updateMission(void)
 void _AP_takeoff::draw(void)
 {
 	IF_(check()<0);
-	this->_MissionBase::draw();
-	drawActive();
+	this->_StateBase::draw();
 
 	addMsg("alt = "+f2str(m_pAP->m_vGlobalPos.w) + ", dAlt = " + f2str(m_dAlt));
 }

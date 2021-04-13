@@ -19,7 +19,7 @@ struct AP_relay
 	}
 };
 
-class _AP_relay: public _MissionBase
+class _AP_relay: public _StateBase
 {
 public:
 	_AP_relay();
@@ -33,7 +33,7 @@ public:
 
 private:
 	void updateRelay(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_AP_relay*) This)->update();
 		return NULL;

@@ -13,22 +13,56 @@
 namespace kai
 {
 
-class Median: public FilterBase
-{
-public:
-	Median();
-	virtual ~Median();
+	template <class T>
+	class Median : public FilterBase<T>
+	{
+	public:
+		Median<T>()
+		{
+			FilterBase<T>::m_nW = 3;
+			m_iMid = 1;
+		}
+		virtual ~Median<T>()
+		{
+		}
 
-	bool init(int wLen, int nTraj);
-	void input(double v);
-	void reset(void);
+		bool init(int nW)
+		{
+			IF_F(nW < 0);
+			FilterBase<T>::m_nW = nW;
+			m_iMid = FilterBase<T>::m_nW / 2;
+			FilterBase<T>::reset();
+			return true;
+		}
 
-private:
-	int m_windowLen;
-	int m_iMid;
-	std::deque<double> m_sort;
+		T *update(T *pV)
+		{
+			NULL_N(pV);
+			if (FilterBase<T>::m_nW < 3 ||
+				FilterBase<T>::m_qV.size() < FilterBase<T>::m_nW)
+			{
+				FilterBase<T>::m_v = *pV;
+				return FilterBase<T>::m_pV;
+			}
 
-};
+			FilterBase<T>::add(*pV);
+			m_qSort = FilterBase<T>::m_qV;
+			std::sort(m_qSort.begin(), m_qSort.end());
+			FilterBase<T>::m_v = m_qSort.at(m_iMid);
+
+			return FilterBase<T>::m_pV;
+		}
+
+		void reset(void)
+		{
+			FilterBase<T>::reset();
+			m_qSort.clear();
+		}
+
+	private:
+		int m_iMid;
+		std::deque<T> m_qSort;
+	};
 
 }
 #endif

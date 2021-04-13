@@ -41,7 +41,7 @@ _APcopter_photo::~_APcopter_photo()
 
 bool _APcopter_photo::init(void* pKiss)
 {
-	IF_F(!this->_MissionBase::init(pKiss));
+	IF_F(!this->_StateBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
 	pK->v("quality", &m_quality);
@@ -64,50 +64,42 @@ bool _APcopter_photo::init(void* pKiss)
 	m_compress.push_back(IMWRITE_JPEG_QUALITY);
 	m_compress.push_back(m_quality);
 
-	string iName;
+	string n;
 
-	iName = "";
-	pK->v("_AP_base", &iName);
-	m_pAP = (_AP_base*) (pK->getInst(iName));
-	NULL_Fl(m_pAP, iName + ": not found");
+	n = "";
+	pK->v("_AP_base", &n);
+	m_pAP = (_AP_base*) (pK->getInst(n));
+	NULL_Fl(m_pAP, n + ": not found");
 
-	iName = "";
-	pK->v("_AP_posCtrl", &iName);
-	m_pPC = (_AP_posCtrl*) (pK->getInst(iName));
-	NULL_Fl(m_pPC, iName + ": not found");
+	n = "";
+	pK->v("_AP_posCtrl", &n);
+	m_pPC = (_AP_posCtrl*) (pK->getInst(n));
+	NULL_Fl(m_pPC, n + ": not found");
 
-	iName = "";
-	pK->v("_DistSensorBase", &iName);
-	m_pDS = (_DistSensorBase*) (pK->getInst(iName));
-	NULL_Fl(m_pDS, iName + ": not found");
+	n = "";
+	pK->v("_DistSensorBase", &n);
+	m_pDS = (_DistSensorBase*) (pK->getInst(n));
+	NULL_Fl(m_pDS, n + ": not found");
 
-	iName = "";
-	pK->v("_VisionBase", &iName);
-	m_pV = (_VisionBase*) (pK->getInst(iName));
+	n = "";
+	pK->v("_VisionBase", &n);
+	m_pV = (_VisionBase*) (pK->getInst(n));
 
-	iName = "";
-	pK->v("_DepthVisionBase", &iName);
-	m_pDV = (_DepthVisionBase*) (pK->getInst(iName));
+	n = "";
+	pK->v("_DepthVisionBase", &n);
+	m_pDV = (_DepthVisionBase*) (pK->getInst(n));
 
-	iName = "";
-	pK->v("_GPhoto", &iName);
-	m_pG = (_GPhoto*) (pK->getInst(iName));
+	n = "";
+	pK->v("_GPhoto", &n);
+	m_pG = (_GPhoto*) (pK->getInst(n));
 
 	return true;
 }
 
 bool _APcopter_photo::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG(ERROR) << "Return code: " << retCode;
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _APcopter_photo::check(void)
@@ -116,15 +108,15 @@ int _APcopter_photo::check(void)
 	NULL__(m_pPC, -1);
 	NULL__(m_pDS, -1);
 
-	return this->_MissionBase::check();
+	return this->_StateBase::check();
 }
 
 void _APcopter_photo::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
-		this->_MissionBase::update();
+		m_pT->autoFPSfrom();
+		this->_StateBase::update();
 
 		if(check()>=0)
 		{
@@ -142,7 +134,7 @@ void _APcopter_photo::update(void)
 			}
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -185,7 +177,7 @@ void _APcopter_photo::shutter(void)
 	m_pAP->m_pMav->clDoSetRelay(m_iRelayShutter, true);
 
 	if(m_tDelay > 0)
-		this->sleepTime(m_tDelay);
+		m_pT->sleepT (m_tDelay);
 
 	string cmd;
 	cmd = "mkdir /media/usb";
@@ -264,7 +256,7 @@ void _APcopter_photo::shutter(void)
 void _APcopter_photo::draw(void)
 {
 	IF_(check()<0);
-	this->_MissionBase::draw();
+	this->_StateBase::draw();
 	drawActive();
 
 	addMsg("alt = " + f2str(m_alt) + ", lastAlt = " + f2str(m_lastAlt) + ", dAlt = " + f2str(m_dAlt));

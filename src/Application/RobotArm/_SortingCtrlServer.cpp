@@ -23,7 +23,7 @@ _SortingCtrlServer::_SortingCtrlServer()
 	m_bbSize = 0.05;
 	m_dT = 0.0;
 	m_iState = SORT_STATE_OFF;
-	m_ieState.init(USEC_1SEC);
+	m_ieState.init(SEC_2_USEC);
 }
 
 _SortingCtrlServer::~_SortingCtrlServer()
@@ -41,19 +41,19 @@ bool _SortingCtrlServer::init(void *pKiss)
 	pK->v("dT", &m_dT);
 	pK->v("tStateInterval", &m_ieState.m_tInterval);
 
-	string iName;
+	string n;
 
-	iName = "";
-	F_ERROR_F(pK->v("_DepthVisionBase", &iName));
-	m_pDV = (_DepthVisionBase*) (pK->getInst(iName));
-	IF_Fl(!m_pDV, iName + " not found");
+	n = "";
+	F_ERROR_F(pK->v("_DepthVisionBase", &n));
+	m_pDV = (_DepthVisionBase*) (pK->getInst(n));
+	IF_Fl(!m_pDV, n + " not found");
 
 	m_nClass = 5;
 
-	iName = "";
-	F_ERROR_F(pK->v("_ProtocolBase", &iName));
-	m_pPB = (_ProtocolBase*) (pK->getInst(iName));
-	IF_Fl(!m_pPB, iName + " not found");
+	n = "";
+	F_ERROR_F(pK->v("_ProtocolBase", &n));
+	m_pPB = (_ProtocolBase*) (pK->getInst(n));
+	IF_Fl(!m_pPB, n + " not found");
 
 	m_pPB->setCallback(callbackCMD, this);
 
@@ -62,15 +62,8 @@ bool _SortingCtrlServer::init(void *pKiss)
 
 bool _SortingCtrlServer::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _SortingCtrlServer::check(void)
@@ -83,23 +76,23 @@ int _SortingCtrlServer::check(void)
 
 void _SortingCtrlServer::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		if (check() >= 0)
 		{
 			updateImg();
 			m_pU->updateObj();
 
-//		if(m_ieState.update(m_tStamp))
+//		if(m_ieState.update(m_pT->getTfrom()))
 //			m_pPB->sendState(m_iState);
 
-			if (m_bGoSleep)
+			if (m_pT->bGoSleep())
 				m_pU->m_pPrev->clear();
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -108,7 +101,7 @@ void _SortingCtrlServer::updateImg(void)
 	IF_(check() < 0);
 
 	//update existing target positions
-	float spd = m_cSpeed * ((float) m_dTime) * 1e-6;
+	float spd = m_cSpeed * ((float) m_pT->getDt()) * USEC_2_SEC;
 	int i = 0;
 	_Object *pO;
 	while ((pO = m_pU->get(i++)))
@@ -135,7 +128,7 @@ void _SortingCtrlServer::handleCMD(uint8_t *pCMD)
 
 	if (cmd == SORTINGCTRL_OBJ)
 	{
-		float d = m_cSpeed * ((float) m_dT) * 1e-6;
+		float d = m_cSpeed * ((float) m_dT) * USEC_2_SEC;
 
 		m_newO.setX((float) pCMD[3] / 255.0);
 		m_newO.setY((float) pCMD[3] / 255.0);

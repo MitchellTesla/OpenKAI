@@ -1,0 +1,402 @@
+{
+	"name":"APP",
+	"class":"Startup",
+	"appName":"OpenKAI",
+	"bWindow":1,
+	"bDraw":1,
+	"bLog":1,
+	"bStdErr":1,
+	"waitKey":30,
+}
+
+{
+	"name":"OK_Console",
+	"class":"_Console",
+	"bInst":1,
+}
+
+{
+	"name":"OKview",
+	"class":"Window",
+	"bInst":1,
+	"_Console":"OK_Console",
+}
+
+{
+	"name":"state",
+	"class":"_StateControl",
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"bInst":1,
+	"_Console":"OK_Console",
+	"/start":"STANDBY",
+	"start":"LANDING",
+
+	{
+		"name":"state",
+		{
+			"bInst":1,
+			"name":"STANDBY",
+			"class":"State",
+		}
+		{
+			"bInst":1,
+			"name":"TAKEOFF_REQUEST",
+			"class":"State",
+		}
+		{
+			"bInst":1,
+			"name":"TAKEOFF_READY",
+			"class":"State",
+		}
+		{
+			"bInst":1,
+			"name":"AIRBORNE",
+			"class":"State",
+		}
+		{
+			"bInst":1,
+			"name":"LANDING_REQUEST",
+			"class":"State",
+		}
+		{
+			"bInst":1,
+			"name":"LANDING",
+			"class":"State",
+		}
+		{
+			"bInst":1,
+			"name":"TOUCHDOWN",
+			"class":"State",
+		}
+		{
+			"bInst":1,
+			"name":"LANDED",
+			"class":"State",
+		}
+	}
+}
+
+{
+	"name":"apSerial",
+	"class":"_SerialPort",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+    {
+		"name":"threadR",
+		"FPS":1,
+	}
+	"bLog":0,
+	"_Console":"OK_Console",
+	"port":"/dev/ttyTHS1",
+	"/port":"/dev/ttyACM0",
+	"baud":115200,
+}
+
+{
+	"name":"apMavlink",
+	"class":"_Mavlink",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"bLog":0,
+	"_Console":"OK_Console",
+	"_IOBase":"apSerial",
+	
+    {
+		"name":"routing",
+	}
+}
+
+{
+	"name":"apBase",
+	"class":"_AP_base",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":10,
+	}
+	"_StateControl":"state",
+	"_Console":"OK_Console",
+	"_Mavlink":"apMavlink",
+	"freqSendHeartbeat":1,
+	"apType":0,
+	
+	{
+		"name":"mavMsgInt",
+		
+		{
+			"name":"heartbeat",
+			"id":0,
+			"tInt":0.5,
+		}
+		{
+			"name":"attitude",
+			"id":30,
+			"tInt":1.0,
+		}
+		{
+			"name":"rcChannels",
+			"id":65,
+			"tInt":1.0,
+		}
+		{
+			"name":"localPosition",
+			"id":32,
+			"tInt":0.3,
+		}
+		{
+			"name":"globalPosition",
+			"id":33,
+			"tInt":0.3,
+		}
+		{
+			"name":"homePosition",
+			"id":242,
+			"tInt":10,
+		}
+		{
+			"name":"batteryStatus",
+			"id":147,
+			"tInt":10,
+		}
+	}
+}
+
+
+{
+	"name":"cam",
+	"class":"_GStreamer",
+	"bInst":0,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"Window":"OKview",
+	"_Console":"OK_Console",
+	"pipeline":"nvarguscamerasrc ! video/x-raw(memory:NVMM), width=1280, height=720, format=(string)NV12, framerate=(fraction)30/1 ! nvvidconv flip-method=0 ! video/x-raw, width=(int)640, height=(int)360, format=(string)BGRx ! tee name=t t. ! queue ! videoconvert ! video/x-raw, format=(string)BGR ! appsink t. ! queue ! videoconvert ! omxh264enc insert-sps-pps=true ! rtph264pay mtu=1500 config-interval=1 pt=96 ! udpsink host=192.168.16.198 port=5678 auto-multicast=false",
+}
+
+{
+	"name":"cam",
+	"class":"_Camera",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"Window":"OKview",
+	"_Console":"OK_Console",
+	"deviceID":0,
+	"vSize":[640,480],
+}
+
+{
+	"name":"univTag",
+	"class":"_Universe",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"Window":"OKview",
+	"_Console":"OK_Console",
+}
+
+{
+	"name":"arUco",
+	"class":"_ArUco",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"bDraw":1,
+	"Window":"OKview",
+	"_VisionBase":"cam",
+	"_Console":"OK_Console",
+	"_Universe":"univTag",
+	"dict":17,
+}
+
+{
+	"name":"PIDroll",
+	"class":"PID",
+	"bInst":1,
+	"Window":"OKview",
+	"_Console":"OK_Console",
+	"P":-1.0,
+	"I":0.0,
+	"Imax":0.0,
+	"D":0.0,
+	"oMin":-1.0,
+	"oMax":1.0,
+}
+
+{
+	"name":"PIDpitch",
+	"class":"PID",
+	"bInst":1,
+	"Window":"OKview",
+	"_Console":"OK_Console",
+	"P":1.0,
+	"I":0.0,
+	"Imax":0.0,
+	"D":0.0,
+	"oMin":-1.0,
+	"oMax":1.0,
+}
+
+{
+	"name":"PIDyaw",
+	"class":"PID",
+	"bInst":1,
+	"Window":"OKview",
+	"_Console":"OK_Console",
+	"P":-0.5,
+	"I":0.0,
+	"Imax":0.0,
+	"D":0.0,
+	"oMin":-90.0,
+	"oMax":90.0,
+}
+
+{
+	"name":"apLand",
+	"class":"_AP_land",
+    {
+		"name":"thread",
+		"FPS":10,
+	}
+	"bInst":1,
+	"bLog":1,
+	"Window":"OKview",
+	"_Console":"OK_Console",
+	"_StateControl":"state",
+	"vActiveState":["LANDING"],
+	"_AP_base":"apBase",
+	"_Universe":"univTag",
+	"PIDroll":"PIDroll",
+	"PIDpitch":"PIDpitch",
+	"PIDyaw":"PIDyaw",
+	"vTargetP":[0.48, 0.46, 0.3, 0.0], /*xTarget, yTarget, zSpeed, yawTarget */
+	"targetAlt":0.8,
+	"zrK":10.0,
+	"nWmed":0,
+	"nWpred":0,
+	"dThold":0,
+	"iClass":-1,
+	
+	{
+		"name":"mount",
+		"bEnable":0,
+		"pitch":0,
+		"roll":0,
+		"yaw":0,
+		"stabPitch":1,
+		"stabRoll":1,
+		"stabYaw":0,
+		"mountMode":2,
+	}
+}
+
+{
+	"name":"apGCS",
+	"class":"_AP_gcs",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":10,
+	}
+	"bLog":1,
+	"bDraw":1,
+	"_Console":"OK_Console",
+	"_AP_base":"apBase",
+	"_StateControl":"state",
+	"altAirborne":15.0,
+	"altLand":-2.5,
+	"dLanded":5,
+	"bAutoArm":0,
+}
+
+{
+	"name":"telem",
+	"class":"_SerialPort",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+    {
+		"name":"threadR",
+		"FPS":1,
+	}
+	"bLog":0,
+	"_Console":"OK_Console",
+	"port":"/dev/ttyUSB0",
+	"baud":57600,
+	"_wakeUp":"dbjTelem",
+}
+
+{
+	"name":"dbjTelem",
+	"class":"_AP_droneBoxJSON",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":1,
+	}
+    {
+		"name":"threadR",
+		"FPS":30,
+	}
+	"bLog":1,
+	"_Console":"OK_Console",
+	"_AP_gcs":"apGCS",
+	"_IOBase":"telem",
+}
+
+{
+	"name":"udp",
+	"class":"_UDP",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+    {
+		"name":"threadR",
+		"FPS":1,
+	}
+	"bLog":0,
+	"_Console":"OK_Console",
+	"addr":"192.168.16.100",
+	"port":20000,
+	"_wakeUp":"dbjUDP",
+}
+
+{
+	"name":"dbjUDP",
+	"class":"_AP_droneBoxJSON",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":1,
+	}
+    {
+		"name":"threadR",
+		"FPS":30,
+	}
+	"bLog":1,
+	"_Console":"OK_Console",
+	"_AP_gcs":"apGCS",
+	"_IOBase":"udp",
+}
+

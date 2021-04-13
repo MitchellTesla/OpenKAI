@@ -24,7 +24,7 @@ struct APROVER_KU_MODE
 	}
 };
 
-class _AProver_KU: public _MissionBase
+class _AProver_KU: public _StateBase
 {
 public:
 	_AProver_KU();
@@ -38,7 +38,7 @@ public:
 
 private:
 	void updateMode(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_AProver_KU*) This)->update();
 		return NULL;

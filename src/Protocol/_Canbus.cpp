@@ -16,7 +16,7 @@ _Canbus::~_Canbus()
 
 bool _Canbus::init(void* pKiss)
 {
-	IF_F(!this->_ThreadBase::init(pKiss));
+	IF_F(!this->_ModuleBase::init(pKiss));
 	Kiss* pK = (Kiss*)pKiss;
 
 	m_nCanData = 0;
@@ -31,10 +31,10 @@ bool _Canbus::init(void* pKiss)
 		m_nCanData++;
 	}
 
-	string iName;
-	iName = "";
-	F_ERROR_F(pK->v("_IOBase", &iName));
-	m_pIO = (_SerialPort*) (pK->getInst(iName));
+	string n;
+	n = "";
+	F_ERROR_F(pK->v("_IOBase", &n));
+	m_pIO = (_SerialPort*) (pK->getInst(n));
 	NULL_Fl(m_pIO,"_IOBase not found");
 
 	return true;
@@ -42,25 +42,17 @@ bool _Canbus::init(void* pKiss)
 
 bool _Canbus::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG_E(retCode);
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _Canbus::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
 		if(!m_pIO)
 		{
-			this->sleepTime(USEC_1SEC);
+			m_pT->sleepT (SEC_2_USEC);
 			continue;
 		}
 
@@ -68,18 +60,18 @@ void _Canbus::update(void)
 		{
 			if(!m_pIO->open())
 			{
-				this->sleepTime(USEC_1SEC);
+				m_pT->sleepT (SEC_2_USEC);
 				continue;
 			}
 		}
 
 		//Regular update loop
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		//Handling incoming messages
 		recv();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -217,7 +209,7 @@ void _Canbus::pinOut(uint8_t pin, uint8_t output)
 
 void _Canbus::draw(void)
 {
-	this->_ThreadBase::draw();
+	this->_ModuleBase::draw();
 
 	string msg = *this->getName();
 	if (m_pIO->isOpen())

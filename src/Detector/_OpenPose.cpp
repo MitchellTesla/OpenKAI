@@ -37,9 +37,7 @@ bool _OpenPose::init(void *pKiss)
 	pK->v("iTarget", &m_iTarget);
 	pK->v("bSwapRB", &m_bSwapRB);
 	pK->v("scale", &m_scale);
-	pK->v("meanB", &m_vMean.x);
-	pK->v("meanG", &m_vMean.y);
-	pK->v("meanR", &m_vMean.z);
+	pK->v("vMean", &m_vMean);
 
 	m_net = readNetFromCaffe(m_fModel, m_fWeight);
 	IF_Fl(m_net.empty(), "read Net failed");
@@ -52,46 +50,37 @@ bool _OpenPose::init(void *pKiss)
 
 bool _OpenPose::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG_E(retCode);
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _OpenPose::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		if (check() >= 0)
 		{
 			detect();
 
-			if (m_bGoSleep)
+			if (m_pT->bGoSleep())
 				m_pU->m_pPrev->clear();
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
 int _OpenPose::check(void)
 {
-	NULL__(m_pU, -1);
 	NULL__(m_pV, -1);
 	Frame *pBGR = m_pV->BGR();
 	NULL__(pBGR, -1);
 	IF__(pBGR->bEmpty(), -1);
 	IF__(pBGR->tStamp() <= m_fBGR.tStamp(), -1);
 
-	return 0;
+	return this->_DetectorBase::check();
 }
 
 void _OpenPose::detect(void)
@@ -154,15 +143,14 @@ void _OpenPose::detect(void)
 		circle(m_mDebug, partB, 8, Scalar(0, 0, 255), -1);
 	}
 
-	m_pU->updateObj();
 }
 
 void _OpenPose::draw(void)
 {
-	this->_ThreadBase::draw();
+	this->_DetectorBase::draw();
 	IF_(!checkWindow());
 
-	Window *pWin = (Window*) this->m_pWindow;
+	_WindowCV *pWin = (_WindowCV*) this->m_pWindow;
 	Frame *pFrame = pWin->getFrame();
 	Mat *pMat = pFrame->m();
 

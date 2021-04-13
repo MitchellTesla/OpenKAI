@@ -51,11 +51,8 @@ bool _GStreamer::open(void)
 	}
 	m_fBGR.copy(mCam);
 
-	m_w = mCam.cols;
-	m_h = mCam.rows;
-
-	m_cW = m_w / 2;
-	m_cH = m_h / 2;
+	m_vSize.x = mCam.cols;
+	m_vSize.y = mCam.rows;
 
 	m_bOpen = true;
 	return true;
@@ -63,49 +60,36 @@ bool _GStreamer::open(void)
 
 void _GStreamer::close(void)
 {
-	if(m_threadMode==T_THREAD)
-	{
-		goSleep();
-		while(!bSleeping());
-	}
-
-	m_gst.release();
 	this->_VisionBase::close();
+	m_gst.release();
 }
 
 bool _GStreamer::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _GStreamer::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
 		if (!m_bOpen)
 		{
 			if (!open())
 			{
-				this->sleepTime(USEC_1SEC);
+				m_pT->sleepT (SEC_2_USEC);
 				continue;
 			}
 		}
 
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		Mat mCam;
 		while (!m_gst.read(mCam));
 		m_fBGR.copy(mCam);
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 

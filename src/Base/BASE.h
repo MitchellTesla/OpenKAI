@@ -32,12 +32,12 @@ public:
 	string* getClass(void);
 
 	bool checkWindow(void);
-	void addMsg(const string& msg, int iTab = 0);
+	void addMsg(const string& msg, int iLine = 1);
 
 public:
 	void*	m_pKiss;
 	void*	m_pWindow;
-	void*	m_pConsole;
+	void*	m_p_Console;
 	bool	m_bLog;
 	bool	m_bDebug;
 };

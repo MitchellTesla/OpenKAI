@@ -27,12 +27,12 @@ _GPS::~_GPS()
 
 bool _GPS::init(void* pKiss)
 {
-	IF_F(!this->_ThreadBase::init(pKiss));
+	IF_F(!this->_ModuleBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
-	string iName = "";
-	F_ERROR_F(pK->v("_IOBase", &iName));
-	m_pIO = (_IOBase*) (pK->getInst(iName));
+	string n = "";
+	F_ERROR_F(pK->v("_IOBase", &n));
+	m_pIO = (_IOBase*) (pK->getInst(n));
 	IF_Fl(!m_pIO, "_IOBase not found");
 
 	return true;
@@ -40,22 +40,15 @@ bool _GPS::init(void* pKiss)
 
 bool _GPS::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _GPS::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		if (readNMEA())
 		{
@@ -63,7 +56,7 @@ void _GPS::update(void)
 			m_msg = "";
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -264,7 +257,7 @@ UTM_POS _GPS::getUTMpos(void)
 
 void _GPS::draw(void)
 {
-	this->_ThreadBase::draw();
+	this->_ModuleBase::draw();
 
 	if(!m_pIO->isOpen())
 	{

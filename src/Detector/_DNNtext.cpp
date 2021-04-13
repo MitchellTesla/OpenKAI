@@ -66,10 +66,10 @@ bool _DNNtext::init(void* pKiss)
 	IF_T(!m_bOCR);
 
 #ifdef USE_OCR
-	string iName = "";
-	F_INFO(pK->v("OCR", &iName));
-	m_pOCR = (OCR*) (pK->getInst(iName));
-	IF_Fl(!m_pOCR, iName + " not found");
+	string n = "";
+	F_INFO(pK->v("OCR", &n));
+	m_pOCR = (OCR*) (pK->getInst(n));
+	IF_Fl(!m_pOCR, n + " not found");
 #endif
 
 	return true;
@@ -77,23 +77,15 @@ bool _DNNtext::init(void* pKiss)
 
 bool _DNNtext::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG_E(retCode);
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _DNNtext::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		if(check() >= 0)
 		{
@@ -102,11 +94,11 @@ void _DNNtext::update(void)
 
 			ocr();
 
-			if (m_bGoSleep)
+			if (m_pT->bGoSleep())
 				m_pU->m_pPrev->clear();
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -119,7 +111,7 @@ int _DNNtext::check(void)
 	IF__(pBGR->bEmpty(), -1);
 	IF__(pBGR->tStamp() <= m_fBGR.tStamp(), -1);
 
-	return 0;
+	return this->_DetectorBase::check();
 }
 
 void _DNNtext::detect(void)
@@ -157,7 +149,7 @@ void _DNNtext::detect(void)
 	{
 		_Object o;
 		o.init();
-		o.m_tStamp = m_tStamp;
+//		o.m_tStamp = m_pT->getTfrom();
 		o.setTopClass(0, 1.0);
 
 		Point2f pP[4];	//in pixel unit
@@ -320,7 +312,7 @@ void _DNNtext::draw(void)
 	this->_DetectorBase::draw();
 	IF_(!checkWindow());
 
-	Window* pWin = (Window*) this->m_pWindow;
+	_WindowCV* pWin = (_WindowCV*) this->m_pWindow;
 	Frame* pFrame = pWin->getFrame();
 	Mat* pMat = pFrame->m();
 

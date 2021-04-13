@@ -61,28 +61,18 @@ bool _S6H4D::init(void *pKiss)
 		m_vForbArea.push_back(a);
 	}
 
-	string iName = "";
-	F_ERROR_F(pK->v("_IOBase", &iName));
-	m_pIO = (_IOBase*) (pK->getInst(iName));
-	IF_Fl(!m_pIO, iName + " not found");
+	string n = "";
+	F_ERROR_F(pK->v("_IOBase", &n));
+	m_pIO = (_IOBase*) (pK->getInst(n));
+	IF_Fl(!m_pIO, n + " not found");
 
 	return true;
 }
 
 bool _S6H4D::start(void)
 {
-	IF_T(m_bThreadON);
-
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG_E(retCode);
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _S6H4D::check(void)
@@ -90,28 +80,28 @@ int _S6H4D::check(void)
 	NULL__(m_pIO, -1);
 	IF__(!m_pIO->isOpen(), -1);
 
-	return 0;
+	return this->_ActuatorBase::check();
 }
 
 void _S6H4D::update(void)
 {
 	while (check() < 0)
-		this->sleepTime(USEC_1SEC);
+		m_pT->sleepT (SEC_2_USEC);
 
 	armSetMode(m_mode);
 	while (m_vOrigin != m_vOriginTarget)
 	{
 		armSetOrigin(m_vOriginTarget);
-		this->sleepTime(100000);
+		m_pT->sleepT (100000);
 		readState();
 	}
 	stickStop();
 	stickRelease();
 	updatePos();
 
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		readState();
 
@@ -137,7 +127,7 @@ void _S6H4D::update(void)
 			}
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 

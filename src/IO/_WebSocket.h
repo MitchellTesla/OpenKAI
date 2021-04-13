@@ -29,7 +29,7 @@ struct WS_CLIENT
 	bool init(uint32_t id, int nB)
 	{
 		m_id = id;
-		m_tStamp = getTimeUsec();
+		m_tStamp = getApproxTbootUs();
 		IF_F(!m_fifo.init(nB));
 		reset();
 
@@ -54,8 +54,8 @@ public:
 	void close(void);
 	void draw(void);
 
-	bool write(uint8_t* pBuf, int nB, uint32_t mode);
-	bool writeTo(uint32_t id, uint8_t* pBuf, int nB, uint32_t mode);
+	bool write(uint8_t* pBuf, int nB, uint32_t mode = WS_MODE_BIN);
+	bool writeTo(uint32_t id, uint8_t* pBuf, int nB, uint32_t mode = WS_MODE_BIN);
 	int  read(uint8_t* pBuf, int nB);
 	int  readFrom(uint32_t id, uint8_t* pBuf, int nB);
 
@@ -67,20 +67,21 @@ private:
 	WS_CLIENT* findClientById(uint32_t id);
 
 	void updateW(void);
-	static void* getUpdateThreadW(void* This)
+	static void* getUpdateW(void* This)
 	{
 		((_WebSocket*) This)->updateW();
 		return NULL;
 	}
 
 	void updateR(void);
-	static void* getUpdateThreadR(void* This)
+	static void* getUpdateR(void* This)
 	{
 		((_WebSocket*) This)->updateR();
 		return NULL;
 	}
 
 public:
+    _Thread* m_pTr;
 	string	m_fifoIn;
 	string	m_fifoOut;
 	int		m_fdW;

@@ -57,23 +57,15 @@ bool _YOLO::init(void* pKiss)
 
 bool _YOLO::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG_E(retCode);
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _YOLO::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		IF_CONT(!detect());
 
@@ -84,7 +76,7 @@ void _YOLO::update(void)
 			m_obj.m_pPrev->reset();
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -124,7 +116,7 @@ bool _YOLO::detect(void)
 		yolo_object* pYO = &m_pYoloObj[i];
 
 		obj.init();
-		obj.m_tStamp = m_tStamp;
+		obj.m_tStamp = m_pT->getTfrom();
 		obj.setClassMask(pYO->m_mClass);
 		obj.setTopClass(pYO->m_topClass, (double) pYO->m_topProb);
 

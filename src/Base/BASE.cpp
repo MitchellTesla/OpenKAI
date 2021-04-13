@@ -7,8 +7,8 @@
 
 #include "BASE.h"
 #include "../Script/Kiss.h"
-#include "../UI/Window.h"
-#include "../UI/Console.h"
+#include "../UI/_WindowCV.h"
+#include "../UI/_Console.h"
 
 namespace kai
 {
@@ -17,7 +17,7 @@ BASE::BASE()
 {
 	m_pKiss = NULL;
 	m_pWindow = NULL;
-	m_pConsole = NULL;
+	m_p_Console = NULL;
 	m_bLog = false;
 	m_bDebug = false;
 }
@@ -32,9 +32,9 @@ bool BASE::init(void* pKiss)
 	Kiss* pK = (Kiss*)pKiss;
 	m_pKiss = pKiss;
 
-	string name="";
-	F_ERROR_F(pK->v("name",&name));
-	IF_F(name.empty());
+	string n="";
+	F_ERROR_F(pK->v("name",&n ));
+	IF_F( n.empty());
 
 	bool bLog = false;
 	pK->root()->child("APP")->v("bLog",&bLog);
@@ -44,14 +44,14 @@ bool BASE::init(void* pKiss)
 	}
 	pK->v("bDebug",&m_bDebug);
 
-	name = "";
-	F_INFO(pK->v("Console",&name));
-	m_pConsole = (Console*)(pK->getInst(name));
+	n = "";
+	pK->v("_Console",&n );
+	m_p_Console = (_Console*)(pK->getInst( n ));
 
 #ifdef USE_OPENCV
-	name = "";
-	F_INFO(pK->v("Window",&name));
-	m_pWindow = (Window*)(pK->getInst(name));
+	n = "";
+	pK->v("Window",&n );
+	m_pWindow = (_WindowCV*)(pK->getInst( n ));
 #endif
 
 	return true;
@@ -76,7 +76,7 @@ bool BASE::start(void)
 
 int BASE::check(void)
 {
-	return -1;
+	return 0;
 }
 
 int BASE::serialize(uint8_t* pB, int nB)
@@ -94,7 +94,7 @@ bool BASE::checkWindow(void)
 	NULL_F(m_pWindow);
 
 #ifdef USE_OPENCV
-	Window* pWin = (Window*)m_pWindow;
+	_WindowCV* pWin = (_WindowCV*)m_pWindow;
 	NULL_F(pWin->getFrame());
 
 	Mat* pMat = pWin->getFrame()->m();
@@ -109,38 +109,19 @@ bool BASE::checkWindow(void)
 
 void BASE::draw(void)
 {
-	if(m_pConsole)
+	if(m_p_Console)
 	{
-		Console* pC = (Console*)m_pConsole;
-		pC->addMsg(*this->getName(), COLOR_PAIR(CONSOLE_COL_NAME)|A_BOLD, CONSOLE_X_NAME, 1);
-
-//	    if(m_msgLev > 0)
-//			pC->addMsg(m_msg, COLOR_PAIR(CONSOLE_COL_ERROR)|A_BOLD, CONSOLE_X_MSG);
-//	    else
-//			pC->addMsg(m_msg, COLOR_PAIR(CONSOLE_COL_MSG), CONSOLE_X_MSG);
+		_Console* pC = (_Console*)m_p_Console;
+		pC->addMsg("____________________________________", COLOR_PAIR(_Console_COL_NAME)|A_BOLD, _Console_X_NAME, 1);
+		pC->addMsg(*this->getName(), COLOR_PAIR(_Console_COL_NAME)|A_BOLD, _Console_X_NAME, 1);
 	}
-
-#ifdef USE_OPENCV
-	if(checkWindow())
-	{
-		Window* pWin = (Window*)this->m_pWindow;
-		pWin->addMsg(*this->getName());
-	}
-#endif
 }
 
-void BASE::addMsg(const string& msg, int iTab)
+void BASE::addMsg(const string& msg, int iLine)
 {
-	if(m_pConsole)
-		((Console*)m_pConsole)->addMsg(msg, COLOR_PAIR(CONSOLE_COL_MSG), CONSOLE_X_MSG, 1);
-
-#ifdef USE_OPENCV
-	if(checkWindow())
-	{
-		Window* pWin = ((Window*)m_pWindow);
-		pWin->addMsg(msg, iTab);
-	}
-#endif
+	NULL_(m_p_Console);
+    
+	((_Console*)m_p_Console)->addMsg(msg, COLOR_PAIR(_Console_COL_MSG), _Console_X_MSG, iLine);
 }
 
 }

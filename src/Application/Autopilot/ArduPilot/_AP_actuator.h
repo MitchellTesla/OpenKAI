@@ -9,7 +9,7 @@
 namespace kai
 {
 
-class _AP_actuator: public _MissionBase
+class _AP_actuator: public _StateBase
 {
 public:
 	_AP_actuator();
@@ -23,7 +23,7 @@ public:
 
 private:
 	void updateActuator(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_AP_actuator*) This)->update();
 		return NULL;

@@ -1,5 +1,5 @@
 /*
- * PointCloudBase.h
+ * _PCviewer.h
  *
  *  Created on: May 28, 2020
  *      Author: yankai
@@ -7,106 +7,75 @@
 
 #ifndef OpenKAI_src_PointCloud__PCviewer_H_
 #define OpenKAI_src_PointCloud__PCviewer_H_
-
-#include "../Base/_ThreadBase.h"
-
 #ifdef USE_OPEN3D
-using namespace open3d;
-using namespace open3d::geometry;
-using namespace open3d::visualization;
+#include "_PCframe.h"
+#include "PCviewerUI.h"
 
 namespace kai
 {
 
-struct PCVIEWER_GEO
-{
-	shared_ptr<PointCloud> m_spPC;
-	pthread_mutex_t m_mutex;
-	bool m_bAdded;
-	bool m_bUpdated;
-
-	void init(void)
+	struct CAM_PROJ
 	{
-		m_spPC = shared_ptr<PointCloud>(new PointCloud);
-		pthread_mutex_init(&m_mutex, NULL);
-		m_bAdded = false;
-		m_bUpdated = false;
-	}
+		float m_fov;
+		float m_aspect;		
+		vFloat2 m_vNF;		//near far plane
+		uint8_t m_fovType;
 
-	void destroy(void)
+		void init(void)
+		{
+			m_fov = 70.0;
+			m_aspect = 16.0/9.0;
+			m_vNF.init(0, FLT_MAX);
+			m_fovType = 0;
+		}
+	};
+
+	class _PCviewer : public _PCframe
 	{
-		pthread_mutex_destroy(&m_mutex);
-	}
+	public:
+		_PCviewer();
+		virtual ~_PCviewer();
 
-	void updateGeometry(PointCloud* pPC)
-	{
-		NULL_(pPC);
+		virtual bool init(void *pKiss);
+		virtual bool start(void);
+		virtual int check(void);
+		virtual void draw(void);
 
-		pthread_mutex_lock(&m_mutex);
-		*m_spPC = *pPC;
-		pthread_mutex_unlock(&m_mutex);
+	protected:
+		virtual void readAllPC(void);
+		virtual void makeInitPC(PointCloud *pPC, int n, double l, int iAxis, Vector3d vCol);
 
-		m_bUpdated = true;
-	}
+		virtual void update(void);
+		static void *getUpdate(void *This)
+		{
+			((_PCviewer *)This)->update();
+			return NULL;
+		}
 
-	void addToVisualizer(Visualizer* pV)
-	{
-		NULL_(pV);
-		IF_(m_bAdded);
+		virtual void updateUI(void);
+		static void *getUpdateUI(void *This)
+		{
+			((_PCviewer *)This)->updateUI();
+			return NULL;
+		}
 
-		pthread_mutex_lock(&m_mutex);
-		pV->AddGeometry(m_spPC);
-		pthread_mutex_unlock(&m_mutex);
+	protected:
+		string m_pathRes;
+		Visualizer m_vis;
+		vInt2 m_vWinSize;
+		string m_device;
 
-		m_bAdded = true;
-	}
+		CAM_PROJ m_camProj;
+		vFloat3 m_vCamCenter;
+		vFloat3 m_vCamEye;
+		vFloat3 m_vCamUp;
+		vFloat3 m_vCamCoR;
 
-	void updateVisualizer(Visualizer* pV)
-	{
-		NULL_(pV);
-		IF_(!m_bAdded);
-		IF_(!m_bUpdated);
+		vector<_PCbase *> m_vpPCB;
 
-		pthread_mutex_lock(&m_mutex);
-		pV->UpdateGeometry(m_spPC);
-		pthread_mutex_unlock(&m_mutex);
-
-		m_bUpdated = false;
-	}
-
-};
-
-class _PCviewer: public _ThreadBase
-{
-public:
-	_PCviewer();
-	virtual ~_PCviewer();
-
-	virtual bool init(void* pKiss);
-	virtual bool start(void);
-	virtual int check(void);
-	virtual void draw(void);
-
-	int addGeometry(void);
-	void updateGeometry(int i, PointCloud* pPC);
-
-private:
-	void render(void);
-	void update(void);
-	static void* getUpdateThread(void* This)
-	{
-		((_PCviewer *) This)->update();
-		return NULL;
-	}
-
-public:
-	Visualizer m_vis;
-	vInt2 m_vWinSize;
-	shared_ptr<TriangleMesh> m_pMcoordFrame;
-	float m_fov;
-
-	vector<PCVIEWER_GEO> m_vGeo;
-};
+		_Thread *m_pTui;
+		shared_ptr<PCviewerUI> m_spWin;
+	};
 
 }
 #endif

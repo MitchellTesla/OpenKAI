@@ -40,15 +40,8 @@ bool _Chilitags::init ( void* pKiss )
 
 bool _Chilitags::start ( void )
 {
-    m_bThreadON = true;
-    int retCode = pthread_create ( &m_threadID, 0, getUpdateThread, this );
-    if ( retCode != 0 )
-    {
-        m_bThreadON = false;
-        return false;
-    }
-
-    return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _Chilitags::check ( void )
@@ -56,24 +49,24 @@ int _Chilitags::check ( void )
     NULL__ ( m_pV,-1 );
     NULL__ ( m_pU,-1 );
 
-    return 0;
+    return this->_DetectorBase::check();
 }
 
 void _Chilitags::update ( void )
 {
-    while ( m_bThreadON )
+    while(m_pT->bRun())
     {
-        this->autoFPSfrom();
+        m_pT->autoFPSfrom();
 
         if ( check() >= 0 )
         {
             detect();
 
-            if ( m_bGoSleep )
+            if ( m_pT->bGoSleep() )
                 m_pU->m_pPrev->clear();
         }
 
-        this->autoFPSto();
+        m_pT->autoFPSto();
     }
 }
 
@@ -93,9 +86,9 @@ void _Chilitags::detect ( void )
     float ky = 1.0/ ( float ) m.rows;
 
     for ( const std::pair<int, chilitags::Quad> & tag : tags )
-    {
+    {        
         o.init();
-        o.m_tStamp = m_tStamp;
+//        o.m_tStamp = m_pT->getTfrom();
         o.setTopClass ( tag.first,1.0 );
 
         // We wrap the corner matrix into a datastructure that allows an easy access to the coordinates
@@ -159,7 +152,7 @@ void _Chilitags::draw ( void )
     IF_ ( m_pU->size() <= 0 );
 
     IF_ ( !checkWindow() );
-    Mat* pM = ( ( Window* ) this->m_pWindow )->getFrame()->m();
+    Mat* pM = ( ( _WindowCV* ) this->m_pWindow )->getFrame()->m();
 
     i=0;
     while ( ( pO = m_pU->get ( i++ ) ) != NULL )

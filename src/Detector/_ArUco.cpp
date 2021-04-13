@@ -35,15 +35,8 @@ bool _ArUco::init(void* pKiss)
 
 bool _ArUco::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _ArUco::check(void)
@@ -51,24 +44,24 @@ int _ArUco::check(void)
 	NULL__(m_pV,-1);
 	NULL__(m_pU,-1);
 
-	return 0;
+	return this->_DetectorBase::check();
 }
 
 void _ArUco::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		if(check() >= 0)
 		{
 			detect();
 
-			if(m_bGoSleep)
+			if(m_pT->bGoSleep())
 				m_pU->m_pPrev->clear();
 		}
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -77,8 +70,8 @@ void _ArUco::detect(void)
 	Mat m = *m_pV->BGR()->m();
 	IF_(m.empty());
 
-    std::vector<int> vID;
-    std::vector<std::vector<cv::Point2f> > vvCorner;
+    vector<int> vID;
+    vector<vector<cv::Point2f> > vvCorner;
     cv::aruco::detectMarkers(m, m_pDict, vvCorner, vID);
 
 	_Object o;
@@ -89,7 +82,6 @@ void _ArUco::detect(void)
 	for (unsigned int i = 0; i < vID.size(); i++)
 	{
 		o.init();
-		o.m_tStamp = m_tStamp;
 		o.setTopClass(vID[i],1.0);
 
 		Point2f pLT = vvCorner[i][0];
@@ -112,6 +104,10 @@ void _ArUco::detect(void)
 		{
 			vFloat4 bb = o.getBB2D();
 			o.setZ(m_pDV->d(&bb));
+		}
+		else
+		{
+
 		}
 
 		// center position
@@ -155,7 +151,7 @@ void _ArUco::draw(void)
 	IF_(m_pU->size() <= 0);
 
 	IF_(!checkWindow());
-	Mat* pM = ((Window*) this->m_pWindow)->getFrame()->m();
+	Mat* pM = ((_WindowCV*) this->m_pWindow)->getFrame()->m();
 
 	i=0;
 	while((pO = m_pU->get(i++)) != NULL)

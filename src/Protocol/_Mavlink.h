@@ -1,8 +1,8 @@
 #ifndef OpenKAI_src_Protocol__Mavlink_H_
 #define OpenKAI_src_Protocol__Mavlink_H_
 
-#include "../Dependency/mavlink/ardupilotmega/mavlink.h"
-#include "../Dependency/mavlink/mavlink_conversions.h"
+#include "../Dependency/c_library_v2/ardupilotmega/mavlink.h"
+#include "../Dependency/c_library_v2/mavlink_conversions.h"
 #include "../IO/_IOBase.h"
 #include "../IO/_WebSocket.h"
 
@@ -21,7 +21,7 @@ public:
 		m_id = 0x7fffffff;
 		m_tStamp = 0;
 		m_tInterval = -1;
-		m_tTimeout = USEC_1SEC * 10;
+		m_tTimeout = SEC_2_USEC * 10;
 	};
 
 	virtual ~MavMsgBase(void){};
@@ -41,7 +41,7 @@ public:
 
 	virtual void decode(mavlink_message_t* pM)
 	{
-		m_tStamp = getTimeUsec();
+		m_tStamp = getApproxTbootUs();
 	}
 
 	uint32_t	m_id;
@@ -485,7 +485,7 @@ struct MAVLINK_PEER
 	}
 };
 
-class _Mavlink: public _ThreadBase
+class _Mavlink: public _ModuleBase
 {
 public:
 	_Mavlink();
@@ -544,7 +544,7 @@ public:
 
 private:
 	void update(void);
-	static void* getUpdateThread(void *This)
+	static void* getUpdate(void *This)
 	{
 		((_Mavlink*) This)->update();
 		return NULL;

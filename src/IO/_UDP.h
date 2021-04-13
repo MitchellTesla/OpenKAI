@@ -9,7 +9,7 @@
 #define OpenKAI_src_IO__UDP_H_
 
 #include "../Script/Kiss.h"
-#include "../UI/Window.h"
+#include "../UI/_WindowCV.h"
 #include "_IOBase.h"
 
 #define DEFAULT_UDP_PORT 19840
@@ -31,20 +31,22 @@ public:
 
 private:
 	void updateW(void);
-	static void* getUpdateThreadW(void* This)
+	static void* getUpdateW(void* This)
 	{
 		((_UDP*) This)->updateW();
 		return NULL;
 	}
 
 	void updateR(void);
-	static void* getUpdateThreadR(void* This)
+	static void* getUpdateR(void* This)
 	{
 		((_UDP*) This)->updateR();
 		return NULL;
 	}
 
 public:
+    _Thread* m_pTr;
+    
 	string	m_addr;
 	uint16_t m_port;
 

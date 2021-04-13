@@ -23,14 +23,14 @@ _AProver_drive::~_AProver_drive()
 
 bool _AProver_drive::init(void* pKiss)
 {
-	IF_F(!this->_MissionBase::init(pKiss));
+	IF_F(!this->_StateBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
 	pK->v("bSetYawSpeed",&m_bSetYawSpeed);
 	pK->v("yawMode",&m_yawMode);
 	pK->v("bRcChanOverride",&m_bRcChanOverride);
 
-	uint16_t* pRC[18];
+	uint16_t* pRC[19];
 	pRC[0] = NULL;
 	pRC[1] = &m_rcOverride.chan1_raw;
 	pRC[2] = &m_rcOverride.chan2_raw;
@@ -51,7 +51,7 @@ bool _AProver_drive::init(void* pKiss)
 	pRC[17] = &m_rcOverride.chan17_raw;
 	pRC[18] = &m_rcOverride.chan18_raw;
     
-    for(int i=1; i<18; i++)
+    for(int i=1; i<19; i++)
         *pRC[i] = UINT16_MAX;
 
 	int iRcYaw = 1;
@@ -75,7 +75,7 @@ bool _AProver_drive::init(void* pKiss)
 	IF_Fl(!m_pAP, n + ": not found");
 
 	n = "";
-	pK->v("Drive", &n );
+	pK->v("_Drive", &n );
 	m_pD = ( _Drive*) (pK->getInst( n ));
 	IF_Fl(!m_pD, n + ": not found");
 
@@ -84,16 +84,8 @@ bool _AProver_drive::init(void* pKiss)
 
 bool _AProver_drive::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG(ERROR) << "Return code: " << retCode;
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _AProver_drive::check(void)
@@ -102,18 +94,18 @@ int _AProver_drive::check(void)
 	NULL__(m_pAP->m_pMav,-1);
     NULL__(m_pD, -1);
 
-	return this->_MissionBase::check();
+	return this->_StateBase::check();
 }
 
 void _AProver_drive::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		updateDrive();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -129,8 +121,7 @@ bool _AProver_drive::updateDrive(void)
         return false;
     }
     
-    m_pD->update();
-    float nSpd = m_pD->getSpeed();
+    float nSpd = m_pD->getSpeed() * m_pD->getDirection();
     float nStr = m_pD->getSteering();
     
 	if(m_bSetYawSpeed)
@@ -164,8 +155,11 @@ void _AProver_drive::setYawMode(bool bRelative)
 
 void _AProver_drive::draw(void)
 {
-	this->_MissionBase::draw();
+	this->_StateBase::draw();
     drawActive();
+    
+    NULL_(m_pRcYaw);
+    NULL_(m_pRcThrottle);
 
 	addMsg("yawMode=" + f2str(m_yawMode) + ", yaw=" + i2str(*m_pRcYaw) + ", throttle=" + i2str(*m_pRcThrottle));
 }

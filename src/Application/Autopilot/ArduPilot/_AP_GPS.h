@@ -11,7 +11,7 @@
 namespace kai
 {
 
-class _AP_GPS: public _MissionBase
+class _AP_GPS: public _StateBase
 {
 public:
 	_AP_GPS();
@@ -27,7 +27,7 @@ public:
 
 protected:
 	void updateGPS(void);
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_AP_GPS *) This)->update();
 		return NULL;

@@ -43,32 +43,24 @@ bool _AP_goto::init(void* pKiss)
 		pG->v("mountMode", &m_apMount.m_config.mount_mode);
 	}
 
-	string iName;
+	string n;
 
-	iName = "";
-	pK->v("_AP_base", &iName);
-	m_pAP = (_AP_base*) (pK->getInst(iName));
-	IF_Fl(!m_pAP, iName + ": not found");
+	n = "";
+	pK->v("_AP_base", &n);
+	m_pAP = (_AP_base*) (pK->getInst(n));
+	IF_Fl(!m_pAP, n + ": not found");
 
-	iName = "";
-	pK->v("_AP_target_base", &iName);
-	m_pAPtarget = (_AP_base*) (pK->getInst(iName));
+	n = "";
+	pK->v("_AP_target_base", &n);
+	m_pAPtarget = (_AP_base*) (pK->getInst(n));
 
 	return true;
 }
 
 bool _AP_goto::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG(ERROR) << "Return code: " << retCode;
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _AP_goto::check(void)
@@ -83,14 +75,14 @@ int _AP_goto::check(void)
 
 void _AP_goto::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		this->_AP_posCtrl::update();
 		updateGoto();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -120,7 +112,7 @@ bool _AP_goto::findTarget(void)
 {
 	IF_F(check()<0);
 
-	IF_F(!m_pAPtarget->m_pMav->m_globalPositionINT.bReceiving(m_tStamp));
+	IF_F(!m_pAPtarget->m_pMav->m_globalPositionINT.bReceiving(m_pT->getTfrom()));
 
 	vDouble4 vAPpos = m_pAPtarget->getGlobalPos();
 	IF_F(vAPpos.x <= 0.0);

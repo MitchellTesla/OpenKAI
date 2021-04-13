@@ -14,7 +14,7 @@ _AP_servo::~_AP_servo()
 
 bool _AP_servo::init(void* pKiss)
 {
-	IF_F(!this->_MissionBase::init(pKiss));
+	IF_F(!this->_StateBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
 	int i = 0;
@@ -30,26 +30,18 @@ bool _AP_servo::init(void* pKiss)
 		m_vServo.push_back(s);
 	}
 
-	string iName;
-	iName = "";
-	F_ERROR_F(pK->v("_AP_base", &iName));
-	m_pAP = (_AP_base*) (pK->getInst(iName));
+	string n;
+	n = "";
+	F_ERROR_F(pK->v("_AP_base", &n));
+	m_pAP = (_AP_base*) (pK->getInst(n));
 
 	return true;
 }
 
 bool _AP_servo::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG(ERROR) << "Return code: "<< retCode;
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 int _AP_servo::check(void)
@@ -57,19 +49,19 @@ int _AP_servo::check(void)
 	NULL__(m_pAP, -1);
 	NULL__(m_pAP->m_pMav, -1);
 
-	return this->_MissionBase::check();
+	return this->_StateBase::check();
 }
 
 void _AP_servo::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
-		this->_MissionBase::update();
+		this->_StateBase::update();
 		updateServo();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -89,7 +81,7 @@ void _AP_servo::updateServo(void)
 void _AP_servo::draw(void)
 {
 	IF_(check()<0);
-	this->_MissionBase::draw();
+	this->_StateBase::draw();
 	drawActive();
 
 	for(AP_SERVO s : m_vServo)

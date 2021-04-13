@@ -20,7 +20,6 @@ _VideoFile::_VideoFile()
 
 _VideoFile::~_VideoFile()
 {
-	m_vc.release();
 }
 
 bool _VideoFile::init(void* pKiss)
@@ -42,56 +41,52 @@ bool _VideoFile::open(void)
 		return false;
 	}
 
-	m_vc.set(CAP_PROP_FRAME_WIDTH, m_w);
-	m_vc.set(CAP_PROP_FRAME_HEIGHT, m_h);
-	m_vc.set(CAP_PROP_FPS, m_targetFPS);
+	m_vc.set(CAP_PROP_FRAME_WIDTH, m_vSize.x);
+	m_vc.set(CAP_PROP_FRAME_HEIGHT, m_vSize.y);
+	m_vc.set(CAP_PROP_FPS, m_pT->getTargetFPS());
 
 	Mat cMat;
 	while (!m_vc.read(cMat));
 
-	m_w = cMat.cols;
-	m_h = cMat.rows;
-
-	m_cW = m_w / 2;
-	m_cH = m_h / 2;
+	m_vSize.x = cMat.cols;
+	m_vSize.y = cMat.rows;
 
 	m_bOpen = true;
 	return true;
 }
 
+void _VideoFile::close(void)
+{
+	this->_VisionBase::close();
+	m_vc.release();
+}
+
 bool _VideoFile::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _VideoFile::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
 		if (!m_bOpen)
 		{
 			if (!open())
 			{
-				this->sleepTime(USEC_1SEC);
+				m_pT->sleepT (SEC_2_USEC);
 				continue;
 			}
 		}
 
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		Mat mCam;
 		while (!m_vc.read(mCam));
 		m_fBGR.copy(mCam);
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 

@@ -34,16 +34,8 @@ bool _StepperGripper::init(void* pKiss)
 
 bool _StepperGripper::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		LOG_E(retCode);
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _StepperGripper::update(void)
@@ -51,13 +43,13 @@ void _StepperGripper::update(void)
 	while(!initPos());
 	m_bState = true;
 
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
 		updateMove();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
@@ -86,11 +78,11 @@ bool _StepperGripper::setMove(bool bOpen)
 	pB[0] = HIGH16(ds);
 	pB[1] = LOW16(ds);
 	IF_F(m_pMB->writeRegisters(m_iSlave, 9, 2, pB) != 2);
-	this->sleepTime(m_cmdInt);
+	m_pT->sleepT (m_cmdInt);
 
 	pB[0] = (step > 0)?0:1;
 	IF_F(m_pMB->writeRegisters(m_iSlave, 11, 1, pB) != 1);
-	this->sleepTime(m_cmdInt);
+	m_pT->sleepT (m_cmdInt);
 
 	return true;
 }

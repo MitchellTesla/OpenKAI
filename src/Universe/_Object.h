@@ -8,12 +8,12 @@
 #ifndef OpenKAI_src_Universe__Object_H_
 #define OpenKAI_src_Universe__Object_H_
 
-#include "../Base/_ThreadBase.h"
+#include "../Base/_ModuleBase.h"
 
 namespace kai
 {
 
-class _Object: public _ThreadBase
+class _Object: public _ModuleBase
 {
 public:
 	_Object();
@@ -95,8 +95,12 @@ public:
 	//kinetics
 	virtual void updateKinetics(void);
 
+	//time stamp
+	virtual void setTstamp(uint64_t t);
+	virtual uint64_t getTstamp(void);
+
 private:
-	static void* getUpdateThread(void* This)
+	static void* getUpdate(void* This)
 	{
 		((_Object *) This)->update();
 		return NULL;
@@ -107,6 +111,7 @@ protected:
 	vFloat3		m_vPos;		//center pos x, y, z
 	vFloat3		m_vAtti;	//attitude roll, pith, yaw
 	vFloat4		m_vDim;		//width, height, depth, radius
+	uint64_t	m_tStamp;
 
 	//kinetics
 	vFloat3		m_vSpeed;

@@ -18,7 +18,7 @@ _Object::~_Object()
 
 bool _Object::init(void* pKiss)
 {
-	IF_F(!this->_ThreadBase::init(pKiss));
+	IF_F(!this->_ModuleBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
 
 	return true;
@@ -34,36 +34,31 @@ void _Object::init(void)
 	m_vTraj.clear();
 	m_mFlag = 0;
 	m_pTracker = NULL;
+	m_tStamp = 0;
 
 	resetClass();
 }
 
 bool _Object::start(void)
 {
-	m_bThreadON = true;
-	int retCode = pthread_create(&m_threadID, 0, getUpdateThread, this);
-	if (retCode != 0)
-	{
-		m_bThreadON = false;
-		return false;
-	}
-
-	return true;
+    NULL_F(m_pT);
+	return m_pT->start(getUpdate, this);
 }
 
 void _Object::update(void)
 {
-	while (m_bThreadON)
+	while(m_pT->bRun())
 	{
-		this->autoFPSfrom();
+		m_pT->autoFPSfrom();
 
-		this->autoFPSto();
+		m_pT->autoFPSto();
 	}
 }
 
 void _Object::updateKinetics(void)
 {
-	m_vSpeed += m_vAccel * (float)m_dTime * OV_USEC_1SEC;
+    IF_(check()<0);
+	m_vSpeed += m_vAccel * m_pT->getDt() * USEC_2_SEC;
 	m_vPos += m_vSpeed;
 }
 
@@ -355,12 +350,22 @@ float _Object::nIoU(_Object& obj)
 	return 0.0;
 }
 
+void _Object::setTstamp(uint64_t t)
+{
+	m_tStamp = t;
+}
+
+uint64_t _Object::getTstamp(void)
+{
+	return m_tStamp;
+}
+
 void _Object::draw(void)
 {
-	this->_ThreadBase::draw();
+	this->_ModuleBase::draw();
 
 //	IF_(!checkWindow());
-//	Mat* pMat = ((Window*) this->m_pWindow)->getFrame()->m();
+//	Mat* pMat = ((_WindowCV*) this->m_pWindow)->getFrame()->m();
 }
 
 }

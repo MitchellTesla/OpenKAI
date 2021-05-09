@@ -63,6 +63,7 @@ namespace kai
 		}
 
 		m_bReady = true;
+		m_bReset = false;
 		return true;
 	}
 
@@ -96,7 +97,7 @@ namespace kai
 			if (m_bReset)
 			{
 				close();
-				this->_SlamBase::resetAll();
+				resetAll();
 				continue;
 			}
 
@@ -162,11 +163,6 @@ namespace kai
 
 			m_pT->autoFPSto();
 		}
-	}
-
-	void _RStracking::draw(void)
-	{
-		this->_SlamBase::draw();
 	}
 
 }

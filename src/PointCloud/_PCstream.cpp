@@ -58,7 +58,7 @@ namespace kai
         m_bAccept = b;
     }
 
-    void _PCstream::add(Vector3d &vP, Vector3d &vC, uint64_t tStamp)
+    void _PCstream::add(const Vector3d &vP, const Vector3f &vC, uint64_t tStamp)
     {
         NULL_(m_pP);
         IF_(!m_bAccept);
@@ -68,7 +68,7 @@ namespace kai
                             vP[m_vAxisIdx.y] * m_vAxisK.y,
                             vP[m_vAxisIdx.z] * m_vAxisK.z
                             );
-        uP *= m_unitK;
+        IF_(!bRange(uP));
 
         PC_POINT *pP = &m_pP[m_iP];
         pP->m_vP = m_A * uP;
@@ -124,11 +124,6 @@ namespace kai
     int _PCstream::iP(void)
     {
         return m_iP;
-    }
-
-    void _PCstream::draw(void)
-    {
-        this->_ModuleBase::draw();
     }
 
 }

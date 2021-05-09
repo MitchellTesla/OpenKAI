@@ -1,0 +1,158 @@
+{
+	"name":"APP",
+	"class":"Startup",
+	"appName":"PCscan",
+	"bWindow":1,
+	"bLog":1,
+	"bStdErr":1,
+	"waitKey":30,
+}
+
+{
+	"name":"console",
+	"class":"_Console",
+	"bInst":0,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"vBASE":["cam","RGBview","PCcalib"],
+}
+
+{
+	"name":"RGBview",
+	"class":"_WindowCV",
+	"bInst":0,
+	"bFullScreen":0,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"vBASE":["cam"],
+}
+
+{
+	"name":"cam",
+	"class":"_GStreamer",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"pipeline":"v4l2src device=/dev/video4 ! image/jpeg,width=3840,height=2160,framerate=30/1 ! jpegdec ! videoconvert ! appsink",
+}
+
+{
+	"name":"remap",
+	"class":"_Remap",
+	"FPS":30,
+	"bInst":0,
+	"_VisionBase":"cam",
+	"yml":"",
+}
+
+{
+	"name":"camCalib",
+	"class":"_CamCalib",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":10,
+	}
+	"path":"",
+	"vChessBoardSize":[9,6],
+	"squareSize":0.03,
+}
+
+{
+	"name":"pcCalib",
+	"class":"_PCcalib",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":5,
+	}
+    {
+		"name":"threadRGB",
+		"FPS":30,
+	}
+    {
+		"name":"threadUI",
+		"FPS":30,
+	}
+	"_Console":"console",
+	"vWinSize":[1920,1080],
+	"pathRes":"/home/kai/dev/Open3D/build/bin/resources",
+	"device":"CPU:0",
+	"vPCbase":["pcFile","pcLivox"],
+	"_PCstream":"pcLivox",
+	"_Remap":"cam",
+	"_CamCalib":"camCalib",
+	"vCamLookAt":[0,0,0],
+	"vCamEye":[0,0,2],
+	"vCamUp":[0,1,0],
+	"vCamAutoLookAt":[0,0,0],
+	"vCamAutoEye":[0,-2,0],
+	"vCamAutoUp":[0,1,0],
+	"vCoR":[0,0,0],
+	"camFov":80,
+	"vCamNF":[0, 200],
+	"camFovType":1,
+	"bFullScreen":0,
+	"wPanel":13,
+	"mouseMode":1,
+	"vDmove":[0.5, 5.0],
+	"rDummyDome":1000.0,
+	"shade":0,
+	"vShadeCol":[1.0, 1.0, 1.0],
+	"rShadePosCol":15.0,
+}
+
+{
+	"name":"pcFile",
+	"class":"_PCfile",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"_Console":"console",
+	"fName":"/home/kai/dev/Open3D/examples/test_data/fragment.pcd",
+}
+
+{
+	"name":"LivoxLidar",
+	"class":"LivoxLidar",
+	"bInst":1,
+	"bLog":1,
+	"_Console":"console",
+	"vBroadcastCode":["3JEDHC900100791","3GGDJ1500105411","0TFDHAW001808W1"],
+	"bEnableFan":1,
+	"returnMode":1,
+	"coordinate":0,
+	"imuRate":1,
+	"scanPattern":0,
+}
+
+{
+	"name":"pcLivox",
+	"class":"_Livox",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"bLog":1,
+	"_Console":"console",
+	"LivoxLidar":"LivoxLidar",
+	"/broadcastCode":"3JEDHC900100791",
+	"broadcastCode":"3GGDJ1500105411",
+	"/broadcastCode":"0TFDHAW001808W1",
+	"nP":256000,
+	"vToffset":[-0.0098, -0.046, 0.002],
+	"vRoffset":[0, 0, 0],
+	"vAxisIdx":[1, 0, 2],
+	"vAxisK":[-1, 1, 1],
+	"unitK":0.001,
+	"vRange":[0.6, 300],
+}

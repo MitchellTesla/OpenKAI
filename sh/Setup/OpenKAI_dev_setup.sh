@@ -3,10 +3,10 @@
 #----------------------------------------------------
 # (Optional) Update kernel if needed
 uname -r
-wget https://kernel.ubuntu.com/~kernel-ppa/mainline/v5.6.11/linux-headers-5.6.11-050611_5.6.11-050611.202005061022_all.deb
-wget https://kernel.ubuntu.com/~kernel-ppa/mainline/v5.6.11/linux-headers-5.6.11-050611-generic_5.6.11-050611.202005061022_amd64.deb
-wget https://kernel.ubuntu.com/~kernel-ppa/mainline/v5.6.11/linux-image-unsigned-5.6.11-050611-generic_5.6.11-050611.202005061022_amd64.deb
-wget https://kernel.ubuntu.com/~kernel-ppa/mainline/v5.6.11/linux-modules-5.6.11-050611-generic_5.6.11-050611.202005061022_amd64.deb
+wget https://kernel.ubuntu.com/~kernel-ppa/mainline/v5.12/amd64/linux-headers-5.12.0-051200_5.12.0-051200.202104252130_all.deb
+wget https://kernel.ubuntu.com/~kernel-ppa/mainline/v5.12/amd64/linux-headers-5.12.0-051200-generic_5.12.0-051200.202104252130_amd64.deb
+wget https://kernel.ubuntu.com/~kernel-ppa/mainline/v5.12/amd64/linux-image-unsigned-5.12.0-051200-generic_5.12.0-051200.202104252130_amd64.deb
+wget https://kernel.ubuntu.com/~kernel-ppa/mainline/v5.12/amd64/linux-modules-5.12.0-051200-generic_5.12.0-051200.202104252130_amd64.deb
 sudo dpkg -i *.deb
 sudo reboot now
 
@@ -66,7 +66,7 @@ sudo apt-get -y install libglu1-mesa-dev libglu1-mesa libgl1-mesa-glx libgl1-mes
 sudo apt-get -y install libqhull-dev qhull-bin gfortran libblas-dev liblapack-dev liblapacke-dev liblapack3 libatlas-base-dev libopenblas-base libopenblas-dev gsl-bin libgsl0-dev libflann-dev libproj-dev
 
 # Not sure if needed
-sudo apt-get -y install libpcap-dev libdc1394-22 libdc1394-22-dev libswscale-dev libtheora-dev libvorbis-dev libfaac-dev libmp3lame-dev libopencore-amrnb-dev libopencore-amrwb-dev 
+sudo apt-get -y install libpcap-dev libdc1394-22 libdc1394-22-dev libswscale-dev libtheora-dev libvorbis-dev libfaac-dev libmp3lame-dev libopencore-amrnb-dev libopencore-amrwb-dev
 
 # (Optional)
 sudo apt-get -y install libimage-exiftool-perl
@@ -148,8 +148,8 @@ gphoto2 --stdout --capture-movie | ffmpeg -i - -vcodec rawvideo -pix_fmt yuv420p
 
 #----------------------------------------------------
 # (Optional) OpenCV
-git clone --branch 4.5.1 --depth 1 https://github.com/opencv/opencv.git
-git clone --branch 4.5.1 --depth 1 https://github.com/opencv/opencv_contrib.git
+git clone --branch 4.5.2 --depth 1 https://github.com/opencv/opencv.git
+git clone --branch 4.5.2 --depth 1 https://github.com/opencv/opencv_contrib.git
 cd opencv
 mkdir build
 cd build
@@ -289,6 +289,18 @@ make all -j$(nproc)
 
 # Copy startup sh into home
 sudo chmod a+x $HOME/ok.sh
+
+#----------------------------------------------------
+# Misc.
+# Screen and touch screen input rotate
+xrandr -o left
+xinput set-prop 'GXTP7386:00 27C6:0113' 'Coordinate Transformation Matrix' 0 -1 1 1 0 0 0 0 1
+
+#Block on screen keyboard
+sudo apt install gnome-tweaks
+sudo apt install gnome-shell-extensions
+https://extensions.gnome.org/extension/3222/block-caribou-36/
+
 #----------------------------------------------------
 
 Make Jetson boot SD image

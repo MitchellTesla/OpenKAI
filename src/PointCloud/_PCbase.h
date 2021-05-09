@@ -17,23 +17,31 @@ using namespace Eigen;
 
 namespace kai
 {
-    enum PC_TYPE{
+    enum PC_TYPE
+    {
         pc_unknown = -1,
         pc_stream = 0,
         pc_frame = 1,
         pc_lattice = 2,
     };
 
+    enum PC_SHADE
+    {
+        pcShade_original = 0,
+        pcShade_colOvrr = 1,
+        pcShade_colPos = 2,
+    };
+
     struct PC_POINT
     {
         Vector3d m_vP; //pos
-        Vector3d m_vC; //color
+        Vector3f m_vC; //color
         uint64_t m_tStamp;
 
         void init(void)
         {
-            m_vP = Vector3d(0.0, 0.0, 0.0);
-            m_vC = Vector3d(0.0, 0.0, 0.0);
+            m_vP = Vector3d(0,0,0);
+            m_vC = Vector3f(0,0,0);
             m_tStamp = 0;
         }
     };
@@ -64,7 +72,6 @@ namespace kai
 
         virtual bool init(void *pKiss);
         virtual int check(void);
-        virtual void draw(void);
 
         virtual PC_TYPE getType(void);
         virtual void setTranslation(const vDouble3 &vT, const vDouble3 &vR);
@@ -81,6 +88,8 @@ namespace kai
         virtual void getFrame(void* p);
         virtual void getLattice(void* p);
 
+        virtual bool bRange(const Vector3d& vP);
+
     protected:
         PC_TYPE m_type;
         int m_nPread;
@@ -96,6 +105,9 @@ namespace kai
     	Matrix4d m_mToffset;
         Eigen::Affine3d m_Aoffset;
 
+        //filter
+        vDouble2 m_vRange;
+
         //dynamic transform
         vDouble3 m_vT; //translation
         vDouble3 m_vR; //rotation
@@ -106,7 +118,9 @@ namespace kai
         PC_PIPIN_CTX m_pInCtx;
 
         //color override
-  		vFloat3 m_vColOvrr;
+        PC_SHADE m_shade;
+  		vFloat3 m_vShadeCol;
+        float m_rShadePosCol;
     };
 
 }

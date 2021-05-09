@@ -25,7 +25,11 @@ namespace kai
         m_vAxisIdx.init(0,1,2);
         m_vAxisK.init(1.0);
         m_unitK = 1.0;
-        m_vColOvrr.init(-1.0);
+        m_vRange.init(0.0, 1000.0);
+        
+        m_shade = pcShade_original;
+        m_vShadeCol.init(1.0);
+        m_rShadePosCol = 1000.0;
 
         m_pInCtx.init();
     }
@@ -39,10 +43,19 @@ namespace kai
         IF_F(!this->_ModuleBase::init(pKiss));
         Kiss *pK = (Kiss *)pKiss;
 
+        pK->v("shade", (int*)&m_shade);
+        pK->v("vShadeCol", &m_vShadeCol);
+        pK->v("rShadePosCol", &m_rShadePosCol);
+        m_rShadePosCol = 1.0/m_rShadePosCol;
+
         pK->v("vAxisIdx", &m_vAxisIdx);
         pK->v("vAxisK", &m_vAxisK);
         pK->v("unitK", &m_unitK);
-        pK->v("vColOvrr", &m_vColOvrr);
+        m_vAxisK *= m_unitK;
+
+        pK->v("vRange", &m_vRange);
+        m_vRange.x *= m_vRange.x;
+        m_vRange.y *= m_vRange.y;
 
         //origin offset
         pK->v("vToffset", &m_vToffset);
@@ -138,9 +151,13 @@ namespace kai
     {
     }
 
-    void _PCbase::draw(void)
+    bool _PCbase::bRange(const Vector3d& vP)
     {
-        this->_ModuleBase::draw();
+        double ds = vP[0]*vP[0] + vP[1]*vP[1] + vP[2]*vP[2];
+        IF_F(ds < m_vRange.x);
+        IF_F(ds > m_vRange.y);
+
+        return true;
     }
 
 }

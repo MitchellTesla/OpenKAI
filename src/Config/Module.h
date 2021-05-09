@@ -37,6 +37,7 @@
 #include "../Application/Autopilot/ArduPilot/_AProver_picking.h"
 #include "../Application/RobotArm/_Sequencer.h"
 
+#include "../Application/CamCalib/_CamCalib.h"
 #include "../Application/UTphenoRover/_AProver_UT.h"
 #include "../Application/UTphenoRover/_UTprArmL.h"
 #include "../Application/UTphenoRover/_AProver_UTfollowTag.h"
@@ -57,7 +58,6 @@
 
 #include "../State/_StateControl.h"
 
-#include "../Navigation/_Path.h"
 #include "../Navigation/_GPS.h"
 #include "../Navigation/_RTCM3.h"
 
@@ -68,7 +68,6 @@
 #include "../IO/_UDP.h"
 #include "../IO/_WebSocket.h"
 #include "../Protocol/_Canbus.h"
-#include "../Protocol/_CETCUS.h"
 #include "../Protocol/_Mavlink.h"
 #include "../Protocol/_MOAB.h"
 #include "../Protocol/_ProtocolBase.h"
@@ -80,9 +79,6 @@
 
 #include "../Universe/_Object.h"
 #include "../Universe/_Universe.h"
-
-#include "../Vision/Hiphen/_HiphenServer.h"
-#include "../Vision/Hiphen/_HiphenCMD.h"
 
 #ifdef USE_OPENCL
 #include "../Compute/OpenCL/clBase.h"
@@ -109,6 +105,7 @@
 #include "../Vision/ImgFilter/_Invert.h"
 #include "../Vision/ImgFilter/_InRange.h"
 #include "../Vision/ImgFilter/_Resize.h"
+#include "../Vision/ImgFilter/_Remap.h"
 #include "../Vision/ImgFilter/_Rotate.h"
 
 #include "../Data/Image/_GDimgUploader.h"
@@ -134,14 +131,10 @@
 #include "../Application/Autopilot/ArduPilot/_AP_follow.h"
 #include "../Application/Autopilot/ArduPilot/_APcopter_photo.h"
 
-#include "../Application/Observation/_HiphenRGB.h"
 #include "../Application/Surveillance/_ANR.h"
 #include "../Application/Surveillance/_GDcam.h"
-#include "../Application/Surveillance/_ShopCam.h"
 
 #include "../Application/RobotArm/_PickingArm.h"
-#include "../Application/RobotArm/_SortingArm.h"
-#include "../Application/RobotArm/_SortingCtrlServer.h"
 
 #ifdef USE_OPENCV_CONTRIB
 #include "../Detector/_ArUco.h"
@@ -221,6 +214,7 @@
 #include "../PointCloud/PCregistration/_PCregistICP.h"
 #include "../PointCloud/PCregistration/_PCregistGlobal.h"
 #include "../Application/PCscan/_PCscan.h"
+#include "../Application/PCscan/_PCcalib.h"
 #ifdef USE_REALSENSE
 #include "../PointCloud/_PCrs.h"
 #endif
@@ -235,8 +229,6 @@
 #endif
 
 #ifdef USE_DYNAMIXEL
-#include "../Actuator/_DeltaArm.h"
-#include "../Actuator/_LabArm.h"
 #endif
 
 #ifdef USE_LIVOX

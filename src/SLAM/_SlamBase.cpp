@@ -36,7 +36,7 @@ bool _SlamBase::init(void* pKiss)
 
 bool _SlamBase::bReady(void)
 {
-	return m_bReady;
+	return m_bReady && (!m_bReset);
 }
 
 void _SlamBase::reset(void)
@@ -52,7 +52,6 @@ void _SlamBase::resetAll(void)
 	m_vQ.init();
 	m_mT = Matrix4d::Identity();
 	m_confidence = 0.0;
-	m_bReset = false;
 }
 
 vFloat3 _SlamBase::t(void)
@@ -80,34 +79,36 @@ const Matrix4d& _SlamBase::mT(void)
 	return m_mT;
 }
 
-void _SlamBase::draw(void)
+void _SlamBase::console(void* pConsole)
 {
-	this->_ModuleBase::draw();
+	NULL_(pConsole);
+	this->_ModuleBase::console(pConsole);
 
+	_Console *pC = (_Console *)pConsole;
 	string msg;
 	msg = "vT = (" + f2str(m_vT.x,3) + ", "
 				  + f2str(m_vT.y,3) + ", "
 				  + f2str(m_vT.z,3) + ")";
-	addMsg(msg,1);
+	pC->addMsg(msg,1);
 
 	msg = "vV = (" + f2str(m_vV.x,3) + ", "
 				  + f2str(m_vV.y,3) + ", "
 				  + f2str(m_vV.z,3) + ")";
-	addMsg(msg,1);
+	pC->addMsg(msg,1);
 
 	msg = "vR = (" + f2str(m_vR.x,3) + ", "
 				  + f2str(m_vR.y,3) + ", "
 				  + f2str(m_vR.z,3) + ")";
-	addMsg(msg,1);
+	pC->addMsg(msg,1);
 
 	msg = "vQ = (" + f2str(m_vQ.x,3) + ", "
 				  + f2str(m_vQ.y,3) + ", "
 				  + f2str(m_vQ.z,3) + ", "
 				  + f2str(m_vQ.w,3) + ")";
-	addMsg(msg,1);
+	pC->addMsg(msg,1);
 
 	msg = "confidence=" + f2str(m_confidence);
-	addMsg(msg,1);
+	pC->addMsg(msg,1);
 }
 
 }

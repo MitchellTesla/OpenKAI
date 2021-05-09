@@ -1,7 +1,7 @@
 {
 	"name":"APP",
 	"class":"Startup",
-	"appName":"OpenKAI",
+	"appName":"PCscan",
 	"bWindow":0,
 	"bDraw":1,
 	"bLog":1,
@@ -21,7 +21,7 @@
 	"bInst":1,
     {
 		"name":"thread",
-		"FPS":2,
+		"FPS":5,
 	}
     {
 		"name":"threadK",
@@ -38,14 +38,25 @@
 	"vPCbase":["pcFile","pcRS","pcLivox"],
 	"_SlamBase":"T265",
 	"_PCstream":"pcLivox",
-	"vCamCenter":[0,0,0],
-	"vCamEye":[0,0,1],
+	"vCamLookAt":[0,0,0],
+	"vCamEye":[0,0,2],
 	"vCamUp":[0,1,0],
-	"vCamCoR":[0,0,0],
-	"camFov":70,
-	"camAspect":1.8,
-	"vCamNF":[0,100],
-	"camFovType":0,
+	"vCamAutoLookAt":[0,0,0],
+	"vCamAutoEye":[0,-2,0],
+	"vCamAutoUp":[0,1,0],
+	"vCoR":[0,0,0],
+	"camFov":80,
+	"vCamNF":[0, 200],
+	"camFovType":1,
+	"bFullScreen":1,
+	"wPanel":13,
+	"mouseMode":1,
+	"vDmove":[0.5, 5.0],
+	"rDummyDome":1000.0,
+	"dHiddenRemove":100.0,
+	"shade":0,
+	"vShadeCol":[1.0, 1.0, 1.0],
+	"rShadePosCol":15.0,
 }
 
 {
@@ -113,12 +124,12 @@
 	"broadcastCode":"3GGDJ1500105411",
 	"/broadcastCode":"0TFDHAW001808W1",
 	"nP":256000,
-	"vToffset":[-0.015, -0.048, 0.0],
-	"vRoffset":[0,0,0],
-	"vCol":[0, 1.0, 0],
+	"vToffset":[-0.0098, -0.046, 0.002],
+	"vRoffset":[0, 0, 0],
 	"vAxisIdx":[1, 0, 2],
 	"vAxisK":[-1, 1, 1],
 	"unitK":0.001,
+	"vRange":[0.6, 300],
 }
 
 {

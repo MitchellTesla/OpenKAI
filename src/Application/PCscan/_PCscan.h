@@ -11,10 +11,21 @@
 #include "../../PointCloud/_PCstream.h"
 #include "../../PointCloud/_PCviewer.h"
 #include "../../SLAM/_SlamBase.h"
+#include "../../Utility/BitFlag.h"
 #include "PCscanUI.h"
 
 namespace kai
 {
+	namespace
+	{
+		static const int pcfScanning = 0;
+		static const int pcfScanStart = 1;
+		static const int pcfScanStop = 2;
+		static const int pcfVoxelDown = 3;
+		static const int pcfHiddenRemove = 4;
+		static const int pcfResetPC = 5;
+		static const int pcfCamAuto = 6;
+	}
 
 	class _PCscan : public _PCviewer
 	{
@@ -26,12 +37,14 @@ namespace kai
 		virtual bool start(void);
 		virtual int check(void);
 
-		virtual bool startScan(void);
-		virtual bool stopScan(void);
-
 	protected:
-		virtual void updateCamProj(void);
-		virtual void updateCamPose(void);
+		void addUIpc(const PointCloud& pc);
+		void updateUIpc(const PointCloud& pc);
+		void removeUIpc(void);
+		virtual void updateProcess(void);
+		virtual void startScan(void);
+		virtual void stopScan(void);
+		virtual void updateCamAuto(void);
 		virtual void updateScan(void);
 		virtual void update(void);
 		static void *getUpdate(void *This)
@@ -48,9 +61,9 @@ namespace kai
 			return NULL;
 		}
 
-		static void OnBtnScan(void *pPCV, void* pD);
-		static void OnBtnSavePC(void *pPCV, void* pD);
-		static void OnBtnAutoCam(void *pPCV, void* pD);
+		void updateCamProj(void);
+		void updateCamPose(void);
+		void camBound(const AxisAlignedBoundingBox& aabb);
 		virtual void updateUI(void);
 		static void *getUpdateUI(void *This)
 		{
@@ -58,14 +71,34 @@ namespace kai
 			return NULL;
 		}
 
+		AxisAlignedBoundingBox createDefaultAABB(void);
+
+		static void OnBtnScan(void *pPCV, void* pD);
+		static void OnBtnOpenPC(void *pPCV, void* pD);
+		static void OnBtnCamSet(void *pPCV, void* pD);
+		static void OnVoxelDown(void *pPCV, void* pD);
+		static void OnBtnHiddenRemove(void *pPCV, void* pD);
+		static void OnBtnResetPC(void *pPCV, void* pD);
+
 	protected:
 		_PCstream* m_pPS;
 		shared_ptr<visualizer::PCscanUI> m_spWin;
+		visualizer::UIState* m_pUIstate;
 		string m_modelName;
 		_Thread *m_pTk;
 		_SlamBase *m_pSB;
 
-		bool m_bScanning;
+		bool m_bFullScreen;
+		bool m_bSceneCache;
+		int	m_wPanel;
+		int m_mouseMode;
+		vFloat2 m_vDmove;
+		float m_rDummyDome;
+		float m_dHiddenRemove;
+		AxisAlignedBoundingBox m_aabb;
+
+		//filter flags
+		BIT_FLAG m_fProcess;
 	};
 
 }

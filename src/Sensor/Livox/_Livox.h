@@ -24,7 +24,6 @@ public:
     virtual bool init ( void* pKiss );
     virtual int check ( void );
     virtual bool start ( void );
-    virtual void draw ( void );
 
 protected:
     static void CbRecvData(LivoxEthPacket* pData, void* pLivox);
@@ -50,8 +49,7 @@ public:
     string m_broadcastCode;
     LivoxLidar* m_pL;
     uint32_t m_iTransformed;
-    
-    vDouble3 m_vCol;
+    const float m_ovRef = 1.0/255.0;    
 };
 
 }

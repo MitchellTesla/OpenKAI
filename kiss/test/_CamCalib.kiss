@@ -1,0 +1,22 @@
+{
+	"name":"APP",
+	"class":"Startup",
+	"appName":"OpenKAI",
+	"bWindow":1,
+	"bLog":1,
+	"bStdErr":1,
+}
+
+{
+	"name":"camCalib",
+	"class":"_CamCalib",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":10,
+	}
+	"path":"/home/kai/calib/\*.jpg",
+	"vChessBoardSize":[9,6],
+	"squareSize":0.03,
+}
+

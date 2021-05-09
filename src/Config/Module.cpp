@@ -24,10 +24,7 @@ namespace kai
 
 		ADD_MODULE(_Console);
 		ADD_MODULE(_Canbus);
-		ADD_MODULE(_CETCUS);
 		ADD_MODULE(_GPS);
-		ADD_MODULE(_HiphenCMD);
-		ADD_MODULE(_HiphenServer);
 		ADD_MODULE(_LeddarVu);
 		ADD_MODULE(_TOFsense);
 		ADD_MODULE(_Mavlink);
@@ -35,7 +32,6 @@ namespace kai
 		ADD_MODULE(_MOAB);
 		ADD_MODULE(_Modbus);
 		ADD_MODULE(_Object);
-		ADD_MODULE(_Path);
 		ADD_MODULE(PID);
 		ADD_MODULE(_Drive);
 		ADD_MODULE(Destimator);
@@ -91,6 +87,7 @@ namespace kai
 #ifdef USE_OPENCV
 		ADD_MODULE(_ANR);
 		ADD_MODULE(_Camera);
+		ADD_MODULE(_CamCalib);
 		ADD_MODULE(_Contrast);
 		ADD_MODULE(_Crop);
 		ADD_MODULE(_DNNclassifier);
@@ -103,7 +100,6 @@ namespace kai
 		ADD_MODULE(_GStreamer);
 		ADD_MODULE(_Grayscale);
 		ADD_MODULE(_GDcam);
-		ADD_MODULE(_HiphenRGB);
 		ADD_MODULE(_HistEqualize);
 		ADD_MODULE(_Invert);
 		ADD_MODULE(_IRLock);
@@ -117,18 +113,16 @@ namespace kai
 		ADD_MODULE(_HandKey);
 		ADD_MODULE(_Raspivid);
 		ADD_MODULE(_Resize);
+		ADD_MODULE(_Remap);
 		ADD_MODULE(_Rotate);
 		ADD_MODULE(_RTCM3);
 		ADD_MODULE(_SlideWindow);
-		ADD_MODULE(_ShopCam);
 		ADD_MODULE(_Thermal);
 		ADD_MODULE(_Threshold);
 		ADD_MODULE(_VideoFile);
 		ADD_MODULE(_WindowCV);
 
 		ADD_MODULE(_PickingArm);
-		ADD_MODULE(_SortingArm);
-		ADD_MODULE(_SortingCtrlServer);
 
 		ADD_MODULE(_GDimgUploader);
 		ADD_MODULE(_BBoxCutOut);
@@ -221,6 +215,7 @@ namespace kai
 		ADD_MODULE(_PCregistICP);
 		ADD_MODULE(_PCregistGlobal);
 		ADD_MODULE(_PCscan);
+		ADD_MODULE(_PCcalib);
 #ifdef USE_REALSENSE
 		ADD_MODULE(_PCrs);
 #endif
@@ -240,8 +235,6 @@ namespace kai
 #endif
 
 #ifdef USE_DYNAMIXEL
-		ADD_MODULE(_DeltaArm);
-		ADD_MODULE(_LabArm);
 #endif
 
 #ifdef USE_XARM

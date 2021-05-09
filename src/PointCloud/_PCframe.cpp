@@ -16,7 +16,7 @@ namespace kai
     _PCframe::_PCframe()
     {
         m_type = pc_frame;
-        
+
         pthread_mutex_init(&m_mutexPC, NULL);
     }
 
@@ -61,7 +61,6 @@ namespace kai
     void _PCframe::updatePC(void)
     {
         m_sPC.next()->Transform(m_mT);
-        paintPC(m_sPC.next());
 
         pthread_mutex_lock(&m_mutexPC);
         m_sPC.swap();
@@ -75,19 +74,30 @@ namespace kai
     {
         NULL_(p);
 
-        _PCstream* pS = (_PCstream*)p;
-        PointCloud* pPC = m_sPC.next();
+        _PCstream *pS = (_PCstream *)p;
+        PointCloud *pPC = m_sPC.next();
         uint64_t tFrom = m_pT->getTfrom() - m_pInCtx.m_dT;
-        if(m_pInCtx.m_dT >= UINT64_MAX)
+        if (m_pInCtx.m_dT >= UINT64_MAX)
             tFrom = 0;
-    
+
         for (int i = 0; i < pS->m_nP; i++)
         {
             PC_POINT *pP = &pS->m_pP[i];
             IF_CONT(pP->m_tStamp <= tFrom);
 
+            Vector3f C = pP->m_vC;
+            if (m_shade == pcShade_colOvrr)
+            {
+                C = m_vShadeCol.v3f();
+            }
+            else if (m_shade == pcShade_colPos)
+            {
+                C = m_vShadeCol.v3f();
+                C[0] *= constrain<float>(1.0 - abs(pP->m_vP[2]) * m_rShadePosCol, 0, 1);
+            }
+
             pPC->points_.push_back(pP->m_vP);
-            pPC->colors_.push_back(pP->m_vC);
+            pPC->colors_.push_back(C.cast<double>());
             m_nPread++;
         }
     }
@@ -96,7 +106,7 @@ namespace kai
     {
         NULL_(p);
 
-        _PCframe* pF = (_PCframe*)p;
+        _PCframe *pF = (_PCframe *)p;
         PointCloud pc;
         pF->getPC(&pc);
 
@@ -111,23 +121,13 @@ namespace kai
     void _PCframe::paintPC(PointCloud *pPC)
     {
         NULL_(pPC);
-        IF_(m_vColOvrr.x < 0.0)
 
-        pPC->PaintUniformColor(
-            Vector3d(
-                m_vColOvrr.x,
-                m_vColOvrr.y,
-                m_vColOvrr.z));
+        pPC->PaintUniformColor(m_vShadeCol.v3f().cast<double>());
     }
 
     int _PCframe::size(void)
     {
         return m_sPC.get()->points_.size();
-    }
-
-    void _PCframe::draw(void)
-    {
-        this->_PCbase::draw();
     }
 
 }

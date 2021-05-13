@@ -9,7 +9,7 @@
 #define OpenKAI_src_PointCloud__PCbase_H_
 #ifdef USE_OPEN3D
 
-#include "../Base/_ModuleBase.h"
+#include "../Vision/_VisionBase.h"
 using namespace open3d;
 using namespace open3d::geometry;
 using namespace open3d::visualization;
@@ -31,6 +31,17 @@ namespace kai
         pcShade_colOvrr = 1,
         pcShade_colPos = 2,
     };
+
+    enum PC_THREAD_ACTION
+	{
+		pc_Scanning = 0,
+		pc_ScanStart = 1,
+		pc_ScanStop = 2,
+		pc_VoxelDown = 3,
+		pc_HiddenRemove = 4,
+		pc_ResetPC = 5,
+		pc_CamAuto = 6,
+	};
 
     struct PC_POINT
     {
@@ -74,21 +85,23 @@ namespace kai
         virtual int check(void);
 
         virtual PC_TYPE getType(void);
+        virtual void setOffset(const vDouble3 &vT, const vDouble3 &vR);
         virtual void setTranslation(const vDouble3 &vT, const vDouble3 &vR);
         virtual void setTranslation(const Matrix4d &mT);
         virtual void readPC(void* pPC);
-
-        virtual Matrix4d getTranslationMatrix(const vDouble3 &vT, const vDouble3 &vR);
         virtual int nPread(void);
-
         virtual void clear(void);
 
+        virtual void setRGBoffset(const vDouble3 &vT, const vDouble3 &vR);
+
     protected:
+        virtual Matrix4d getTranslationMatrix(const vDouble3 &vT, const vDouble3 &vR);
         virtual void getStream(void* p);
         virtual void getFrame(void* p);
         virtual void getLattice(void* p);
-
         virtual bool bRange(const Vector3d& vP);
+
+        virtual bool getColor(const Vector3d &vP, Vector3f* pvC);
 
     protected:
         PC_TYPE m_type;
@@ -117,10 +130,16 @@ namespace kai
         //pipeline input
         PC_PIPIN_CTX m_pInCtx;
 
-        //color override
-        PC_SHADE m_shade;
-  		vFloat3 m_vShadeCol;
-        float m_rShadePosCol;
+        //RGB offset
+        _VisionBase* m_pV;
+        vDouble2 m_vFrgb;
+        vDouble2 m_vCrgb;
+        vDouble3 m_vToffsetRGB;
+        vDouble3 m_vRoffsetRGB;
+    	Matrix4d m_mToffsetRGB;
+    	Eigen::Affine3d m_AoffsetRGB;
+        vInt3 m_vAxisIdxRGB;
+        vFloat3 m_vAxisKrgb;
     };
 
 }

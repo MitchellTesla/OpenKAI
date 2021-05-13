@@ -16,6 +16,8 @@ namespace kai
 	{
 		m_type = vision_remap;
 		m_pV = NULL;
+		m_bReady = false;
+		m_yml = "";
 	}
 
 	_Remap::~_Remap()
@@ -28,14 +30,17 @@ namespace kai
 		IF_F(!_VisionBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
 
-		string path;
-		pK->v("yml", &path);
-		FileStorage fs(path.c_str(), FileStorage::READ);
-		IF_F(!fs.isOpened());
-
-		fs["mCam"] >> m_mCam;
-		fs["mDistCoeffs"] >> m_mDistCoeffs;
-		fs.release();
+		pK->v("yml", &m_yml);
+		if (!m_yml.empty())
+		{
+			FileStorage fs(m_yml.c_str(), FileStorage::READ);
+			if (fs.isOpened())
+			{
+				fs["mC"] >> m_mC;
+				fs["mD"] >> m_mD;
+				fs.release();
+			}
+		}
 
 		string n;
 		n = "";
@@ -59,6 +64,11 @@ namespace kai
 		this->_VisionBase::close();
 	}
 
+	bool _Remap::bReady(void)
+	{
+		return m_bReady;
+	}
+
 	bool _Remap::start(void)
 	{
 		NULL_F(m_pT);
@@ -72,15 +82,8 @@ namespace kai
 			if (!m_bOpen)
 			{
 				open();
-
-				if (m_bOpen)
-				{
-					m_pV->BGR()->setRemap(m_mX, m_mY);
-				}
-				else
-				{
+				if (!m_bOpen)
 					continue;
-				}
 			}
 
 			m_pT->autoFPSfrom();
@@ -95,24 +98,65 @@ namespace kai
 	{
 		Frame *pF = m_pV->BGR();
 		IF_(pF->bEmpty());
-		IF_(m_fBGR.tStamp() < pF->tStamp())
+		IF_(m_fBGR.tStamp() >= pF->tStamp())
 
-		m_fBGR.copy(pF->remap());
+		if(!m_bReady)
+		{
+			m_fBGR.copy(*pF);
+			setup();
+			IF_(!m_bReady);
+		}
+
+		if(m_fBGR.size() != m_s)
+		{
+			m_bReady = false;
+			setup();
+			IF_(!m_bReady);
+		}
+
+		m_fBGR.copy(pF->remap(m_mX, m_mY));
 	}
 
-	void _Remap::setCamMatrices(const Mat &mCam, const Mat &mDistCoeffs)
+	void _Remap::setup(void)
 	{
-		NULL_(!m_pV);
+		IF_(m_mC.empty() || m_mD.empty());
+
+		setCamMatrices(m_mC, m_mD);
+		m_bReady = true;
+	}
+
+	void _Remap::setCamMatrices(const Mat &mC, const Mat &mD)
+	{
 		IF_(m_fBGR.bEmpty());
 
-		m_mCam = mCam;
-		m_mDistCoeffs = mDistCoeffs;
+		m_mC = mC;
+		m_mD = mD;
 
-		m_mCamNew = getOptimalNewCameraMatrix(mCam, m_mDistCoeffs, m_fBGR.size(), 1, m_fBGR.size(), 0);
-		initUndistortRectifyMap(mCam, m_mDistCoeffs, Mat(), m_mCamNew, m_fBGR.size(), CV_16SC2, m_mX, m_mY);
+		m_s = m_fBGR.size();
+		Mat mCs = m_mC;
+		mCs.at<float>(0,0) *= (float)m_s.width;  //Fx
+		mCs.at<float>(1,1) *= (float)m_s.height; //Fy
+		mCs.at<float>(0,2) *= (float)m_s.width;  //Cx
+		mCs.at<float>(1,2) *= (float)m_s.height; //Cy
 
-		m_pV->BGR()->setRemap(m_mX, m_mY);
+		m_mCscaled = getOptimalNewCameraMatrix(mCs, m_mD, m_s, 1, m_s, 0);
+//		initUndistortRectifyMap(mCs, m_mD, Mat(), m_mCscaled, m_s, CV_32FC1, m_mX, m_mY);
+		initUndistortRectifyMap(mCs, m_mD, Mat(), mCs, m_s, CV_16SC2, m_mX, m_mY);
 	}
 
+	Mat _Remap::mC(void)
+	{
+		return m_mC;
+	}
+
+	Mat _Remap::mCscaled(void)
+	{
+		return m_mCscaled;
+	}
+
+	Mat _Remap::mD(void)
+	{
+		return m_mD;
+	}
 }
 #endif

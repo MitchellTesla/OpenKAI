@@ -16,17 +16,6 @@
 
 namespace kai
 {
-	namespace
-	{
-		static const int pcfScanning = 0;
-		static const int pcfScanStart = 1;
-		static const int pcfScanStop = 2;
-		static const int pcfVoxelDown = 3;
-		static const int pcfHiddenRemove = 4;
-		static const int pcfResetPC = 5;
-		static const int pcfCamAuto = 6;
-	}
-
 	class _PCscan : public _PCviewer
 	{
 	public:
@@ -38,9 +27,7 @@ namespace kai
 		virtual int check(void);
 
 	protected:
-		void addUIpc(const PointCloud& pc);
-		void updateUIpc(const PointCloud& pc);
-		void removeUIpc(void);
+		//point cloud
 		virtual void updateProcess(void);
 		virtual void startScan(void);
 		virtual void stopScan(void);
@@ -53,6 +40,7 @@ namespace kai
 			return NULL;
 		}
 
+		//attitude
 		virtual void updateSlam(void);
 		virtual void updateKinematics(void);
 		static void *getUpdateKinematics(void *This)
@@ -61,9 +49,7 @@ namespace kai
 			return NULL;
 		}
 
-		void updateCamProj(void);
-		void updateCamPose(void);
-		void camBound(const AxisAlignedBoundingBox& aabb);
+		// UI
 		virtual void updateUI(void);
 		static void *getUpdateUI(void *This)
 		{
@@ -71,8 +57,7 @@ namespace kai
 			return NULL;
 		}
 
-		AxisAlignedBoundingBox createDefaultAABB(void);
-
+		// handlers
 		static void OnBtnScan(void *pPCV, void* pD);
 		static void OnBtnOpenPC(void *pPCV, void* pD);
 		static void OnBtnCamSet(void *pPCV, void* pD);
@@ -80,20 +65,13 @@ namespace kai
 		static void OnBtnHiddenRemove(void *pPCV, void* pD);
 		static void OnBtnResetPC(void *pPCV, void* pD);
 
+		AxisAlignedBoundingBox createDefaultAABB(void);
+
 	protected:
 		_PCstream* m_pPS;
-		shared_ptr<visualizer::PCscanUI> m_spWin;
-		visualizer::UIState* m_pUIstate;
-		string m_modelName;
-		_Thread *m_pTk;
 		_SlamBase *m_pSB;
+		_Thread *m_pTk;
 
-		bool m_bFullScreen;
-		bool m_bSceneCache;
-		int	m_wPanel;
-		int m_mouseMode;
-		vFloat2 m_vDmove;
-		float m_rDummyDome;
 		float m_dHiddenRemove;
 		AxisAlignedBoundingBox m_aabb;
 

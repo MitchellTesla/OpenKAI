@@ -9,11 +9,10 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/OpenKAI",
-            "args": ["${workspaceFolder}/kiss/app/_PCcalib.kiss"],
+            "args": ["${workspaceFolder}/kiss/app/3DscanCalibCam.kiss"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "external_Console": false,
             "MIMode": "gdb",
             "setupCommands": [
                 {

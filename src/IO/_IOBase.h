@@ -35,7 +35,7 @@ enum IO_STATUS
 
 struct IO_FIFO
 {
-	uint8_t *m_pB;
+	uint8_t *m_pB = NULL;
 	int m_nB;
 	int m_nData;
 	int m_iIn;
@@ -49,9 +49,7 @@ struct IO_FIFO
 		m_nB = nB;
 
 		pthread_mutex_init(&m_mutex, NULL);
-
 		clear();
-
 		return true;
 	}
 
@@ -138,6 +136,7 @@ public:
 	virtual ~_IOBase();
 
 	virtual bool init(void* pKiss);
+	virtual bool link(void);
 	virtual bool open(void);
 	virtual bool isOpen(void);
 	virtual void close(void);
@@ -156,8 +155,7 @@ public:
 	IO_FIFO		m_fifoW;
 	IO_FIFO		m_fifoR;
 
-	pthread_t m_rThreadID;
-	bool	m_bRThreadON;
+    _Thread* m_pTr;
 
 };
 

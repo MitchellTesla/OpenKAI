@@ -95,7 +95,7 @@ namespace kai
 				ocr();
 
 				if (m_pT->bGoSleep())
-					m_pU->m_pPrev->clear();
+					m_pU->clear();
 			}
 
 			m_pT->autoFPSto();
@@ -168,7 +168,7 @@ namespace kai
 			m_pU->add(o);
 		}
 
-		m_pU->updateObj();
+		m_pU->swap();
 	}
 
 	void _DNNtext::decode(const Mat &mScores, const Mat &mGeometry,
@@ -315,7 +315,7 @@ namespace kai
 		IF_(check() < 0);
 
 		_WindowCV *pWin = (_WindowCV *)pWindow;
-		Frame *pF = pWin->getFrame();
+		Frame *pF = pWin->getNextFrame();
 		NULL_(pF);
 		Mat *pM = pF->m();
 		IF_(pM->empty());

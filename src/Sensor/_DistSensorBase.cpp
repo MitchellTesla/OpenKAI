@@ -329,6 +329,7 @@ namespace kai
 
 	void _DistSensorBase::console(void *pConsole)
 	{
+#ifdef WITH_UI
 		NULL_(pConsole);
 		this->_ModuleBase::console(pConsole);
 
@@ -338,17 +339,19 @@ namespace kai
 			msg += f2str(m_pDiv[i].dAvr()) + " | ";
 		}
 		((_Console *)pConsole)->addMsg(msg);
+#endif
 	}
 
 	void _DistSensorBase::cvDraw(void *pWindow)
 	{
+#ifdef WITH_UI
 #ifdef USE_OPENCV
 		NULL_(pWindow);
 		this->_ModuleBase::cvDraw(pWindow);
 		IF_(check() < 0);
 
 		_WindowCV *pWin = (_WindowCV *)pWindow;
-		Frame *pF = pWin->getFrame();
+		Frame *pF = pWin->getNextFrame();
 		NULL_(pF);
 		Mat *pM = pF->m();
 		IF_(pM->empty());
@@ -378,6 +381,7 @@ namespace kai
 			Scalar col = Scalar(0, 255, 0);
 			circle(*pM, pCenter + Point(pX, pY), 1, col, 2);
 		}
+#endif
 #endif
 	}
 

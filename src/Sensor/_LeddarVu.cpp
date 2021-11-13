@@ -302,6 +302,7 @@ namespace kai
 
 	void _LeddarVu::console(void *pConsole)
 	{
+#ifdef WITH_UI
 		NULL_(pConsole);
 		this->_ModuleBase::console(pConsole);
 
@@ -322,17 +323,19 @@ namespace kai
 		}
 		msg += " |";
 		pC->addMsg(msg);
+#endif
 	}
 
 	void _LeddarVu::cvDraw(void *pWindow)
 	{
+#ifdef WITH_UI
 #ifdef USE_OPENCV
 		NULL_(pWindow);
 		this->_ModuleBase::cvDraw(pWindow);
 		IF_(check() < 0);
 
 		_WindowCV *pWin = (_WindowCV *)pWindow;
-		Frame *pF = pWin->getFrame();
+		Frame *pF = pWin->getNextFrame();
 		NULL_(pF);
 		Mat *pM = pF->m();
 		IF_(pM->empty());
@@ -358,6 +361,7 @@ namespace kai
 			line(*pM, pCenter + Point(pFrom.x * rMax, pFrom.y * rMax), pCenter, col, 1);
 			line(*pM, pCenter, pCenter + Point(pTo.x * rMax, pTo.y * rMax), col, 1);
 		}
+#endif
 #endif
 	}
 

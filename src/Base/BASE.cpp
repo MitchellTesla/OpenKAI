@@ -13,81 +13,81 @@
 namespace kai
 {
 
-BASE::BASE()
-{
-	m_pKiss = NULL;
-	m_bLog = false;
-	m_bDebug = false;
-}
-
-BASE::~BASE()
-{
-}
-
-bool BASE::init(void* pKiss)
-{
-	NULL_F(pKiss);
-	Kiss* pK = (Kiss*)pKiss;
-	m_pKiss = pKiss;
-
-	string n="";
-	F_ERROR_F(pK->v("name",&n ));
-	IF_F( n.empty());
-
-	bool bLog = false;
-	pK->root()->child("APP")->v("bLog",&bLog);
-	if(bLog)
+	BASE::BASE()
 	{
-		pK->v("bLog",&m_bLog);
+		m_pKiss = NULL;
+		m_bLog = false;
+		m_bDebug = false;
 	}
-	pK->v("bDebug",&m_bDebug);
 
-	return true;
-}
+	BASE::~BASE()
+	{
+	}
 
-string* BASE::getName(void)
-{
-	NULL_N(m_pKiss);
-	return &((Kiss*)m_pKiss)->m_name;
-}
+	bool BASE::init(void *pKiss)
+	{
+		NULL_F(pKiss);
+		Kiss *pK = (Kiss *)pKiss;
+		m_pKiss = pKiss;
 
-string* BASE::getClass(void)
-{
-	NULL_N(m_pKiss);
-	return &((Kiss*)m_pKiss)->m_class;
-}
+		pK->v("bLog", &m_bLog);
+		pK->v("bDebug", &m_bDebug);
 
-bool BASE::start(void)
-{
-	return true;
-}
+		return true;
+	}
 
-int BASE::check(void)
-{
-	return 0;
-}
+	bool BASE::link(void)
+	{
+		NULL_F(m_pKiss);
 
-int BASE::serialize(uint8_t* pB, int nB)
-{
-	return 0;
-}
+		return true;
+	}
 
-int BASE::deSerialize(uint8_t* pB, int nB)
-{
-	return 0;
-}
+	string *BASE::getName(void)
+	{
+		NULL_N(m_pKiss);
+		return &((Kiss *)m_pKiss)->m_name;
+	}
 
-void BASE::cvDraw(void* pWindow)
-{
-}
+	string *BASE::getClass(void)
+	{
+		NULL_N(m_pKiss);
+		return &((Kiss *)m_pKiss)->m_class;
+	}
 
-void BASE::console(void* pConsole)
-{
-	NULL_(pConsole);
+	bool BASE::start(void)
+	{
+		return true;
+	}
 
-	_Console* pC = (_Console*)pConsole;
-	pC->addMsg("____________________________________", COLOR_PAIR(_Console_COL_NAME)|A_BOLD, _Console_X_NAME, 1);
-	pC->addMsg(*this->getName(), COLOR_PAIR(_Console_COL_NAME)|A_BOLD, _Console_X_NAME, 1);
-}
+	int BASE::check(void)
+	{
+		return 0;
+	}
+
+	int BASE::serialize(uint8_t *pB, int nB)
+	{
+		return 0;
+	}
+
+	int BASE::deSerialize(uint8_t *pB, int nB)
+	{
+		return 0;
+	}
+
+	void BASE::cvDraw(void *pWindow)
+	{
+	}
+
+	void BASE::console(void *pConsole)
+	{
+#ifdef WITH_UI
+		NULL_(pConsole);
+
+		_Console *pC = (_Console *)pConsole;
+		pC->addMsg("____________________________________", COLOR_PAIR(_Console_COL_NAME) | A_BOLD, _Console_X_NAME, 1);
+		pC->addMsg(*this->getName(), COLOR_PAIR(_Console_COL_NAME) | A_BOLD, _Console_X_NAME, 1);
+#endif
+	}
 
 }

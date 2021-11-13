@@ -7,8 +7,6 @@
 
 #include "_VisionBase.h"
 
-#ifdef USE_OPENCV
-
 namespace kai
 {
 
@@ -33,6 +31,7 @@ namespace kai
 		pK->v("bbDraw", &m_bbDraw);
 
 		m_bOpen = false;
+
 		return true;
 	}
 
@@ -74,12 +73,14 @@ namespace kai
 
 	void _VisionBase::cvDraw(void *pWindow)
 	{
+#ifdef WITH_UI
+#ifdef USE_OPENCV
 		NULL_(pWindow);
 		this->_ModuleBase::cvDraw(pWindow);
-		IF_(check()<0);
+		IF_(check() < 0);
 
 		_WindowCV *pWin = (_WindowCV *)pWindow;
-		Frame *pF = pWin->getFrame();
+		Frame *pF = pWin->getNextFrame();
 		NULL_(pF);
 		Mat *pM = pF->m();
 		IF_(pM->empty());
@@ -92,7 +93,6 @@ namespace kai
 		}
 		else
 		{
-			Mat *pM = pF->m();
 			Rect r = bb2Rect(bbScale(m_bbDraw, pM->cols, pM->rows));
 
 			Mat m;
@@ -100,7 +100,8 @@ namespace kai
 
 			m.copyTo((*pM)(r));
 		}
+#endif
+#endif
 	}
 
 }
-#endif

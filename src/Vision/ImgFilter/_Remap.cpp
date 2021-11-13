@@ -7,8 +7,6 @@
 
 #include "_Remap.h"
 
-#ifdef USE_OPENCV
-
 namespace kai
 {
 
@@ -17,7 +15,7 @@ namespace kai
 		m_type = vision_remap;
 		m_pV = NULL;
 		m_bReady = false;
-		m_yml = "";
+		m_fCalib ="";
 	}
 
 	_Remap::~_Remap()
@@ -30,25 +28,43 @@ namespace kai
 		IF_F(!_VisionBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
 
-		pK->v("yml", &m_yml);
-		if (!m_yml.empty())
-		{
-			FileStorage fs(m_yml.c_str(), FileStorage::READ);
-			if (fs.isOpened())
-			{
-				fs["mC"] >> m_mC;
-				fs["mD"] >> m_mD;
-				fs.release();
-			}
-		}
-
 		string n;
 		n = "";
 		pK->v("_VisionBase", &n);
 		m_pV = (_VisionBase *)(pK->getInst(n));
 		IF_Fl(!m_pV, n + ": not found");
 
+		pK->v("fCalib", &m_fCalib);
+		updateCamMatrices();
+
 		return true;
+	}
+
+	void _Remap::updateCamMatrices(void)
+	{
+		Kiss *pKf = new Kiss();
+		if (parseKiss(m_fCalib, pKf))
+		{
+			Kiss* pK = pKf->child("calib");
+			IF_d_(pK->empty(), DEL(pKf));
+
+			Mat mC = Mat::zeros(3, 3, CV_64FC1);
+			pK->v("Fx", &mC.at<double>(0, 0));
+			pK->v("Fy", &mC.at<double>(1, 1));
+			pK->v("Cx", &mC.at<double>(0, 2));
+			pK->v("Cy", &mC.at<double>(1, 2));
+			mC.at<double>(2, 2) = 1.0;
+
+			Mat mD = Mat::zeros(1, 5, CV_64FC1);
+			pK->v("k1", &mD.at<double>(0, 0));
+			pK->v("k2", &mD.at<double>(0, 1));
+			pK->v("p1", &mD.at<double>(0, 2));
+			pK->v("p2", &mD.at<double>(0, 3));
+			pK->v("k3", &mD.at<double>(0, 4));
+
+			m_bReady = setCamMatrices(mC, mD);
+		}
+		DEL(pKf);
 	}
 
 	bool _Remap::open(void)
@@ -94,54 +110,75 @@ namespace kai
 		}
 	}
 
-	void _Remap::filter(void)
+	bool _Remap::setCamMatrices(const Mat &mC, const Mat &mD)
 	{
-		Frame *pF = m_pV->BGR();
-		IF_(pF->bEmpty());
-		IF_(m_fBGR.tStamp() >= pF->tStamp())
-
-		if(!m_bReady)
-		{
-			m_fBGR.copy(*pF);
-			setup();
-			IF_(!m_bReady);
-		}
-
-		if(m_fBGR.size() != m_s)
-		{
-			m_bReady = false;
-			setup();
-			IF_(!m_bReady);
-		}
-
-		m_fBGR.copy(pF->remap(m_mX, m_mY));
-	}
-
-	void _Remap::setup(void)
-	{
-		IF_(m_mC.empty() || m_mD.empty());
-
-		setCamMatrices(m_mC, m_mD);
-		m_bReady = true;
-	}
-
-	void _Remap::setCamMatrices(const Mat &mC, const Mat &mD)
-	{
-		IF_(m_fBGR.bEmpty());
+		IF_F(mC.empty() || mD.empty());
 
 		m_mC = mC;
 		m_mD = mD;
+		return scaleCamMatrices();
+	}
 
-		m_s = m_fBGR.size();
-		Mat mCs = m_mC;
-		mCs.at<float>(0,0) *= (float)m_s.width;  //Fx
-		mCs.at<float>(1,1) *= (float)m_s.height; //Fy
-		mCs.at<float>(0,2) *= (float)m_s.width;  //Cx
-		mCs.at<float>(1,2) *= (float)m_s.height; //Cy
+	bool _Remap::scaleCamMatrices(void)
+	{
+		IF_F(m_mC.empty() || m_mD.empty());
 
-		m_mCscaled = getOptimalNewCameraMatrix(mCs, m_mD, m_s, 1, m_s, 0);
-//		initUndistortRectifyMap(mCs, m_mD, Mat(), m_mCscaled, m_s, CV_32FC1, m_mX, m_mY);
-		initUndistortRectifyMap(mCs, m_mD, Mat(), mCs, m_s, CV_16SC2, m_mX, m_mY);
+		cv::Size s(m_vSize.x, m_vSize.y);
+		Mat mCs;
+		m_mC.copyTo(mCs);
+		mCs.at<double>(0, 0) *= (double)s.width;  //Fx
+		mCs.at<double>(1, 1) *= (double)s.height; //Fy
+		mCs.at<double>(0, 2) *= (double)s.width;  //Cx
+		mCs.at<double>(1, 2) *= (double)s.height; //Cy
+
+		m_mCscaled = getOptimalNewCameraMatrix(mCs, m_mD, s, 1, s, 0);
+#ifdef USE_CUDA
+		initUndistortRectifyMap(mCs, m_mD, Mat(), m_mCscaled, s, CV_32F, m_m1, m_m2);
+#else
+		initUndistortRectifyMap(mCs, m_mD, Mat(), m_mCscaled, s, CV_16SC2, m_m1, m_m2);
+#endif
+
+		return true;
+	}
+
+	vDouble2 _Remap::getF(void)
+	{
+		vDouble2 vF = {0,0};
+		IF__(m_mCscaled.empty(), vF);
+
+		vF.x = m_mCscaled.at<double>(0, 0);
+		vF.y = m_mCscaled.at<double>(1, 1);
+		return vF;
+	}
+
+	vDouble2 _Remap::getC(void)
+	{
+		vDouble2 vC = {0,0};
+		IF__(m_mCscaled.empty(), vC);
+
+		vC.x = m_mCscaled.at<double>(0, 2);
+		vC.y = m_mCscaled.at<double>(1, 2);
+		return vC;
+	}
+
+	vFloat2 _Remap::getFf(void)
+	{
+		vFloat2 vF = {0,0};
+		IF__(m_mCscaled.empty(), vF);
+
+		vF.x = (float)m_mCscaled.at<double>(0, 0);
+		vF.y = (float)m_mCscaled.at<double>(1, 1);
+		return vF;
+	}
+
+	vFloat2 _Remap::getCf(void)
+	{
+		vFloat2 vC = {0,0};
+		IF__(m_mCscaled.empty(), vC);
+
+		vC.x = (float)m_mCscaled.at<double>(0, 2);
+		vC.y = (float)m_mCscaled.at<double>(1, 2);
+		return vC;
 	}
 
 	Mat _Remap::mC(void)
@@ -158,5 +195,24 @@ namespace kai
 	{
 		return m_mD;
 	}
+
+	void _Remap::filter(void)
+	{
+		Frame *pF = m_pV->BGR();
+		IF_(pF->bEmpty());
+		IF_(m_fBGR.tStamp() >= pF->tStamp())
+
+		if(!m_bReady || pF->size() != cv::Size(m_vSize.x, m_vSize.y))
+		{
+			cv::Size s = pF->size();
+			m_vSize.x = s.width;
+			m_vSize.y = s.height;
+			m_bReady = scaleCamMatrices();
+		}
+
+		if(m_bReady)
+			m_fBGR.copy(pF->remap(m_m1, m_m2));
+		else
+			m_fBGR.copy(*pF);
+	}
 }
-#endif

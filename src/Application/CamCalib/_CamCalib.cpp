@@ -47,9 +47,9 @@ namespace kai
         vector<vector<Point2f>> vvPimg; // 2D points for each checkerboard image
         vector<Point3f> vObj;           // world coordinates for 3D points
 
-        for (int j = 0; j < m_vChessBoardSize.y; j++)
+        for (int i = 0; i < m_vChessBoardSize.x; i++)
         {
-            for (int i = 0; i < m_vChessBoardSize.x; i++)
+            for (int j = 0; j < m_vChessBoardSize.y; j++)
                 vObj.push_back(cv::Point3f(j*m_squareSize, i*m_squareSize, 0));
         }
 
@@ -64,7 +64,7 @@ namespace kai
         for (int i{0}; i < vImgs.size(); i++)
         {
             m = imread(vImgs[i]);
-            cvtColor(m, mGray, cv::COLOR_BGR2GRAY);
+            cv::cvtColor(m, mGray, cv::COLOR_BGR2GRAY);
 
             // If desired number of corners are found in the image then bSuccess = true
             bSuccess = cv::findChessboardCorners(mGray, 
@@ -93,13 +93,12 @@ namespace kai
 
         Mat mR, mT;
         calibrateCamera(vvPobj, vvPimg, cv::Size(mGray.rows, mGray.cols), m_mC, m_mD, mR, mT);
-        cout << "Camera Matrix : " << m_mC << endl;
-
      	m_mC.at<double>(0,0) /= (double)mGray.cols; //Fx
 		m_mC.at<double>(1,1) /= (double)mGray.rows; //Fy
 		m_mC.at<double>(0,2) /= (double)mGray.cols; //Cx
 		m_mC.at<double>(1,2) /= (double)mGray.rows; //Cy
-        cout << "Camera Matrix (Scaled) : " << m_mC << endl;
+
+        cout << "Camera Matrix : " << m_mC << endl;
         cout << "DistCoeffs : " << m_mD << endl;
         cout << "Rotation vector : " << mR << endl;
         cout << "Translation vector : " << mT << endl;

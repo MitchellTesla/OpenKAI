@@ -4,7 +4,6 @@
 	"appName":"PCcalib",
 	"bLog":1,
 	"bStdErr":1,
-	"waitKey":30,
 }
 
 {
@@ -39,7 +38,7 @@
 		"FPS":30,
 	}
 	"/pipeline":"v4l2src device=/dev/video4 ! image/jpeg,width=3840,height=2160,framerate=30/1 ! jpegdec ! videoconvert ! appsink",
-	"pipeline":"v4l2src device=/dev/video4 ! image/jpeg,width=640,height=480,framerate=30/1 ! jpegdec ! videoconvert ! appsink",
+	"pipeline":"v4l2src device=/dev/video4 ! image/jpeg,width=1920,height=1080,framerate=30/1 ! jpegdec ! videoconvert ! appsink",
 }
 
 {
@@ -51,7 +50,7 @@
 		"FPS":30,
 	}
 	"_VisionBase":"cam",
-	"yml":"",
+	"fCalib":"/home/kai/dev/OpenKAI/kiss/app/calib.kiss",
 }
 
 {
@@ -63,8 +62,8 @@
 		"FPS":10,
 	}
 	"path":"",
-	"vChessBoardSize":[9,6],
-	"squareSize":0.038,
+	"vChessBoardSize":[11,8],
+	"squareSize":0.06,
 }
 
 {
@@ -88,7 +87,8 @@
 	"device":"CPU:0",
 	"vPCbase":["/pcFile","pcLivox"],
 	"_PCstream":"pcLivox",
-	"_SlamBase":"T265",
+	"_NavBase":"T265",
+	"bSlam":1,
 	"_VisionBase":"remap",
 	"_CamCalib":"camCalib",
 	"vCamLookAt":[0,0,0],
@@ -98,8 +98,8 @@
 	"vCamAutoEye":[0,-2,0],
 	"vCamAutoUp":[0,1,0],
 	"vCoR":[0,0,0],
-	"camFov":70,
-	"vCamNF":[0, 200],
+	"camFov":80,
+	"vCamNF":[0, 500],
 	"camFovType":1,
 	"bFullScreen":0,
 	"wPanel":15,
@@ -146,17 +146,14 @@
 	"/broadcastCode":"3GGDJ1500105411",
 	"/broadcastCode":"0TFDHAW001808W1",
 	"nP":256000,
-	"vRange":[0.6, 500],
-	"/vToffset":[-0.0098, -0.046, 0.002],
-	"vToffset":[0.027, -0.0026, 0.0475],
-	"vRoffset":[0, 0, 0],
+	"vRange":[0.5, 500],
 	"vAxisIdx":[1, 0, 2],
 	"vAxisK":[-1, 1, 1],
 	"unitK":0.001,
 	"_VisionBase":"remap",
 	"vAxisIdxRGB":[1, 2, 0],
 	"vAxisKrgb":[-1, -1, 1],
-	"vToffsetRGB":[0.0516, 0.005, 0.01],
+	"fCalib":"/home/kai/dev/OpenKAI/kiss/app/calib.kiss",
 }
 
 {

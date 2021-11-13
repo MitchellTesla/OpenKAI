@@ -8,10 +8,11 @@
 #ifndef OpenKAI_src_Vision__VisionBase_H_
 #define OpenKAI_src_Vision__VisionBase_H_
 
-#ifdef USE_OPENCV
 #include "../Base/_ModuleBase.h"
+#include "../IO/_File.h"
 #include "../UI/_Console.h"
 #include "../UI/_WindowCV.h"
+#include "../Utility/utilFile.h"
 
 namespace kai
 {
@@ -61,7 +62,7 @@ public:
 	virtual VISION_TYPE getType(void);
 	virtual Frame* BGR(void);
 
-public:
+protected:
 	bool m_bOpen;
 	VISION_TYPE m_type;
     vInt2 m_vSize;
@@ -71,5 +72,4 @@ public:
 };
 
 }
-#endif
 #endif

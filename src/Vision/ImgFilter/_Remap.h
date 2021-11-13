@@ -8,8 +8,8 @@
 #ifndef OpenKAI_src_Vision__Remap_H_
 #define OpenKAI_src_Vision__Remap_H_
 
-#ifdef USE_OPENCV
 #include "../_VisionBase.h"
+#include "../../IO/_File.h"
 
 namespace kai
 {
@@ -26,8 +26,13 @@ public:
 	void close(void);
 	bool bReady(void);
 
-	void setup(void);
-	void setCamMatrices(const Mat& mC, const Mat& mD);
+	bool setCamMatrices(const Mat& mC, const Mat& mD);
+	bool scaleCamMatrices(void);
+	void updateCamMatrices(void);
+	vDouble2 getF(void);
+	vDouble2 getC(void);
+	vFloat2 getFf(void);
+	vFloat2 getCf(void);
 	Mat mC(void);
 	Mat mCscaled(void);
 	Mat mD(void);
@@ -43,20 +48,17 @@ private:
 
 public:
 	_VisionBase* m_pV;
-	string m_yml;
 	bool m_bReady;
+	string m_fCalib;
 
-	//original
-	Mat m_mC;
-	Mat m_mD;
-
-	//scaled with input image size
-	Mat m_mCscaled;
-	Mat m_mX;
-	Mat m_mY;
-	cv::Size m_s;
+	//original camera matrix
+	Mat m_mC;		//Intrinsic
+	Mat m_mCscaled;	//scaled with input image size
+	Mat m_mD;		//Distortion
+	//Remap
+	Mat m_m1;
+	Mat m_m2;
 };
 
 }
-#endif
 #endif

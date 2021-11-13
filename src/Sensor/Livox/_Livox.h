@@ -8,8 +8,7 @@
 #ifndef OpenKAI_src_Sensor__Livox_H_
 #define OpenKAI_src_Sensor__Livox_H_
 
-#ifdef USE_LIVOX
-#include "../../PointCloud/_PCstream.h"
+#include "../../3D/PointCloud/_PCstream.h"
 #include "LivoxLidar.h"
 
 namespace kai
@@ -24,6 +23,11 @@ public:
     virtual bool init ( void* pKiss );
     virtual int check ( void );
     virtual bool start ( void );
+
+    virtual void startStream(void);
+    virtual void stopStream(void);
+
+    void setLidarMode(LidarMode m);
 
 protected:
     static void CbRecvData(LivoxEthPacket* pData, void* pLivox);
@@ -49,9 +53,9 @@ public:
     string m_broadcastCode;
     LivoxLidar* m_pL;
     uint32_t m_iTransformed;
-    const float m_ovRef = 1.0/255.0;    
+    const float m_ovRef = 1.0/255.0;
+    int m_lidarMode;
 };
 
 }
-#endif
 #endif

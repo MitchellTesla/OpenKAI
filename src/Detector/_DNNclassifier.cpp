@@ -95,7 +95,7 @@ namespace kai
 				classify();
 
 				if (m_pT->bGoSleep())
-					m_pU->m_pPrev->clear();
+					m_pU->clear();
 			}
 
 			m_pT->autoFPSto();
@@ -150,7 +150,7 @@ namespace kai
 			LOG_I("Class: " + i2str(o.getTopClass()));
 		}
 
-		m_pU->updateObj();
+		m_pU->swap();
 	}
 
 	bool _DNNclassifier::classify(Mat m, _Object *pO, float minConfidence)
@@ -180,7 +180,7 @@ namespace kai
 		IF_(check() < 0);
 
 		_WindowCV *pWin = (_WindowCV *)pWindow;
-		Frame *pF = pWin->getFrame();
+		Frame *pF = pWin->getNextFrame();
 		NULL_(pF);
 		Mat *pM = pF->m();
 		IF_(pM->empty());

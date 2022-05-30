@@ -52,8 +52,11 @@
 #include "../Autopilot/ArduPilot/_AP_depthVision.h"
 #include "../Autopilot/ArduPilot/_AP_land.h"
 #include "../Autopilot/ArduPilot/_AP_follow.h"
+#include "../Autopilot/ArduPilot/_AP_video.h"
 #include "../Autopilot/ArduPilot/_APcopter_photo.h"
+#ifdef WITH_APP_ROBOTARM
 #include "../Autopilot/ArduPilot/_AProver_picking.h"
+#endif
 #ifdef USE_REALSENSE
 #include "../Autopilot/ArduPilot/_AP_GPS.h"
 #endif
@@ -74,6 +77,10 @@
 
 #ifdef WITH_APP_CAMCALIB
 #include "../Application/CamCalib/_CamCalib.h"
+#endif
+
+#ifdef WITH_APP_DEPTHCAM
+#include "../Application/DepthCam/_DepthCam.h"
 #endif
 
 #ifdef WITH_APP_DRONEBOX
@@ -111,6 +118,7 @@
 #endif
 
 #ifdef WITH_APP_ROVER
+#include "../Application/Rover/_PWMrover.h"
 #include "../Application/Rover/_RCrover.h"
 #endif
 
@@ -252,10 +260,19 @@
 #include "../Protocol/_Canbus.h"
 #include "../Protocol/_Mavlink.h"
 #include "../Protocol/_MOAB.h"
+#include "../Protocol/_PWMio.h"
 #include "../Protocol/_ProtocolBase.h"
 #include "../Protocol/_Modbus.h"
 #include "../Protocol/_SBus.h"
 #endif
+
+// #ifdef WITH_SCIENCE
+// #include "../Science/_Solver.h"
+// #include "../Science/_SolverBase.h"
+// #ifdef USE_MATHGL
+// #include "../Science/_FourierSeries.h"
+// #endif
+// #endif
 
 #ifdef WITH_SENSOR
 #include "../Sensor/_LeddarVu.h"
@@ -279,11 +296,9 @@
 #include "../State/_StateControl.h"
 #endif
 
-#ifdef WITH_TRACKER
-#endif
-
 #ifdef WITH_UI
 #include "../UI/_Console.h"
+#include "../UI/_FrameBuffer.h"
 #ifdef USE_OPENCV
 #include "../UI/_WindowCV.h"
 #endif
@@ -327,6 +342,7 @@
 #endif
 #ifdef USE_REALSENSE
 #include "../Vision/_RealSense.h"
+#include "../Vision/ImgFilter/_RSdepth.h"
 #endif
 #ifdef USE_PYLON
 #include "../Vision/_Pylon.h"

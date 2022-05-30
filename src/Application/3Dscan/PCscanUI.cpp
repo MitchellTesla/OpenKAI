@@ -19,8 +19,7 @@ namespace open3d
             PCscanUI::PCscanUI(const string &title, int width, int height)
                 : O3DUI(title, width, height)
             {
-                Init();
-                Application::GetInstance().SetMenubar(NULL);
+                //                Init();
             }
 
             PCscanUI::~PCscanUI() {}
@@ -37,6 +36,8 @@ namespace open3d
                 InitCtrlPanel();
                 UpdateUIstate();
                 SetMouseCameraMode();
+
+                Application::GetInstance().SetMenubar(NULL);
             }
 
             void PCscanUI::camMove(Vector3f vM)
@@ -140,7 +141,6 @@ namespace open3d
                 m_cbResetPC.add(pCb, pPCV);
             }
 
-
             void PCscanUI::Layout(const gui::LayoutContext &context)
             {
                 int settings_width = m_uiState.m_wPanel * context.theme.font_size;
@@ -175,19 +175,19 @@ namespace open3d
                 m_panelCtrl->AddChild(GiveOwnership(panelFile));
 
                 m_btnOpenPC = new Button(" Open ");
-                m_btnOpenPC->SetOnClicked([this]() {
-                    OnOpenPLY();
-                });
+                m_btnOpenPC->SetPaddingEm(m_uiState.m_btnPaddingH, m_uiState.m_btnPaddingV);
+                m_btnOpenPC->SetOnClicked([this]()
+                                          { OnOpenPLY(); });
 
                 m_btnSavePC = new Button(" Save ");
-                m_btnSavePC->SetOnClicked([this]() {
-                    OnSavePLY();
-                });
+                m_btnSavePC->SetPaddingEm(m_uiState.m_btnPaddingH, m_uiState.m_btnPaddingV);
+                m_btnSavePC->SetOnClicked([this]()
+                                          { OnSavePLY(); });
 
                 m_btnSaveRGB = new Button("Screen");
-                m_btnSaveRGB->SetOnClicked([this]() {
-                    OnSaveRGB();
-                });
+                m_btnSaveRGB->SetPaddingEm(m_uiState.m_btnPaddingH, m_uiState.m_btnPaddingV);
+                m_btnSaveRGB->SetOnClicked([this]()
+                                           { OnSaveRGB(); });
 
                 auto pH = new Horiz(v_spacing);
                 pH->AddChild(GiveOwnership(m_btnOpenPC));
@@ -201,61 +201,67 @@ namespace open3d
                 m_panelCtrl->AddChild(GiveOwnership(panelCam));
 
                 m_btnCamAuto = new Button("  Auto  ");
-                m_btnCamAuto->SetOnClicked([this]() {
-                    m_bCamAuto = !m_bCamAuto;
-                    int m = m_bCamAuto ? 1 : 0;
-                    m_cbCamSet.call(&m);
-                    UpdateBtnState();
-                    m_pScene->ForceRedraw();
-                });
+                m_btnCamAuto->SetPaddingEm(m_uiState.m_btnPaddingH, m_uiState.m_btnPaddingV);
+                m_btnCamAuto->SetOnClicked([this]()
+                                           {
+                                               m_bCamAuto = !m_bCamAuto;
+                                               int m = m_bCamAuto ? 1 : 0;
+                                               m_cbCamSet.call(&m);
+                                               UpdateBtnState();
+                                               m_pScene->ForceRedraw();
+                                           });
 
                 m_btnCamAll = new Button("    All    ");
-                m_btnCamAll->SetOnClicked([this]() {
-                    int m = 4;
-                    m_cbCamSet.call(&m);
-                    if (m_uiMode == uiMode_pointPick)
-                        UpdateSelectableGeometry();
-                    m_pScene->ForceRedraw();
-                });
+                m_btnCamAll->SetPaddingEm(m_uiState.m_btnPaddingH, m_uiState.m_btnPaddingV);
+                m_btnCamAll->SetOnClicked([this]()
+                                          {
+                                              int m = 4;
+                                              m_cbCamSet.call(&m);
+                                              if (m_uiMode == uiMode_pointPick)
+                                                  UpdateSelectableGeometry();
+                                              m_pScene->ForceRedraw();
+                                          });
 
                 m_btnCamOrigin = new Button(" Origin ");
-                m_btnCamOrigin->SetOnClicked([this]() {
-                    int m = 3;
-                    m_cbCamSet.call(&m);
-                    if (m_uiMode == uiMode_pointPick)
-                        UpdateSelectableGeometry();
-                    m_pScene->ForceRedraw();
-                });
+                m_btnCamOrigin->SetPaddingEm(m_uiState.m_btnPaddingH, m_uiState.m_btnPaddingV);
+                m_btnCamOrigin->SetOnClicked([this]()
+                                             {
+                                                 int m = 3;
+                                                 m_cbCamSet.call(&m);
+                                                 if (m_uiMode == uiMode_pointPick)
+                                                     UpdateSelectableGeometry();
+                                                 m_pScene->ForceRedraw();
+                                             });
 
                 m_btnCamL = new Button(" < ");
-                m_btnCamL->SetOnClicked([this]() {
-                    camMove(Vector3f(-1, 0, 0));
-                });
+                m_btnCamL->SetPaddingEm(m_uiState.m_btnPaddingH, m_uiState.m_btnPaddingV);
+                m_btnCamL->SetOnClicked([this]()
+                                        { camMove(Vector3f(-1, 0, 0)); });
 
                 m_btnCamR = new Button(" > ");
-                m_btnCamR->SetOnClicked([this]() {
-                    camMove(Vector3f(1, 0, 0));
-                });
+                m_btnCamR->SetPaddingEm(m_uiState.m_btnPaddingH, m_uiState.m_btnPaddingV);
+                m_btnCamR->SetOnClicked([this]()
+                                        { camMove(Vector3f(1, 0, 0)); });
 
                 m_btnCamF = new Button(" ^ ");
-                m_btnCamF->SetOnClicked([this]() {
-                    camMove(Vector3f(0, 0, -1));
-                });
+                m_btnCamF->SetPaddingEm(m_uiState.m_btnPaddingH, m_uiState.m_btnPaddingV);
+                m_btnCamF->SetOnClicked([this]()
+                                        { camMove(Vector3f(0, 0, -1)); });
 
                 m_btnCamB = new Button(" v ");
-                m_btnCamB->SetOnClicked([this]() {
-                    camMove(Vector3f(0, 0, 1));
-                });
+                m_btnCamB->SetPaddingEm(m_uiState.m_btnPaddingH, m_uiState.m_btnPaddingV);
+                m_btnCamB->SetOnClicked([this]()
+                                        { camMove(Vector3f(0, 0, 1)); });
 
                 m_btnCamU = new Button(" Up ");
-                m_btnCamU->SetOnClicked([this]() {
-                    camMove(Vector3f(0, 1, 0));
-                });
+                m_btnCamU->SetPaddingEm(m_uiState.m_btnPaddingH, m_uiState.m_btnPaddingV);
+                m_btnCamU->SetOnClicked([this]()
+                                        { camMove(Vector3f(0, 1, 0)); });
 
                 m_btnCamD = new Button(" Down ");
-                m_btnCamD->SetOnClicked([this]() {
-                    camMove(Vector3f(0, -1, 0));
-                });
+                m_btnCamD->SetPaddingEm(m_uiState.m_btnPaddingH, m_uiState.m_btnPaddingV);
+                m_btnCamD->SetOnClicked([this]()
+                                        { camMove(Vector3f(0, -1, 0)); });
 
                 auto *pN = new VGrid(3, v_spacing);
                 pN->AddChild(GiveOwnership(m_btnCamAuto));
@@ -277,18 +283,18 @@ namespace open3d
                 auto sliderPointSize = new Slider(Slider::INT);
                 sliderPointSize->SetLimits(1, 10);
                 sliderPointSize->SetValue(m_uiState.m_sPoint);
-                sliderPointSize->SetOnValueChanged([this](const double v) {
-                    SetPointSize(int(v));
-                });
+                sliderPointSize->SetOnValueChanged([this](const double v)
+                                                   { SetPointSize(int(v)); });
 
                 m_sliderVsize = new Slider(Slider::DOUBLE);
                 m_sliderVsize->SetLimits(0.0, 1.0);
                 m_sliderVsize->SetValue(m_uiState.m_sVoxel);
-                m_sliderVsize->SetOnValueChanged([this](const double v) {
-                    m_uiState.m_sVoxel = v;
-                    m_cbVoxelDown.call(&m_uiState);
-                    m_pScene->ForceRedraw();
-                });
+                m_sliderVsize->SetOnValueChanged([this](const double v)
+                                                 {
+                                                     m_uiState.m_sVoxel = v;
+                                                     m_cbVoxelDown.call(&m_uiState);
+                                                     m_pScene->ForceRedraw();
+                                                 });
 
                 auto *pG = new VGrid(2, v_spacing);
                 pG->AddChild(make_shared<Label>("PointSize"));
@@ -298,17 +304,21 @@ namespace open3d
                 panelView->AddChild(GiveOwnership(pG));
 
                 m_btnHiddenRemove = new Button(" Z-Cull ");
-                m_btnHiddenRemove->SetOnClicked([this]() {
-                    m_uiState.m_vCamPos = m_pScene->GetScene()->GetCamera()->GetPosition();
-                    m_cbHiddenRemove.call(&m_uiState);
-                    m_pScene->ForceRedraw();
-                });
+                m_btnHiddenRemove->SetPaddingEm(m_uiState.m_btnPaddingH, m_uiState.m_btnPaddingV);
+                m_btnHiddenRemove->SetOnClicked([this]()
+                                                {
+                                                    m_uiState.m_vCamPos = m_pScene->GetScene()->GetCamera()->GetPosition();
+                                                    m_cbHiddenRemove.call(&m_uiState);
+                                                    m_pScene->ForceRedraw();
+                                                });
 
                 m_btnFilterReset = new Button(" Reset ");
-                m_btnFilterReset->SetOnClicked([this]() {
-                    m_cbResetPC.call();
-                    m_pScene->ForceRedraw();
-                });
+                m_btnFilterReset->SetPaddingEm(m_uiState.m_btnPaddingH, m_uiState.m_btnPaddingV);
+                m_btnFilterReset->SetOnClicked([this]()
+                                               {
+                                                   m_cbResetPC.call();
+                                                   m_pScene->ForceRedraw();
+                                               });
 
                 pG = new VGrid(2, v_spacing);
                 pG->AddChild(GiveOwnership(m_btnHiddenRemove));
@@ -320,16 +330,18 @@ namespace open3d
                 m_panelCtrl->AddChild(GiveOwnership(panelScan));
 
                 m_btnScan = new Button("        Start        ");
+                m_btnScan->SetPaddingEm(m_uiState.m_btnPaddingH, m_uiState.m_btnPaddingV);
                 m_btnScan->SetToggleable(true);
-                m_btnScan->SetOnClicked([this]() {
-                    m_bScanning = !m_bScanning;
-                    m_cbScan.call(&m_bScanning);
-                    m_bCamAuto = m_bScanning;
-                    int m = m_bCamAuto ? 1 : 0;
-                    m_cbCamSet.call(&m);
-                    UpdateBtnState();
-                    PostRedraw();
-                });
+                m_btnScan->SetOnClicked([this]()
+                                        {
+                                            m_bScanning = !m_bScanning;
+                                            m_cbScan.call(&m_bScanning);
+                                            m_bCamAuto = m_bScanning;
+                                            int m = m_bCamAuto ? 1 : 0;
+                                            m_cbCamSet.call(&m);
+                                            UpdateBtnState();
+                                            PostRedraw();
+                                        });
                 pH = new Horiz(v_spacing);
                 pH->AddChild(GiveOwnership(m_btnScan));
                 pH->AddStretch();
@@ -363,38 +375,71 @@ namespace open3d
 
             void PCscanUI::OnSaveRGB(void)
             {
-                auto dlg = make_shared<gui::FileDialog>(
-                    gui::FileDialog::Mode::SAVE, "Save File", this->GetTheme());
-                dlg->AddFilter(".png", "PNG images (.png)");
-                dlg->AddFilter("", "All files");
-                dlg->SetOnCancel([this]() { this->CloseDialog(); });
-                dlg->SetOnDone([this](const char *path) {
-                    this->CloseDialog();
-                    this->ExportCurrentImage(path);
-                });
-                ShowDialog(dlg);
+                string fName = getBaseDirSave();
+                if (fName.empty())
+                {
+                    ShowMsg("File Save", "Insert USB memory", true);
+                    return;
+                }
+
+                fName += tFormat() + ".png";
+                this->ExportCurrentImage(fName.c_str());
+                ShowMsg("File Save", "Saved image to USB memory", true);
+
+                // auto dlg = make_shared<gui::FileDialog>(
+                //     gui::FileDialog::Mode::SAVE, "Save File", this->GetTheme());
+                // dlg->AddFilter(".png", "PNG images (.png)");
+                // dlg->AddFilter("", "All files");
+                // dlg->SetOnCancel([this]() { this->CloseDialog(); });
+                // dlg->SetOnDone([this](const char *path) {
+                //     this->CloseDialog();
+                //     this->ExportCurrentImage(path);
+                // });
+                // ShowDialog(dlg);
             }
 
             void PCscanUI::OnSavePLY(void)
             {
-                auto dlg = make_shared<gui::FileDialog>(
-                    gui::FileDialog::Mode::SAVE, "Save File", this->GetTheme());
-                dlg->AddFilter(".ply", "Point Cloud Files (.ply)");
-                dlg->AddFilter("", "All files");
-                dlg->SetOnCancel([this]() { this->CloseDialog(); });
-                dlg->SetOnDone([this](const char *path) {
-                    this->CloseDialog();
+                string fName = getBaseDirSave();
+                if (fName.empty())
+                {
+                    ShowMsg("File Save", "Insert USB memory", true);
+                    return;
+                }
 
-                    ShowMsg("Save", "Saving .Ply file");
-                    io::WritePointCloudOption par;
-                    par.write_ascii = io::WritePointCloudOption::IsAscii::Binary;
-                    par.compressed = io::WritePointCloudOption::Compressed::Uncompressed;
+                fName += tFormat();
+                string imgName = fName + ".png";
+                string plyName = fName + ".ply";
 
-                    shared_ptr<t::geometry::PointCloud> spTpc = GetGeometry(m_modelName).m_sTgeometry;
-                    io::WritePointCloudToPLY(path, spTpc->ToLegacyPointCloud(), par);
-                    CloseMsg();
-                });
-                ShowDialog(dlg);
+                this->ExportCurrentImage(imgName.c_str());
+
+                io::WritePointCloudOption par;
+                par.write_ascii = io::WritePointCloudOption::IsAscii::Binary;
+                par.compressed = io::WritePointCloudOption::Compressed::Uncompressed;
+
+                shared_ptr<t::geometry::PointCloud> spTpc = GetGeometry(m_modelName).m_sTgeometry;
+                io::WritePointCloudToPLY(plyName.c_str(), spTpc->ToLegacyPointCloud(), par);
+
+                ShowMsg("File Save", "Saved model to USB memory", true);
+
+                // auto dlg = make_shared<gui::FileDialog>(
+                //     gui::FileDialog::Mode::SAVE, "Save File", this->GetTheme());
+                // dlg->AddFilter(".ply", "Point Cloud Files (.ply)");
+                // dlg->AddFilter("", "All files");
+                // dlg->SetOnCancel([this]() { this->CloseDialog(); });
+                // dlg->SetOnDone([this](const char *path) {
+                //     this->CloseDialog();
+
+                //     ShowMsg("Save", "Saving .Ply file");
+                //     io::WritePointCloudOption par;
+                //     par.write_ascii = io::WritePointCloudOption::IsAscii::Binary;
+                //     par.compressed = io::WritePointCloudOption::Compressed::Uncompressed;
+
+                //     shared_ptr<t::geometry::PointCloud> spTpc = GetGeometry(m_modelName).m_sTgeometry;
+                //     io::WritePointCloudToPLY(path, spTpc->ToLegacyPointCloud(), par);
+                //     CloseMsg();
+                // });
+                // ShowDialog(dlg);
             }
 
             void PCscanUI::OnOpenPLY(void)
@@ -403,11 +448,13 @@ namespace open3d
                     gui::FileDialog::Mode::OPEN, "Save File", this->GetTheme());
                 dlg->AddFilter(".ply", "Point Cloud Files (.ply)");
                 dlg->AddFilter("", "All files");
-                dlg->SetOnCancel([this]() { this->CloseDialog(); });
-                dlg->SetOnDone([this](const char *path) {
-                    this->CloseDialog();
-                    this->m_cbOpenPC.call((void *)path);
-                });
+                dlg->SetOnCancel([this]()
+                                 { this->CloseDialog(); });
+                dlg->SetOnDone([this](const char *path)
+                               {
+                                   this->CloseDialog();
+                                   this->m_cbOpenPC.call((void *)path);
+                               });
                 ShowDialog(dlg);
             }
 

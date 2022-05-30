@@ -186,7 +186,7 @@ namespace kai
 
 		updateUIpc(pc);
 		PCscanUI* pW = (PCscanUI*)m_pWin;
-//		pW->SetProgressBar((float)m_pPS->iP() / (float)m_pPS->nP());
+		pW->SetProgressBar((float)pPS->iP() / (float)pPS->nP());
 	}
 
 	void _PCscan::updateCamAuto(void)
@@ -277,6 +277,15 @@ namespace kai
 		app.Initialize(m_pathRes.c_str());
 
 		m_pWin = new PCscanUI(*this->getName(), 2000, 1000);
+		m_pUIstate = m_pWin->getUIState();
+		m_pUIstate->m_bSceneCache = m_bSceneCache;
+		m_pUIstate->m_mouseMode = (visualization::gui::SceneWidget::Controls)m_mouseMode;
+		m_pUIstate->m_wPanel = m_wPanel;
+		m_pUIstate->m_sMove = m_vDmove.x;
+		m_pUIstate->m_btnPaddingH = m_vBtnPadding.x;
+		m_pUIstate->m_btnPaddingV = m_vBtnPadding.y;
+		m_pUIstate->m_dirSave = m_dirSave;
+		m_pWin->Init();
 		PCscanUI* pW = (PCscanUI*)m_pWin;
 		app.AddWindow(shared_ptr<PCscanUI>(pW));
 
@@ -287,11 +296,6 @@ namespace kai
 		pW->SetCbResetPC(OnResetPC, (void *)this);
 		pW->SetCbVoxelDown(OnVoxelDown, (void *)this);
 
-		m_pUIstate = m_pWin->getUIState();
-		m_pUIstate->m_bSceneCache = m_bSceneCache;
-		m_pUIstate->m_mouseMode = (visualization::gui::SceneWidget::Controls)m_mouseMode;
-		m_pUIstate->m_wPanel = m_wPanel;
-		m_pUIstate->m_sMove = m_vDmove.x;
 		m_pWin->UpdateUIstate();
 		m_pWin->SetFullScreen(m_bFullScreen);
 		m_aabb = createDefaultAABB();

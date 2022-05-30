@@ -8,9 +8,8 @@
 #ifndef OpenKAI_src_Tracker__TrackerBase_H_
 #define OpenKAI_src_Tracker__TrackerBase_H_
 
+#include <opencv2/tracking.hpp>
 #include "../Base/_ModuleBase.h"
-
-#ifdef USE_OPENCV
 #include "../Detector/_DetectorBase.h"
 #include "../Vision/_VisionBase.h"
 
@@ -59,5 +58,4 @@ public:
 };
 
 }
-#endif
 #endif

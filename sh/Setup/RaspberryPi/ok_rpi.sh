@@ -3,17 +3,26 @@
 # Enable SSH, disable OS use of UART, enable UART hardware
 sudo raspi-config
 
+Start the SSH service with systemctl
+sudo systemctl enable ssh
+sudo systemctl start ssh
+
+For headless setup
+nano /media/kai/boot/ssh
+Placing a file named ssh, without any extension, onto the boot partition of the SD card. When the Pi boots, it looks for the ssh file. If it is found, SSH is enabled, and the file is deleted.
+
 # Setup
 sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get dist-upgrade
-sudo rpi-update
+# sudo rpi-update
 
 # Disable OS use of UART and Enable UART hardware
 set +H
-sudo sh -c "echo 'dtoverlay=disable-bt\ndtoverlay=disable-wifi\n' >> /boot/config.txt"
+sudo sh -c "echo 'dtoverlay=disable-bt\n' >> /boot/config.txt"
 set -H
 sudo reboot now
+#sudo sh -c "echo 'dtoverlay=disable-bt\ndtoverlay=disable-wifi\n' >> /boot/config.txt"
 
 sudo systemctl disable hciuart
 sudo systemctl stop serial-getty@ttyAMA0.service
@@ -21,14 +30,23 @@ sudo systemctl disable serial-getty@ttyAMA0.service
 sudo systemctl stop serial-getty@ttyS0.service
 sudo systemctl disable serial-getty@ttyS0.service
 sudo reboot now
-	
+
+# Mount ssd
+lsblk -f
+sudo mkfs -t ext4 /dev/nvme0n1
+# sudo mkfs -t vfat /dev/nvme0n1
+sudo mkdir -p /home/pi/ssd
+sudo mount -t auto /dev/nvme0n1 /home/pi/ssd
+sudo chown pi ssd/
+sudo mount /dev/nvme0n1 /home/pi/ssd
+
 # Raspberry camera
-sudo apt-get -y install gstreamer1.0-omx libraspberrypi-dev
-git clone --depth 1 https://github.com/thaytan/gst-rpicamsrc.git
-cd gst-rpicamsrc
-./autogen.sh --prefix=/usr --libdir=/usr/lib/arm-linux-gnueabihf/
-make
-sudo make install
+sudo gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw,width=640,height=480,framerate=20/1 ! x264enc ! matroskamux ! filesink location=/home/pi/ssd/test.mkv
+sudo gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw,width=1280,height=720,framerate=30/1 ! omxh264enc ! video/x-h264, control-rate=2,bitrate=16650000,insert-sps-pps=true,profile=high ! h264parse ! matroskamux ! filesink location=/home/pi/ssd/test1.mkv
+sudo gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw,width=1280,height=720,framerate=30/1 ! v4l2h264enc ! h264parse ! matroskamux ! filesink location=/home/pi/ssd/test1.mkv
+sudo gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw,width=1280,height=720,framerate=30/1 ! videoconvert ! fbdevsink
+sudo gst-launch-1.0 libcamerasrc ! video/x-raw,width=1280,height=720,framerate=30/1 ! videoconvert ! fbdevsink
+sudo gst-launch-1.0 libcamerasrc ! video/x-raw,format=RGB,width=1280,height=720,framerate=30/1 ! v4l2convert ! v4l2h264enc ! 'video/x-h264,level=(string)4' ! h264parse ! matroskamux ! filesink location="/home/pi/ssd/video/test.mka"
 
 # USB reset for Realsense
 sudo apt-get install libusb-1.0-0-dev
@@ -120,3 +138,12 @@ sudo systemctl enable ok.service
 
 # clear bash history
 history -c
+
+# outdated
+# Raspberry camera
+sudo apt-get -y install gstreamer1.0-omx libraspberrypi-dev
+git clone --depth 1 https://github.com/thaytan/gst-rpicamsrc.git
+cd gst-rpicamsrc
+./autogen.sh --prefix=/usr --libdir=/usr/lib/arm-linux-gnueabihf/
+make
+sudo make install

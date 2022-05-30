@@ -14,7 +14,7 @@ namespace kai
 	{
 		m_bOpen = false;
 		m_type = vision_unknown;
-		m_vSize.init(1280, 720);
+		m_vSize.set(1280, 720);
 		m_bbDraw.x = -1.0;
 	}
 
@@ -82,8 +82,6 @@ namespace kai
 		_WindowCV *pWin = (_WindowCV *)pWindow;
 		Frame *pF = pWin->getNextFrame();
 		NULL_(pF);
-		Mat *pM = pF->m();
-		IF_(pM->empty());
 
 		IF_(m_fBGR.bEmpty());
 
@@ -93,8 +91,9 @@ namespace kai
 		}
 		else
 		{
+			Mat *pM = pF->m();
+			IF_(pM->empty());
 			Rect r = bb2Rect(bbScale(m_bbDraw, pM->cols, pM->rows));
-
 			Mat m;
 			cv::resize(*m_fBGR.m(), m, Size(r.width, r.height));
 

@@ -1,4 +1,3 @@
-#ifdef USE_OPEN3D
 #include "O3DUI.h"
 
 namespace open3d
@@ -32,9 +31,9 @@ namespace open3d
             }
 
             void O3DUI::AddGeometry(const string &name,
-                                       shared_ptr<geometry::Geometry3D> spG,
-                                       rendering::Material *material,
-                                       bool bVisible)
+                                    shared_ptr<geometry::Geometry3D> spG,
+                                    rendering::Material *material,
+                                    bool bVisible)
             {
                 bool is_default_color;
                 bool no_shadows = false;
@@ -101,9 +100,9 @@ namespace open3d
             }
 
             void O3DUI::AddPointCloud(const string &name,
-                                         shared_ptr<t::geometry::PointCloud> sTg,
-                                         rendering::Material *material,
-                                         bool bVisible)
+                                      shared_ptr<t::geometry::PointCloud> sTg,
+                                      rendering::Material *material,
+                                      bool bVisible)
             {
                 bool no_shadows = false;
                 Material mat;
@@ -139,12 +138,13 @@ namespace open3d
             }
 
             void O3DUI::UpdatePointCloud(const string &name,
-                                            shared_ptr<t::geometry::PointCloud> sTg)
+                                         shared_ptr<t::geometry::PointCloud> sTg)
             {
                 UpdateTgeometry(name, sTg);
 
                 gui::Application::GetInstance().PostToMainThread(
-                    this, [this, name]() {
+                    this, [this, name]()
+                    {
                         m_pScene->GetScene()->GetScene()->UpdateGeometry(
                             name,
                             *GetGeometry(name).m_sTgeometry,
@@ -214,7 +214,7 @@ namespace open3d
             }
 
             void O3DUI::CamAutoBound(const geometry::AxisAlignedBoundingBox &aabb,
-                                        const Vector3f &CoR)
+                                     const Vector3f &CoR)
             {
                 m_pScene->SetupCamera(m_pScene->GetScene()->GetCamera()->GetFieldOfView(),
                                       aabb,
@@ -288,7 +288,8 @@ namespace open3d
                 if (bOK)
                 {
                     auto ok = std::make_shared<Button>("OK");
-                    ok->SetOnClicked([this]() { this->CloseDialog(); });
+                    ok->SetOnClicked([this]()
+                                     { this->CloseDialog(); });
                     layout->AddChild(Horiz::MakeCentered(ok));
                 }
 
@@ -307,7 +308,8 @@ namespace open3d
             {
                 m_pScene->EnableSceneCaching(false);
                 m_pScene->GetScene()->GetScene()->RenderToImage(
-                    [this, path](shared_ptr<geometry::Image> image) mutable {
+                    [this, path](shared_ptr<geometry::Image> image) mutable
+                    {
                         if (!io::WriteImage(path, *image))
                         {
                             ShowMessageBox(
@@ -316,6 +318,27 @@ namespace open3d
                         }
                         m_pScene->EnableSceneCaching(m_uiState.m_bSceneCache);
                     });
+            }
+
+            string O3DUI::getBaseDirSave(void)
+            {
+                DIR *pDir = opendir(m_uiState.m_dirSave.c_str());
+                if(!pDir)return "";
+
+                struct dirent *dir;
+                string d = "";
+                while ((dir = readdir(pDir)) != NULL)
+                {
+                    IF_CONT(dir->d_name[0] == '.');
+                    IF_CONT(dir->d_type != 0x4); //0x4: folder
+
+                    d = m_uiState.m_dirSave + string(dir->d_name);
+                    d = checkDirName(d);
+                    break;
+                }
+
+                closedir(pDir);
+                return d;
             }
 
             void O3DUI::Layout(const gui::LayoutContext &context)
@@ -345,5 +368,3 @@ namespace open3d
         } // namespace visualizer
     }     // namespace visualization
 } // namespace open3d
-
-#endif

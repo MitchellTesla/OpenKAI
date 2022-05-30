@@ -4,6 +4,7 @@
 	"appName":"PCscan",
 	"bLog":1,
 	"bStdErr":1,
+	"/rc":"umount /dev/mmcblk0p1",
 }
 
 {
@@ -92,11 +93,14 @@
 	"vCamNF":[0, 500],
 	"camFovType":1,
 	"bFullScreen":0,
-	"wPanel":13,
+	"wPanel":20,
+	"vBtnPadding":[1.6, 2.0],
 	"mouseMode":0,
 	"vDmove":[0.5, 5.0],
 	"rDummyDome":1000.0,
 	"dHiddenRemove":100.0,
+	"/dirSave":"/media/kai/",
+	"dirSave":"/media/lab/",
 }
 
 {
@@ -118,12 +122,12 @@
 	"bInst":1,
     {
 		"name":"thread",
-		"FPS":30,
+		"FPS":10,
 	}
 	"bLog":0,
 	"LivoxLidar":"LivoxLidar",
 	"/broadcastCode":"",
-	"nP":256000,
+	"nP":500000,
 	"vRange":[0.5, 500],
 	"vAxisIdx":[1, 0, 2],
 	"vAxisK":[1, -1, 1],
@@ -135,6 +139,7 @@
 	"lidarMode":2,
 	"fCalib":"/home/kai/3Dscan/calibOfs.kiss",
 	"/fCalib":"/home/lab/3Dscan/calibOfs.kiss",
+	"scanPattern":0,
 }
 
 {

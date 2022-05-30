@@ -8,8 +8,6 @@
 #ifndef OpenKAI_src_Detector__ArUco_H_
 #define OpenKAI_src_Detector__ArUco_H_
 
-#ifdef USE_OPENCV
-#ifdef USE_OPENCV_CONTRIB
 #include "../Detector/_DetectorBase.h"
 
 namespace kai
@@ -40,9 +38,13 @@ public:
 	cv::Ptr<cv::aruco::Dictionary> m_pDict;
 	uint8_t m_dict;
 	float m_realSize;
+
+	//optional camera matrix
+	bool m_bPose;
+	Mat m_mC;		//Intrinsic
+	Mat m_mCscaled;	//scaled with input image size
+	Mat m_mD;		//Distortion
 };
 
 }
-#endif
-#endif
 #endif

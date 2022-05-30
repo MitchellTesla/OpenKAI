@@ -1,0 +1,115 @@
+{
+	"name":"APP",
+	"class":"Startup",
+	"appName":"OpenKAI",
+	"bLog":1,
+	"bStdErr":1,
+}
+
+{
+	"name":"RGBview",
+	"class":"_WindowCV",
+	"bInst":1,
+	"bFullScreen":0,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"vBASE":["rs"],
+	"bShow":0,
+	"gstOutput":"appsrc ! videoconvert ! x264enc tune=zerolatency byte-stream=true ! h264parse ! rtph264pay config-interval=1 pt=96 ! udpsink host=127.0.0.1 port=5679 auto-multicast=false",
+	"/gstOutput":"appsrc ! videoconvert ! omxh264enc insert-sps-pps=true ! rtph264pay mtu=1400 config-interval=1 pt=96 ! udpsink host=224.1.1.1 port=5678 auto-multicast=false",	
+}
+
+{
+	"name":"depthView",
+	"class":"_WindowCV",
+	"bInst":1,
+	"bFullScreen":0,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"bShow":0,
+	"vBASE":["RSdepth"],
+	"gstOutput":"appsrc ! videoconvert ! x264enc tune=zerolatency byte-stream=true ! h264parse ! rtph264pay config-interval=1 pt=96 ! udpsink host=127.0.0.1 port=5680 auto-multicast=false",
+	"/gstOutput":"appsrc ! videoconvert ! omxh264enc insert-sps-pps=true ! rtph264pay mtu=1400 config-interval=1 pt=96 ! udpsink host=224.1.1.1 port=5678 auto-multicast=false",	
+}
+
+{
+	"name":"rs",
+	"class":"_RealSense",
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+    {
+		"name":"threadPP",
+		"FPS":30,
+	}
+	"bInst":1,
+	"bLog":1,
+	"bDraw":1,
+	"vPreset":"Short Range",
+	"bRsRGB":1,
+	"vSize":[1280,720],
+	"rsFPS":30,
+	"rsDFPS":30,
+	"vDsize":[640,480],
+	"fDec":0,
+	"fSpat":0,
+	"bAlign":0,
+	"bDebug":0,
+	"nHistLevel":128,
+	"minHistD":0.5,
+	"vRange":[0.1,15.0],
+	"bDepthShow":1,
+}
+
+{
+	"name":"RSdepth",
+	"class":"_RSdepth",
+	"FPS":30,
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"_RealSense":"rs",
+}
+
+{
+	"name":"udp",
+	"class":"_UDP",
+	"bInst":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+    {
+		"name":"threadR",
+		"FPS":1,
+		"/vTwakeup":["DC.threadR"],
+	}
+	"port":20000,
+	"nFIFO":128000,
+}
+
+{
+	"name":"DC",
+	"class":"_DepthCam",
+	"bInst":1,
+	"bLog":0,
+    {
+		"name":"thread",
+		"FPS":1,
+	}
+    {
+		"name":"threadR",
+		"FPS":30,
+	}
+	"_IOBase":"udp",
+	"_DepthVisionBase":"rs",
+	"vBBhb":[0.4, 0.4, 0.6, 0.6],
+	"bHeartbeat":0,
+}

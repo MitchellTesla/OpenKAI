@@ -11,19 +11,37 @@ struct vDouble2
 	double x;
 	double y;
 
+	vDouble2(void)
+	{
+		x = 0.0;
+		y = 0.0;
+	}
+
+	vDouble2(double v)
+	{
+		x = v;
+		y = v;
+	}
+
+	vDouble2(double a, double b)
+	{
+		x = a;
+		y = b;
+	}
+
 	void init(void)
 	{
 		x = 0.0;
 		y = 0.0;
 	}
 
-	void init(double v)
+	void set(double v)
 	{
 		x = v;
 		y = v;
 	}
 
-	void init(double a, double b)
+	void set(double a, double b)
 	{
 		x = a;
 		y = b;
@@ -99,6 +117,11 @@ struct vDouble2
 	double len(void)
 	{
 		return sqrt(x*x + y*y);
+	}
+
+	bool bEmpty(void)
+	{
+		return ((x+y)==0);
 	}
 };
 

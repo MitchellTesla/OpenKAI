@@ -8,7 +8,6 @@
 #ifndef OpenKAI_src_Vision__DepthVisionBase_H_
 #define OpenKAI_src_Vision__DepthVisionBase_H_
 
-#ifdef USE_OPENCV
 #include "_VisionBase.h"
 #include "../Filter/Median.h"
 
@@ -25,8 +24,9 @@ public:
 	virtual void cvDraw(void* pWindow);
 
 	virtual Frame* Depth(void);
-	float d(vInt4* pROI);
-	float d(vFloat4* pROI);
+	float d(const vInt4& bb);
+	float d(const vFloat4& bb);
+	virtual Frame* DepthShow(void);
 
 public:
     vInt2   m_vDsize;
@@ -34,17 +34,15 @@ public:
 	int		m_nHistLev;
 	int		m_iHistFrom;
 	float	m_dScale;
-	vFloat4 m_vKpos;
-	vInt4	m_vDRoi;
+	vInt4	m_vDroi;
 
 	vFloat2	m_vRange;
 	float	m_minHistD;
 
-	Frame	m_depthShow;
-	_WindowCV* m_pDepthWin;
+	Frame	m_fDepthShow;
+//	_WindowCV* m_pDepthWin;
 
 };
 
 }
-#endif
 #endif

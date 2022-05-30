@@ -81,6 +81,7 @@ namespace kai
 		UIState* m_pUIstate;
 		_Thread *m_pTui;
 		string m_modelName;
+		string m_dirSave;
 
 		string m_pathRes;
 		Visualizer m_vis;
@@ -90,6 +91,7 @@ namespace kai
 		bool m_bFullScreen;
 		bool m_bSceneCache;
 		int	m_wPanel;
+		vFloat2 m_vBtnPadding;
 		int m_mouseMode;
 		vFloat2 m_vDmove;
 		float m_rDummyDome;

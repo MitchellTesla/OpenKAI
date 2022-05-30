@@ -9,12 +9,20 @@
 #include "cv.h"
 #endif
 
+#ifdef USE_MATHGL
+#include <mgl2/mgl.h>
+#include <mgl2/fltk.h>
+#endif
+
+#ifdef USE_GLOG
+#include <glog/logging.h>
+#endif
+
 #include <Eigen/Dense>
 
 #include "platform.h"
 #include "macro.h"
 #include "constant.h"
-#include <glog/logging.h>
 #include "../Primitive/vInt2.h"
 #include "../Primitive/vInt3.h"
 #include "../Primitive/vInt4.h"
@@ -28,7 +36,6 @@
 #include "../Utility/util.h"
 #include "../Utility/utilEvent.h"
 #include "../Utility/utilStr.h"
-#include "../Utility/utilCV.h"
 
 #endif
 

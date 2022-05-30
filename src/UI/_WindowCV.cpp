@@ -16,17 +16,12 @@ namespace kai
 		m_waitKey = 30;
 		m_bFullScreen = false;
 		m_gstOutput = "";
-		m_fileRec = "";
-		m_vSize.init(1280, 720);
+		m_vSize.set(1280, 720);
 		m_bShow = true;
 	}
 
 	_WindowCV::~_WindowCV()
 	{
-		if (m_VW.isOpened())
-		{
-			m_VW.release();
-		}
 	}
 
 	bool _WindowCV::init(void *pKiss)
@@ -53,39 +48,6 @@ namespace kai
 		{
 			LOG_E("Window size too small");
 			return false;
-		}
-
-		pK->v("fileRec", &m_fileRec);
-		if (!m_fileRec.empty())
-		{
-			int recFPS = 30;
-			string reCodec = "MJPG";
-			pK->v("recFPS", &recFPS);
-			pK->v("recCodec", &reCodec);
-
-			time_t t = time(NULL);
-			struct tm *tm = localtime(&t);
-			char strTime[128];
-			strftime(strTime, sizeof(strTime), "%c", tm);
-			m_fileRec += strTime;
-			m_fileRec += ".avi";
-
-			if (!m_VW.open(m_fileRec,
-#if CV_VERSION_MAJOR == 3
-						   CV_FOURCC
-#else
-						   VideoWriter::fourcc
-#endif
-						   (reCodec.at(0),
-							reCodec.at(1),
-							reCodec.at(2),
-							reCodec.at(3)),
-						   recFPS,
-						   cv::Size(m_vSize.x, m_vSize.y)))
-			{
-				LOG_E("Cannot open file recording");
-				return false;
-			}
 		}
 
 		pK->v("gstOutput", &m_gstOutput);
@@ -123,6 +85,7 @@ namespace kai
 		setMouseCallback(wn, sOnMouse, this);
 
 		// UI
+#ifdef USE_FREETYPE
 		// Freetype font
 		pK->v("font", &m_font);
 		if (m_font != "")
@@ -130,6 +93,7 @@ namespace kai
 			m_pFT = freetype::createFreeType2();
 			m_pFT->loadFontData(m_font.c_str(), 0);
 		}
+#endif
 
 		// buttons
 		Kiss *pKwb = pK->child("btn");
@@ -151,8 +115,11 @@ namespace kai
 			pKb->v("colBorder", &wb.m_colBorder);
 			pKb->v("colFont", &wb.m_colFont);
 			pKb->v("hFont", &wb.m_hFont);
-			wb.init(m_sF.get()->size(), m_pFT);
-
+#ifdef USE_FREETYPE
+			wb.init(m_sF.get()->size(), &m_pFT);
+#else
+			wb.init(m_sF.get()->size());
+#endif
 			m_vBtn.push_back(wb);
 		}
 
@@ -190,7 +157,11 @@ namespace kai
 		// draw UI
 		for (WindowCV_Btn wb : m_vBtn)
 		{
-			wb.draw(m_sF.next()->m(), m_pFT);
+#ifdef USE_FREETYPE
+			wb.draw(m_sF.next()->m(), &m_pFT);
+#else
+			wb.draw(m_sF.next()->m());
+#endif
 		}
 
 		m_sF.swap();
@@ -203,7 +174,7 @@ namespace kai
 		}
 
 		Frame F,F2;
-		if (m_VW.isOpened() || m_gst.isOpened())
+		if (m_gst.isOpened())
 		{
 			F.copy(*m_sF.get());
 			Size fs = F.size();
@@ -214,17 +185,14 @@ namespace kai
 				F = F2;
 			}
 
-			if (F.m()->type() != CV_8UC3)
-			{
-				F2 = F.cvtColor(COLOR_GRAY2BGR);
-				F = F2;
-			}
+			// cuda convert crash on Jetson?
+			// if (F.m()->type() != CV_8UC3)
+			// {
+			// 	F2 = F.cvtColor(COLOR_GRAY2BGR);
+			// 	F = F2;
+			// }
 
-			if (m_VW.isOpened())
-				m_VW << *F.m();
-
-			if (m_gst.isOpened())
-				m_gst << *F.m();
+			m_gst << *F.m();
 		}
 
 		int key = waitKey(m_waitKey);
@@ -240,10 +208,12 @@ namespace kai
 		return m_sF.next();
 	}
 
+#ifdef USE_FREETYPE
 	cv::Ptr<freetype::FreeType2> _WindowCV::getFont(void)
 	{
 		return m_pFT;
 	}
+#endif
 
 	WindowCV_Btn* _WindowCV::findBtn(const string& btnName)
 	{
@@ -262,7 +232,11 @@ namespace kai
 		WindowCV_Btn* pB = findBtn(btnName);
 		NULL_F(pB);
 
-		pB->setLabel(btnLabel, m_pFT);
+#ifdef USE_FREETYPE
+		pB->setLabel(btnLabel, &m_pFT);
+#else
+		pB->setLabel(btnLabel);
+#endif
 		return true;
 	}
 

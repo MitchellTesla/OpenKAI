@@ -13,6 +13,7 @@
 #include "../Script/Kiss.h"
 
 #include "../Arithmetic/Destimator.h"
+#include "../UI/_Console.h"
 
 #ifdef WITH_ACTUATOR
 #include "../Actuator/_ArduServo.h"
@@ -27,6 +28,7 @@
 #include "../Actuator/_InnfosGluon.h"
 #endif
 #ifdef USE_DYNAMIXEL
+#include "../Actuator/Articulated/_LabArm.h"
 #endif
 #ifdef USE_XARM
 #include "../Actuator/Articulated/_xArm.h"
@@ -57,8 +59,10 @@
 #ifdef WITH_APP_ROBOTARM
 #include "../Autopilot/ArduPilot/_AProver_picking.h"
 #endif
+#ifdef WITH_NAVIGATION
 #ifdef USE_REALSENSE
 #include "../Autopilot/ArduPilot/_AP_GPS.h"
+#endif
 #endif
 #endif
 #endif
@@ -229,6 +233,10 @@
 #endif
 #endif
 
+#ifdef WITH_NET
+#include "../Net/_Curl.h"
+#endif
+
 #ifdef WITH_3D
 #ifdef USE_OPEN3D
 #include "../3D/_GeometryViewer.h"
@@ -297,9 +305,8 @@
 #endif
 
 #ifdef WITH_UI
-#include "../UI/_Console.h"
-#include "../UI/_FrameBuffer.h"
 #ifdef USE_OPENCV
+#include "../UI/_GstOutput.h"
 #include "../UI/_WindowCV.h"
 #endif
 #ifdef USE_GUI

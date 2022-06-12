@@ -7,7 +7,6 @@
 
 #include "BASE.h"
 #include "../Script/Kiss.h"
-#include "../UI/_WindowCV.h"
 #include "../UI/_Console.h"
 
 namespace kai
@@ -75,19 +74,21 @@ namespace kai
 		return 0;
 	}
 
-	void BASE::cvDraw(void *pWindow)
+	void BASE::draw(void *pFrame)
 	{
 	}
 
 	void BASE::console(void *pConsole)
 	{
-#ifdef WITH_UI
 		NULL_(pConsole);
 
 		_Console *pC = (_Console *)pConsole;
 		pC->addMsg("____________________________________", COLOR_PAIR(_Console_COL_NAME) | A_BOLD, _Console_X_NAME, 1);
 		pC->addMsg(*this->getName(), COLOR_PAIR(_Console_COL_NAME) | A_BOLD, _Console_X_NAME, 1);
-#endif
+	}
+
+	void BASE::context(void* pContext)
+	{
 	}
 
 }

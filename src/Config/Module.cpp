@@ -23,6 +23,7 @@ namespace kai
 		IF_N(!pK);
 
 		ADD_MODULE(Destimator);
+		ADD_MODULE(_Console);
 
 #ifdef WITH_ACTUATOR
 		ADD_MODULE(_ArduServo);
@@ -37,6 +38,7 @@ namespace kai
 		ADD_MODULE(_InnfosGluon);
 #endif
 #ifdef USE_DYNAMIXEL
+		ADD_MODULE(_LabArm);
 #endif
 #ifdef USE_XARM
 		ADD_MODULE(_xArm);
@@ -67,8 +69,10 @@ namespace kai
 #ifdef WITH_APP_ROBOTARM
 		ADD_MODULE(_AProver_picking);
 #endif
+#ifdef WITH_NAVIGATION
 #ifdef USE_REALSENSE
 		ADD_MODULE(_AP_GPS);
+#endif
 #endif
 #endif
 #endif
@@ -244,6 +248,10 @@ namespace kai
 #endif
 #endif
 
+#ifdef WITH_NET
+		ADD_MODULE(_Curl);
+#endif
+
 #ifdef WITH_3D
 #ifdef USE_OPEN3D
 		ADD_MODULE(_GeometryViewer);
@@ -312,10 +320,9 @@ namespace kai
 #endif
 
 #ifdef WITH_UI
-		ADD_MODULE(_Console);
-		ADD_MODULE(_FrameBuffer);
 #ifdef USE_OPENCV
 		ADD_MODULE(_WindowCV);
+		ADD_MODULE(_GstOutput);
 #endif
 #ifdef USE_GUI
 		ADD_MODULE(_WindowGUI);

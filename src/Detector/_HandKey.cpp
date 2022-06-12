@@ -2,7 +2,6 @@
  *  Created on: Mar 11, 2021
  *      Author: yankai
  */
-#ifdef USE_OPENCV
 #include "_HandKey.h"
 
 namespace kai
@@ -139,10 +138,10 @@ namespace kai
 		}
 	}
 
-	void _HandKey::cvDraw(void *pWindow)
+	void _HandKey::draw(void* pFrame)
 	{
-		NULL_(pWindow);
-		this->_DetectorBase::cvDraw(pWindow);
+		NULL_(pFrame);
+		this->_DetectorBase::draw(pFrame);
 		IF_(check() < 0);
 
 		if (!m_mDebug.empty())
@@ -152,4 +151,3 @@ namespace kai
 	}
 
 }
-#endif

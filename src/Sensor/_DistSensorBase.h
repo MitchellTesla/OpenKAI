@@ -10,7 +10,7 @@
 
 #include "../Base/_ModuleBase.h"
 #include "../UI/_Console.h"
-#include "../UI/_WindowCV.h"
+#include "../Vision/Frame.h""
 #include "../Filter/Median.h"
 #include "../Filter/Average.h"
 
@@ -92,7 +92,7 @@ public:
 	virtual ~_DistSensorBase();
 
 	bool init(void* pKiss);
-	void cvDraw(void* pWindow);
+	void draw(void* pFrame);
 	void console(void* pConsole);
 	void update(void);
 

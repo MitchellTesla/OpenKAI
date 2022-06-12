@@ -71,19 +71,14 @@ namespace kai
 		m_bOpen = false;
 	}
 
-	void _VisionBase::cvDraw(void *pWindow)
+	void _VisionBase::draw(void* pFrame)
 	{
-#ifdef WITH_UI
-#ifdef USE_OPENCV
-		NULL_(pWindow);
-		this->_ModuleBase::cvDraw(pWindow);
+		NULL_(pFrame);
+		this->_ModuleBase::draw(pFrame);
 		IF_(check() < 0);
-
-		_WindowCV *pWin = (_WindowCV *)pWindow;
-		Frame *pF = pWin->getNextFrame();
-		NULL_(pF);
-
 		IF_(m_fBGR.bEmpty());
+
+		Frame *pF = (Frame*)pFrame;
 
 		if (m_bbDraw.x < 0.0)
 		{
@@ -99,8 +94,6 @@ namespace kai
 
 			m.copyTo((*pM)(r));
 		}
-#endif
-#endif
 	}
 
 }

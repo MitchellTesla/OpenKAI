@@ -89,15 +89,13 @@ namespace kai
 		return true;
 	}
 
-	void _RaspiWSbattery::cvDraw(void *pWindow)
+	void _RaspiWSbattery::draw(void* pFrame)
 	{
-		NULL_(pWindow);
-		this->_ModuleBase::cvDraw(pWindow);
+		NULL_(pFrame);
+		this->_ModuleBase::draw(pFrame);
 		IF_(check() < 0);
 
-		_WindowCV *pWin = (_WindowCV *)pWindow;
-		Frame *pF = pWin->getNextFrame();
-		NULL_(pF);
+		Frame *pF = (Frame*)pFrame;
 		Mat *pMw = pF->m();
 		IF_(pMw->empty());
 		cv::Ptr<freetype::FreeType2> pFt = pWin->getFont();

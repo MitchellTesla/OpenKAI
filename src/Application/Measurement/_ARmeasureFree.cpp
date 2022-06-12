@@ -271,16 +271,16 @@ namespace kai
 					   false);
 	}
 
-	void _ARmeasureFree::cvDraw(void *pWindow)
+	void _ARmeasureFree::draw(void* pFrame)
 	{
-		NULL_(pWindow);
+		NULL_(pFrame);
 		IF_(!bActive());
 
-		this->_StateBase::cvDraw(pWindow);
+		this->_StateBase::draw(pFrame);
 		IF_(check() < 0);
 
-		_WindowCV *pWin = (_WindowCV *)pWindow;
-		Mat *pMw = pWin->getNextFrame()->m();
+		Frame *pF = (Frame*)pFrame;
+		Mat *pMw = pF->m();
 		IF_(pMw->empty());
 		m_pFt = pWin->getFont();
 

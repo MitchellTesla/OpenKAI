@@ -7,9 +7,6 @@
 
 #include "_MotionDetector.h"
 
-#ifdef USE_OPENCV
-#ifdef USE_OPENCV_CONTRIB
-
 namespace kai
 {
 
@@ -123,10 +120,10 @@ namespace kai
 		}
 	}
 
-	void _MotionDetector::cvDraw(void *pWindow)
+	void _MotionDetector::draw(void* pFrame)
 	{
-		NULL_(pWindow);
-		this->_DetectorBase::cvDraw(pWindow);
+		NULL_(pFrame);
+		this->_DetectorBase::draw(pFrame);
 		IF_(check() < 0);
 
 		if (!m_mFG.empty())
@@ -136,5 +133,3 @@ namespace kai
 	}
 
 }
-#endif
-#endif

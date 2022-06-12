@@ -7,8 +7,6 @@
 
 #include "_Thermal.h"
 
-#ifdef USE_OPENCV
-
 namespace kai
 {
 
@@ -98,10 +96,10 @@ namespace kai
 		m_pU->swap();
 	}
 
-	void _Thermal::cvDraw(void *pWindow)
+	void _Thermal::draw(void* pFrame)
 	{
-		NULL_(pWindow);
-		this->_DetectorBase::cvDraw(pWindow);
+		NULL_(pFrame);
+		this->_DetectorBase::draw(pFrame);
 		IF_(check() < 0);
 
 		IF_(!m_bDebug);
@@ -112,4 +110,3 @@ namespace kai
 	}
 
 }
-#endif

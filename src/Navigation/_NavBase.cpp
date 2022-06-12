@@ -13,8 +13,8 @@ namespace kai
 	_NavBase::_NavBase()
 	{
 		m_flag.clearAll();
-		m_vAxisIdx.init(0, 1, 2);
-		m_vRoffset.init(0.0);
+		m_vAxisIdx.set(0, 1, 2);
+		m_vRoffset.init();
 		resetAll();
 	}
 
@@ -97,7 +97,6 @@ namespace kai
 
 	void _NavBase::console(void *pConsole)
 	{
-#ifdef WITH_UI
 		NULL_(pConsole);
 		this->_ModuleBase::console(pConsole);
 
@@ -117,7 +116,6 @@ namespace kai
 
 		msg = "confidence=" + f2str(m_confidence);
 		pC->addMsg(msg, 1);
-#endif
 	}
 
 }

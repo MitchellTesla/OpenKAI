@@ -391,15 +391,14 @@ namespace kai
 			pC->addMsg("CN: " + m_cn);
 	}
 
-	void _ANR::cvDraw(void *pWindow)
+	void _ANR::draw(void *pFrame)
 	{
-		NULL_(pWindow);
-		this->_ModuleBase::cvDraw(pWindow);
+		NULL_(pFrame);
+		this->_ModuleBase::draw(pFrame);
 		IF_(check() < 0);
 
-		_WindowCV *pWin = (_WindowCV *)pWindow;
-		Frame *pF = pWin->getNextFrame();
-		NULL_(pF);
+		Frame *pF = (Frame*)pFrame;
+
 		Mat *pM = pF->m();
 		IF_(pM->empty());
 

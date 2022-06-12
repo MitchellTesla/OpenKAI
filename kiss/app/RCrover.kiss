@@ -2,55 +2,19 @@
 	"name":"APP",
 	"class":"Startup",
 	"appName":"RCrover",
-	"bStdErr":0,
-	"/rc":"sudo modprobe bcm2835-v4l2\nv4l2-ctl -d /dev/video0 --set-ctrl=rotate=0\n",
+	"bStdErr":1,
+	"bLog":1,
 }
 
 {
 	"name":"console",
 	"class":"_Console",
-	"bInst":1,
+	"bON":1,
     {
 		"name":"thread",
 		"FPS":30,
 	}
 	"vBASE":["sbus","RCrover","drive","motor"],
-}
-
-{
-	"name":"cam",
-	"class":"_Camera",
-	"bInst":0,
-	"deviceID":0,
-	"vSize":[640, 480],
-    {
-		"name":"thread",
-		"FPS":30,
-	}
-}
-
-{
-	"name":"remap",
-	"class":"_Remap",
-	"bInst":0,
-    {
-		"name":"thread",
-		"FPS":30,
-	}
-	"_VisionBase":"cam",
-	"fCalib":"/home/kai/ARmeasure/calibCam.kiss",
-	"/fCalib":"/home/pi/ARmeasure/calibCam.kiss",
-	"vSize":[640, 480],
-}
-
-{
-	"name":"T265",
-	"class":"_RStracking",
-    {
-		"name":"thread",
-		"FPS":200,
-	}
-	"bInst":1,
 }
 
 {
@@ -60,17 +24,17 @@
 		"name":"thread",
 		"FPS":30,
 	}
-	"bInst":1,
+	"bON":1,
 	"start":"standby",
 	{
 		"name":"state",
 		{
-			"bInst":1,
+			"bON":1,
 			"name":"standby",
 			"class":"State",
 		}
 		{
-			"bInst":1,
+			"bON":1,
 			"name":"rc",
 			"class":"State",
 		}
@@ -80,7 +44,7 @@
 {
 	"name":"sSBus",
 	"class":"_SerialPort",
-	"bInst":1,
+	"bON":1,
     {
 		"name":"thread",
 		"FPS":1,
@@ -89,15 +53,15 @@
 		"name":"threadR",
 		"vTwakeup":["sbus.threadR"],
 	}
-	"port":"/dev/ttyACM0",
-	"/port":"/dev/ttyAMA0",
+	"/port":"/dev/ttyACM0",
+	"port":"/dev/ttyAMA0",
 	"baud":115200,
 }
 
 {
 	"name":"sbus",
 	"class":"_SBus",
-	"bInst":1,
+	"bON":1,
     {
 		"name":"thread", 
 		"FPS":30,
@@ -110,13 +74,13 @@
 	"bSend":0,
 	"_IOBase":"sSBus",
 	"vRawRC":[200,1002,1947],
-	"bRawSbus":1,
+	"bRawSbus":0,
 }
 
 {
 	"name":"RCrover",
 	"class":"_RCrover",
-	"bInst":1,
+	"bON":1,
     {
 		"name":"thread",
 		"FPS":30,
@@ -139,7 +103,7 @@
 		"name":"thread",
 		"FPS":30,
 	}
-	"bInst":1,
+	"bON":1,
 	"nSpd":0.0,
 	"nDir":1.0,
 	"nStr":0.0,
@@ -169,13 +133,14 @@
 {
 	"name":"modbus",
 	"class":"_Modbus",
-	"bInst":1,
+	"bON":1,
     {
 		"name":"thread",
 		"FPS":1,
 	}
 	"bLog":0,
-	"port":"/dev/ttyUSB0",
+	"/port":"/dev/ttyUSB0",
+	"port":"/dev/ttyAMA1",
 	"baud":115200,
 	"/baud":9800,
 	"parity":"N",
@@ -184,7 +149,7 @@
 {
 	"name":"motor",
 	"class":"_ZLAC8015D",
-	"bInst":1,
+	"bON":1,
     {
 		"name":"thread",
 		"FPS":10,
@@ -228,9 +193,49 @@
 }
 
 {
+	"name":"labArm",
+	"class":"_LabArm",
+	"bON":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"bLog":1,
+	"port":"/dev/ttyUSB0",
+	"baudRate":57600,
+	"oprMode":3,
+	"bGripper":0,
+	
+	{
+		"name":"axis",
+		
+		{
+			"name":"X",
+			"vPrange":[-100,100],
+			"nPtarget":0.5,
+			"nPorigin":0.5,
+			"nPerr":0.1,
+			"vSrange":[0,1000],
+			"nStarget":0.5,
+		}
+	}
+
+	"vRotRangeX":[0, 180],
+	"vRotRangeY":[0, 180],
+	"vRotRangeZ":[0, 0],
+	"vNormTargetRot":[0.0, 0.0, 0.0, 0.0],
+	"vPosRangeX":[-100, 100],
+	"vPosRangeY":[200, 400],
+	"vPosRangeZ":[100, 350],
+	"vNormTargetPos":[0.5, 0.0, 1.0, 0.0],
+	"vNormTargetSpeed":[0.0, 0.0, 0.0, 0.0],
+	"vNormPosErr":[1.0, 1.0, 1.0],
+}
+
+{
 	"name":"stepper",
 	"class":"_HYMCU_RS485",
-	"bInst":1,
+	"bON":0,
     {
 		"name":"thread",
 		"FPS":10,

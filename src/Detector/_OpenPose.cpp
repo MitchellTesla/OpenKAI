@@ -4,8 +4,6 @@
  */
 #include "_OpenPose.h"
 
-#ifdef USE_OPENCV
-
 namespace kai
 {
 
@@ -143,10 +141,10 @@ namespace kai
 		}
 	}
 
-	void _OpenPose::cvDraw(void *pWindow)
+	void _OpenPose::draw(void* pFrame)
 	{
-		NULL_(pWindow);
-		this->_DetectorBase::cvDraw(pWindow);
+		NULL_(pFrame);
+		this->_DetectorBase::draw(pFrame);
 		IF_(check() < 0);
 
 		if (!m_mDebug.empty())
@@ -156,4 +154,3 @@ namespace kai
 	}
 
 }
-#endif

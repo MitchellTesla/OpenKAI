@@ -285,14 +285,14 @@ namespace kai
 					   false);
 	}
 
-	void _3DScanCalibCam::cvDraw(void *pWindow)
+	void _3DScanCalibCam::draw(void *pFrame)
 	{
-		NULL_(pWindow);
-		this->_ModuleBase::cvDraw(pWindow);
+		NULL_(pFrame);
+		this->_ModuleBase::draw(pFrame);
 		IF_(check() < 0);
 
-		_WindowCV *pWin = (_WindowCV *)pWindow;
-		Mat *pMw = pWin->getNextFrame()->m();
+		Frame *pF = (Frame*)pFrame;
+		Mat *pMw = pF->m();
 		IF_(pMw->empty());
 		m_pFt = pWin->getFont();
 

@@ -8,8 +8,6 @@
 #ifndef OpenKAI_src_Detector__MotionDetector_H_
 #define OpenKAI_src_Detector__MotionDetector_H_
 
-#ifdef USE_OPENCV
-#ifdef USE_OPENCV_CONTRIB
 #include "_DetectorBase.h"
 
 namespace kai
@@ -23,7 +21,7 @@ public:
 
 	bool init(void* pKiss);
 	bool start(void);
-	void cvDraw(void* pWindow);
+	void draw(void* pFrame);
 	int check(void);
 
 private:
@@ -46,6 +44,4 @@ public:
 };
 
 }
-#endif
-#endif
 #endif

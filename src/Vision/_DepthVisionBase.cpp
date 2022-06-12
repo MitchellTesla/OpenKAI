@@ -13,14 +13,13 @@ namespace kai
 	_DepthVisionBase::_DepthVisionBase()
 	{
 		m_vDsize.set(1280, 720);
-
+		m_vRange.set(0.8,16.0);
+		m_dScale = 1.0;
+		m_dOfs = 0.0;
 		m_nHistLev = 128;
 		m_iHistFrom = 0;
-		m_dScale = 1.0;
-		m_vRange.x = 0.8;
-		m_vRange.y = 16.0;
 		m_minHistD = 0.25;
-		m_vDroi.init();
+        m_bDepthShow = false;
 	}
 
 	_DepthVisionBase::~_DepthVisionBase()
@@ -33,9 +32,13 @@ namespace kai
 		Kiss *pK = (Kiss *)pKiss;
 
 		pK->v("vDsize", &m_vDsize);
-		pK->v("nHistLev", &m_nHistLev);
-		pK->v("minHistD", &m_minHistD);
 		pK->v("vRange", &m_vRange);
+		pK->v("dScale", &m_dScale);
+		pK->v("dOfs", &m_dOfs);
+		pK->v("nHistLev", &m_nHistLev);
+		pK->v("iHistFrom", &m_nHistLev);
+		pK->v("minHistD", &m_minHistD);
+        pK->v("bDepthShow", &m_bDepthShow);
 
 		return true;
 	}
@@ -45,21 +48,22 @@ namespace kai
 		IF__(m_fDepth.bEmpty(), -1.0);
 
 		Size s = m_fDepth.size();
-		m_vDroi.x = bb.x * s.width;
-		m_vDroi.y = bb.y * s.height;
-		m_vDroi.z = bb.z * s.width;
-		m_vDroi.w = bb.w * s.height;
+		vInt4 vBB;
+		vBB.x = bb.x * s.width;
+		vBB.y = bb.y * s.height;
+		vBB.z = bb.z * s.width;
+		vBB.w = bb.w * s.height;
 
-		if (m_vDroi.x < 0)
-			m_vDroi.x = 0;
-		if (m_vDroi.y < 0)
-			m_vDroi.y = 0;
-		if (m_vDroi.z > s.width)
-			m_vDroi.z = s.width;
-		if (m_vDroi.w > s.height)
-			m_vDroi.w = s.height;
+		if (vBB.x < 0)
+			vBB.x = 0;
+		if (vBB.y < 0)
+			vBB.y = 0;
+		if (vBB.z > s.width)
+			vBB.z = s.width;
+		if (vBB.w > s.height)
+			vBB.w = s.height;
 
-		return d(m_vDroi);
+		return d(vBB);
 	}
 
 	float _DepthVisionBase::d(const vInt4& bb)
@@ -89,7 +93,7 @@ namespace kai
 				break;
 		}
 
-		return /*m_dScale **/ (m_vRange.x + (((float)i) / (float)m_nHistLev) * m_vRange.len());
+		return (m_vRange.x + (((float)i) / (float)m_nHistLev) * m_vRange.len());
 	}
 
 	Frame *_DepthVisionBase::Depth(void)
@@ -102,17 +106,13 @@ namespace kai
 		return &m_fDepthShow;
 	}
 
-	void _DepthVisionBase::cvDraw(void *pWindow)
+	void _DepthVisionBase::draw(void *pFrame)
 	{
-#ifdef WITH_UI
-#ifdef USE_OPENCV
-		NULL_(pWindow);
-		this->_VisionBase::cvDraw(pWindow);
+		NULL_(pFrame);
+		this->_VisionBase::draw(pFrame);
 		IF_(check() < 0);
 
-		_WindowCV *pWin = (_WindowCV *)pWindow;
-		Frame *pF = pWin->getNextFrame();
-		NULL_(pF);
+		Frame *pF = (Frame*)pFrame;
 
 		if (m_bDebug)
 		{
@@ -133,8 +133,6 @@ namespace kai
 					Point(r.x + 15, r.y + 25),
 					FONT_HERSHEY_SIMPLEX, 0.6, Scalar(0, 255, 0), 1);
 		}
-#endif
-#endif
 	}
 
 }

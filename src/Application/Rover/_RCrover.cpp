@@ -49,7 +49,7 @@ namespace kai
 		n = "";
 		pK->v("_ActuatorBase", &n);
 		m_pA = (_ActuatorBase *)(pK->getInst(n));
-		IF_Fl(!m_pA, n + ": not found");
+//		IF_Fl(!m_pA, n + ": not found");
 
 		return true;
 	}
@@ -111,7 +111,6 @@ namespace kai
 
 	void _RCrover::console(void *pConsole)
 	{
-#ifdef WITH_UI
 		NULL_(pConsole);
 		this->_StateBase::console(pConsole);
 		msgActive(pConsole);
@@ -120,7 +119,6 @@ namespace kai
 		pC->addMsg("nSpd: "	+ f2str(m_nSpd));
 		pC->addMsg("nSteer: " + f2str(m_nSteer));
 		pC->addMsg("nElev: " + f2str(m_nElev));
-#endif
 	}
 
 }

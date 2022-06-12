@@ -100,16 +100,15 @@ namespace kai
 		}
 	}
 
-	void _AP_distLidar::cvDraw(void *pWindow)
+	void _AP_distLidar::draw(void *pFrame)
 	{
 #ifdef USE_OPENCV
-		NULL_(pWindow);
-		this->_StateBase::cvDraw(pWindow);
+		NULL_(pFrame);
+		this->_StateBase::draw(pFrame);
 		IF_(check() < 0);
 
-		_WindowCV *pWin = (_WindowCV *)pWindow;
-		Frame *pF = pWin->getNextFrame();
-		NULL_(pF);
+		Frame *pF = (Frame *)pFrame;
+
 		Mat *pM = pF->m();
 		IF_(pM->empty());
 

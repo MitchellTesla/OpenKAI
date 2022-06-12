@@ -7,9 +7,6 @@
 
 #include "_DenseFlow.h"
 
-#ifdef USE_OPENCV
-#ifdef USE_CUDA
-
 namespace kai
 {
 
@@ -175,10 +172,10 @@ namespace kai
 		return vF;
 	}
 
-	void _DenseFlow::cvDraw(void *pWindow)
+	void _DenseFlow::draw(void *pFrame)
 	{
-		NULL_(pWindow);
-		this->_ModuleBase::cvDraw(pWindow);
+		NULL_(pFrame);
+		this->_ModuleBase::draw(pFrame);
 		IF_(check() < 0);
 
 		IF_(m_pFlow[0].empty());
@@ -302,5 +299,3 @@ namespace kai
 	}
 
 }
-#endif
-#endif

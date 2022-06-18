@@ -27,9 +27,6 @@
 #ifdef USE_INNFOS
 #include "../Actuator/_InnfosGluon.h"
 #endif
-#ifdef USE_DYNAMIXEL
-#include "../Actuator/Articulated/_LabArm.h"
-#endif
 #ifdef USE_XARM
 #include "../Actuator/Articulated/_xArm.h"
 #endif
@@ -327,6 +324,7 @@
 #include "../Vision/_GStreamer.h"
 #include "../Vision/_Raspivid.h"
 #include "../Vision/_GPhoto.h"
+#include "../Vision/ImgFilter/_DepthProj.h"
 #include "../Vision/ImgFilter/_Morphology.h"
 #include "../Vision/ImgFilter/_Mask.h"
 #include "../Vision/ImgFilter/_Threshold.h"

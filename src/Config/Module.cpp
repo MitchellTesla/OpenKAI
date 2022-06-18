@@ -37,9 +37,6 @@ namespace kai
 #ifdef USE_INNFOS
 		ADD_MODULE(_InnfosGluon);
 #endif
-#ifdef USE_DYNAMIXEL
-		ADD_MODULE(_LabArm);
-#endif
 #ifdef USE_XARM
 		ADD_MODULE(_xArm);
 #endif
@@ -338,6 +335,7 @@ namespace kai
 #ifdef USE_OPENCV
 		ADD_MODULE(_Camera);
 		ADD_MODULE(_Contrast);
+		ADD_MODULE(_DepthProj);
 		ADD_MODULE(_Crop);
 		ADD_MODULE(_Depth2Gray);
 		ADD_MODULE(_Erode);

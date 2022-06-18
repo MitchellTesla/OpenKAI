@@ -65,8 +65,7 @@ namespace kai
 
 			if (m_bOpen)
 			{
-				if (m_fIn.tStamp() < m_pV->Depth()->tStamp())
-					filter();
+				filter();
 			}
 
 			m_pT->autoFPSto();
@@ -86,5 +85,4 @@ namespace kai
 					 -m_pV->m_vRange.x * scale);
 		m_fBGR.copy(mGray);
 	}
-
 }

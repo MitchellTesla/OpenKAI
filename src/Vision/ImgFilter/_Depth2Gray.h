@@ -35,7 +35,6 @@ namespace kai
 
 	public:
 		_DepthVisionBase *m_pV;
-		Frame m_fIn;
 	};
 
 }

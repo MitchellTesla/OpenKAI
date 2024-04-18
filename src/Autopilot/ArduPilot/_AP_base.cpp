@@ -15,12 +15,13 @@ namespace kai
 		m_freqSendHeartbeat = 1;
 
 		m_bHomeSet = false;
-		m_vHomePos.set(-1.0);
-		m_vGlobalPos.set(-1.0);
-		m_vLocalPos.init();
-		m_vSpeed.init();
-		m_vAtti.init();
-		m_apHdg = -1.0;
+		m_vHomePos.set(0.0);
+		m_vGlobalPos.set(0.0);
+		m_vLocalPos.clear();
+		m_vSpeed.clear();
+		m_vAtti.clear();
+		m_apHdg = 0.0;
+		m_battery = 0.0;
 	}
 
 	_AP_base::~_AP_base()
@@ -29,8 +30,9 @@ namespace kai
 
 	bool _AP_base::init(void *pKiss)
 	{
-		IF_F(!this->_StateBase::init(pKiss));
+		IF_F(!this->_ModuleBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
+    	
 
 		pK->v("apType", (int *)&m_apType);
 		pK->v("freqSendHeartbeat", &m_freqSendHeartbeat);
@@ -43,7 +45,16 @@ namespace kai
 		m_lastHeartbeat = 0;
 		m_iHeartbeat = 0;
 
+		return true;
+	}
+
+	bool _AP_base::link(void)
+	{
+		IF_F(!this->_ModuleBase::link());
+
+		Kiss *pK = (Kiss *)m_pKiss;
 		string n;
+
 		n = "";
 		pK->v("_Mavlink", &n);
 		m_pMav = (_Mavlink *)(pK->getInst(n));
@@ -82,16 +93,15 @@ namespace kai
 	{
 		NULL__(m_pMav, -1);
 
-		return this->_StateBase::check();
+		return this->_ModuleBase::check();
 	}
 
 	void _AP_base::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 
-			this->_StateBase::update();
 			updateBase();
 
 			m_pT->autoFPSto();
@@ -104,14 +114,14 @@ namespace kai
 
 		uint64_t tNow = m_pT->getTfrom();
 
-		//update Ardupilot
+		// update Ardupilot
 		if (m_pMav->m_heartbeat.bReceiving(tNow))
 		{
 			m_apMode = m_pMav->m_heartbeat.m_msg.custom_mode;
 			m_bApArmed = m_pMav->m_heartbeat.m_msg.base_mode & 0b10000000;
 		}
 
-		//Attitude
+		// Attitude
 		if (m_pMav->m_attitude.bReceiving(tNow))
 		{
 			m_vAtti.x = m_pMav->m_attitude.m_msg.yaw;
@@ -119,7 +129,7 @@ namespace kai
 			m_vAtti.z = m_pMav->m_attitude.m_msg.roll;
 		}
 
-		//get home position
+		// get home position
 		if (!m_pMav->m_homePosition.bReceiving(tNow))
 		{
 			m_pMav->clGetHomePosition();
@@ -132,7 +142,7 @@ namespace kai
 			m_bHomeSet = true;
 		}
 
-		//get position
+		// get position
 		if (m_pMav->m_globalPositionINT.bReceiving(tNow))
 		{
 			m_vGlobalPos.x = ((double)(m_pMav->m_globalPositionINT.m_msg.lat)) * 1e-7;
@@ -152,7 +162,13 @@ namespace kai
 			m_vSpeed.z = m_pMav->m_localPositionNED.m_msg.vz;
 		}
 
-		//Send Heartbeat
+		// Battery status
+		if (m_pMav->m_batteryStatus.bReceiving(tNow))
+		{
+			m_battery = (float)(m_pMav->m_batteryStatus.m_msg.battery_remaining) * 0.01;
+		}
+
+		// Send Heartbeat
 		if (m_freqSendHeartbeat > 0 && tNow - m_lastHeartbeat >= m_freqSendHeartbeat)
 		{
 			m_pMav->heartbeat();
@@ -225,6 +241,25 @@ namespace kai
 		return m_apHdg;
 	}
 
+	float _AP_base::getBattery(void)
+	{
+		return m_battery;
+	}
+
+	int _AP_base::getWPseq(void)
+	{
+		IF__(!m_pMav, -1);
+
+		return m_pMav->m_missionCurrent.m_msg.seq;
+	}
+
+	int _AP_base::getWPtotal(void)
+	{
+		IF__(!m_pMav, -1);
+
+		return m_pMav->m_missionCurrent.m_msg.total;
+	}
+
 	void _AP_base::setMount(AP_MOUNT &m)
 	{
 		IF_(check() < 0);
@@ -260,7 +295,7 @@ namespace kai
 	void _AP_base::console(void *pConsole)
 	{
 		NULL_(pConsole);
-		this->_StateBase::console(pConsole);
+		this->_ModuleBase::console(pConsole);
 
 		_Console *pC = (_Console *)pConsole;
 		pC->addMsg("State-----------------------------", 1);
@@ -300,6 +335,9 @@ namespace kai
 
 		pC->addMsg("System-----------------------------", 1);
 		pC->addMsg("status=" + i2str(m_pMav->m_heartbeat.m_msg.system_status));
+
+		pC->addMsg("Battery-----------------------------", 1);
+		pC->addMsg("batt=" + f2str(m_battery));
 
 		if (m_bDebug)
 		{

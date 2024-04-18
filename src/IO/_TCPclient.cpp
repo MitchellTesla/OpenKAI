@@ -28,7 +28,7 @@ namespace kai
 
 	bool _TCPclient::init(void *pKiss)
 	{
-		IF_F(!this->_IOBase::init(pKiss));
+		IF_F(!this->_IObase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
 
 		pK->v("addr", &m_strAddr);
@@ -37,7 +37,7 @@ namespace kai
 		m_bClient = true;
 
 		Kiss *pKt = pK->child("threadR");
-		IF_F(pKt->empty());
+		IF_d_F(pKt->empty(), LOG_E("threadR not found"));
 
 		m_pTr = new _Thread();
 		if (!m_pTr->init(pKt))
@@ -45,7 +45,6 @@ namespace kai
 			DEL(m_pTr);
 			return false;
 		}
-        pKt->m_pInst = m_pTr;
 
 		return true;
 	}
@@ -79,7 +78,7 @@ namespace kai
 	{
 		IF_(m_ioStatus != io_opened);
 		::close(m_socket);
-		this->_IOBase::close();
+		this->_IObase::close();
 	}
 
 	bool _TCPclient::start(void)
@@ -92,9 +91,9 @@ namespace kai
 
 	void _TCPclient::updateW(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
-			if (!isOpen())
+			if (!bOpen())
 			{
 				if (!open())
 				{
@@ -130,9 +129,9 @@ namespace kai
 
 	void _TCPclient::updateR(void)
 	{
-		while (m_pTr->bRun())
+		while (m_pTr->bAlive())
 		{
-			if (!isOpen())
+			if (!bOpen())
 			{
 				::sleep(1);
 				continue;
@@ -149,7 +148,7 @@ namespace kai
 			}
 
 			m_fifoR.input(pB, nR);
-			m_pTr->wakeUpAll();
+			m_pTr->runAll();
 
 			LOG_I("received: " + i2str(nR) + " bytes");
 		}
@@ -163,7 +162,7 @@ namespace kai
 	void _TCPclient::console(void *pConsole)
 	{
 		NULL_(pConsole);
-		this->_IOBase::console(pConsole);
+		this->_IObase::console(pConsole);
 
 		NULL_(m_pTr);
 		m_pTr->console(pConsole);

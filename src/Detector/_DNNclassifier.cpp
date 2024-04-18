@@ -12,7 +12,7 @@ namespace kai
 		m_nW = 224;
 		m_nH = 224;
 		m_bSwapRB = true;
-		m_vMean.init();
+		m_vMean.clear();
 		m_scale = 1.0;
 
 		m_iBackend = cv::dnn::DNN_BACKEND_OPENCV;
@@ -49,7 +49,7 @@ namespace kai
 				if (pR->empty())
 					break;
 
-				r.init();
+				r.clear();
 				pR->v("x", &r.x);
 				pR->v("y", &r.y);
 				pR->v("z", &r.z);
@@ -60,7 +60,7 @@ namespace kai
 
 		if (m_vROI.empty())
 		{
-			r.init();
+			r.clear();
 			r.z = 1.0;
 			r.w = 1.0;
 			m_vROI.push_back(r);
@@ -81,42 +81,38 @@ namespace kai
 		return m_pT->start(getUpdate, this);
 	}
 
-	void _DNNclassifier::update(void)
-	{
-		while (m_pT->bRun())
-		{
-			m_pT->autoFPSfrom();
-
-			if (check() >= 0)
-			{
-
-				classify();
-
-				if (m_pT->bGoSleep())
-					m_pU->clear();
-			}
-
-			m_pT->autoFPSto();
-		}
-	}
-
 	int _DNNclassifier::check(void)
 	{
 		NULL__(m_pU, -1);
 		NULL__(m_pV, -1);
-		Frame *pBGR = m_pV->BGR();
+		Frame *pBGR = m_pV->getFrameRGB();
 		NULL__(pBGR, -1);
 		IF__(pBGR->bEmpty(), -1);
-		IF__(pBGR->tStamp() <= m_fBGR.tStamp(), -1);
+		IF__(pBGR->tStamp() <= m_fRGB.tStamp(), -1);
 
 		return this->_DetectorBase::check();
 	}
 
+	void _DNNclassifier::update(void)
+	{
+		while (m_pT->bAlive())
+		{
+			m_pT->autoFPSfrom();
+
+			classify();
+
+			ON_PAUSE;
+			m_pT->autoFPSto();
+		}
+	}
+
 	void _DNNclassifier::classify(void)
 	{
-		Frame *pBGR = m_pV->BGR();
-		m_fBGR.copy(*pBGR);
-		Mat m = *m_fBGR.m();
+		IF_(check() < 0);
+
+		Frame *pBGR = m_pV->getFrameRGB();
+		m_fRGB.copy(*pBGR);
+		Mat m = *m_fRGB.m();
 
 		for (int i = 0; i < m_vROI.size(); i++)
 		{
@@ -139,7 +135,7 @@ namespace kai
 			cv::minMaxLoc(mProb.reshape(1, 1), 0, &conf, 0, &pClassID);
 
 			_Object o;
-			o.init();
+			o.clear();
 			//		o.m_tStamp = m_pT->getTfrom();
 			o.setTopClass(pClassID.x, conf);
 			o.setBB2D(nBB);
@@ -171,13 +167,13 @@ namespace kai
 		return true;
 	}
 
-	void _DNNclassifier::draw(void* pFrame)
+	void _DNNclassifier::draw(void *pFrame)
 	{
 		NULL_(pFrame);
 		this->_DetectorBase::draw(pFrame);
 		IF_(check() < 0);
 
-		Frame *pF = (Frame*)pFrame;
+		Frame *pF = (Frame *)pFrame;
 		Mat *pM = pF->m();
 		IF_(pM->empty());
 
@@ -185,10 +181,10 @@ namespace kai
 		NULL_(pO);
 
 		int iClass = pO->getTopClass();
-		IF_(iClass >= m_nClass);
+		IF_(iClass >= m_vClass.size());
 		IF_(iClass < 0);
 
-		string oName = m_vClass[iClass].m_name;
+		string oName = m_vClass[iClass];
 		if (oName.length() > 0)
 		{
 			putText(*pM, oName, Point(25, 100), FONT_HERSHEY_SIMPLEX, 2.0,

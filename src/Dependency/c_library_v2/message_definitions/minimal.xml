@@ -140,12 +140,12 @@
         <description>VTOL with separate fixed rotors for hover and cruise flight. Fuselage and wings stay (nominally) horizontal in all flight phases.</description>
       </entry>
       <entry value="23" name="MAV_TYPE_VTOL_TAILSITTER">
-        <description>Tailsitter VTOL. Fuselage and wings orientation changes depending on flight phase: vertical for hover, horizontal for cruise. Use more specific VTOL MAV_TYPE_VTOL_DUOROTOR or MAV_TYPE_VTOL_QUADROTOR if appropriate.</description>
+        <description>Tailsitter VTOL. Fuselage and wings orientation changes depending on flight phase: vertical for hover, horizontal for cruise. Use more specific VTOL MAV_TYPE_VTOL_TAILSITTER_DUOROTOR or MAV_TYPE_VTOL_TAILSITTER_QUADROTOR if appropriate.</description>
       </entry>
-      <!-- Entries 24/25 reserved for other VTOL airframe -->
-      <entry value="24" name="MAV_TYPE_VTOL_RESERVED4">
-        <description>VTOL reserved 4</description>
+      <entry value="24" name="MAV_TYPE_VTOL_TILTWING">
+        <description>Tiltwing VTOL. Fuselage stays horizontal in all flight phases. The whole wing, along with any attached engine, can tilt between vertical and horizontal mode.</description>
       </entry>
+      <!-- Entry 25 reserved for other VTOL airframe -->
       <entry value="25" name="MAV_TYPE_VTOL_RESERVED5">
         <description>VTOL reserved 5</description>
       </entry>
@@ -199,6 +199,9 @@
       </entry>
       <entry value="42" name="MAV_TYPE_WINCH">
         <description>Winch</description>
+      </entry>
+      <entry value="43" name="MAV_TYPE_GENERIC_MULTIROTOR">
+        <description>Generic multirotor that does not fit into a specific type or whose type is unknown</description>
       </entry>
     </enum>
     <enum name="MAV_MODE_FLAG" bitmask="true">
@@ -272,16 +275,16 @@
         <description>System is active and might be already airborne. Motors are engaged.</description>
       </entry>
       <entry value="5" name="MAV_STATE_CRITICAL">
-        <description>System is in a non-normal flight mode. It can however still navigate.</description>
+        <description>System is in a non-normal flight mode (failsafe). It can however still navigate.</description>
       </entry>
       <entry value="6" name="MAV_STATE_EMERGENCY">
-        <description>System is in a non-normal flight mode. It lost control over parts or over the whole airframe. It is in mayday and going down.</description>
+        <description>System is in a non-normal flight mode (failsafe). It lost control over parts or over the whole airframe. It is in mayday and going down.</description>
       </entry>
       <entry value="7" name="MAV_STATE_POWEROFF">
         <description>System just initialized its power-down sequence, will shut down now.</description>
       </entry>
       <entry value="8" name="MAV_STATE_FLIGHT_TERMINATION">
-        <description>System is terminating itself.</description>
+        <description>System is terminating itself (failsafe or commanded).</description>
       </entry>
     </enum>
     <enum name="MAV_COMPONENT">
@@ -605,6 +608,9 @@
       <entry value="161" name="MAV_COMP_ID_PARACHUTE">
         <description>Parachute component.</description>
       </entry>
+      <entry value="169" name="MAV_COMP_ID_WINCH">
+        <description>Winch component.</description>
+      </entry>
       <entry value="171" name="MAV_COMP_ID_GIMBAL2">
         <description>Gimbal #2.</description>
       </entry>
@@ -690,8 +696,8 @@
         <description>Component handling TUNNEL messages (e.g. vendor specific GUI of a component).</description>
       </entry>
       <entry value="250" name="MAV_COMP_ID_SYSTEM_CONTROL">
-        <deprecated since="2018-11" replaced_by="MAV_COMP_ID_ALL">System control does not require a separate component ID.</deprecated>
-        <description>Component for handling system messages (e.g. to ARM, takeoff, etc.).</description>
+        <deprecated since="2018-11" replaced_by="MAV_COMP_ID_ALL">System control does not require a separate component ID. Instead, system commands should be sent with target_component=MAV_COMP_ID_ALL allowing the target component to use any appropriate component id.</deprecated>
+        <description>Deprecated, don't use. Component for handling system messages (e.g. to ARM, takeoff, etc.).</description>
       </entry>
     </enum>
   </enums>

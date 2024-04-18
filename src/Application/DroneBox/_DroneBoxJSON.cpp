@@ -5,7 +5,6 @@ namespace kai
 
     _DroneBoxJSON::_DroneBoxJSON()
     {
-        m_Tr = NULL;
         m_pDB = NULL;
     }
 
@@ -19,21 +18,21 @@ namespace kai
         IF_F(!this->_JSONbase::init(pKiss));
         Kiss *pK = (Kiss *)pKiss;
 
+        return true;
+    }
+
+    bool _DroneBoxJSON::link(void)
+    {
+        IF_F(!this->_JSONbase::link());
+        IF_F(!m_pTr->link());
+
+        Kiss *pK = (Kiss *)m_pKiss;
+
         string n;
         n = "";
         pK->v("_DroneBox", &n);
         m_pDB = (_DroneBox *)(pK->getInst(n));
         IF_Fl(!m_pDB, n + ": not found");
-
-        Kiss *pKt = pK->child("threadR");
-        IF_F(pKt->empty());
-
-        m_pTr = new _Thread();
-        if (!m_pTr->init(pKt))
-        {
-            DEL(m_pTr);
-            return false;
-        }
 
         return true;
     }
@@ -55,7 +54,7 @@ namespace kai
 
     void _DroneBoxJSON::updateW(void)
     {
-        while (m_pT->bRun())
+        while (m_pT->bAlive())
         {
             if (!m_pIO)
             {
@@ -63,7 +62,7 @@ namespace kai
                 continue;
             }
 
-            if (!m_pIO->isOpen())
+            if (!m_pIO->bOpen())
             {
                 if (!m_pIO->open())
                 {
@@ -84,12 +83,38 @@ namespace kai
     {
         IF_(check() < 0);
 
-        this->_JSONbase::send();
+        if (m_ieSendHB.update(m_pT->getTfrom()))
+        {
+            sendHeartbeat();
+        }
+
+        _StateControl *pSC = m_pDB->getStateControl();
+        if (pSC)
+        {
+            object o;
+            JO(o, "cmd", "stat");
+            JO(o, "stat", *pSC->getCurrentStateName());
+            sendMsg(o);
+        }
+    }
+
+    void _DroneBoxJSON::sendHeartbeat(void)
+    {
+        vDouble2 vP = m_pDB->getPos();
+
+        object o;
+        JO(o, "id", i2str(m_pDB->getID()));
+        JO(o, "cmd", "heartbeat");
+        JO(o, "t", li2str(m_pT->getTfrom()));
+        JO(o, "lat", lf2str(vP.x, 10));
+        JO(o, "lng", lf2str(vP.y, 10));
+
+        sendMsg(o);
     }
 
     void _DroneBoxJSON::updateR(void)
     {
-        while (m_pTr->bRun())
+        while (m_pTr->bAlive())
         {
             m_pTr->autoFPSfrom();
 
@@ -134,7 +159,7 @@ namespace kai
         int vID = o["id"].get<double>();
         string stat = o["stat"].get<string>();
 
-        m_pDB->status(vID, stat);
+        m_pDB->setState(vID, stat);
     }
 
     void _DroneBoxJSON::req(picojson::object &o)

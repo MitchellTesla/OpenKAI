@@ -10,14 +10,13 @@ namespace kai
 	_Universe::_Universe()
 	{
 		m_minConfidence = 0.0;
-		m_rArea.set(-FLT_MAX, FLT_MAX);
-		m_rW.set(-FLT_MAX, FLT_MAX);
-		m_rH.set(-FLT_MAX, FLT_MAX);
+		m_vArea.set(-FLT_MAX, FLT_MAX);
+		m_vW.set(-FLT_MAX, FLT_MAX);
+		m_vH.set(-FLT_MAX, FLT_MAX);
 
 		m_vRoi.set(0.0, 0.0, 1.0, 1.0);
 		m_vClassRange.set(-INT_MAX, INT_MAX);
 
-		m_bDrawClass = false;
 		m_bDrawText = false;
 		m_bDrawPos = false;
 
@@ -33,21 +32,23 @@ namespace kai
 		IF_F(!this->_ModuleBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
 
-		//general
+		// general
 		pK->v("minConfidence", &m_minConfidence);
-		pK->v("rArea", &m_rArea);
-		pK->v("rW", &m_rW);
-		pK->v("rH", &m_rH);
+		pK->v("vArea", &m_vArea);
+		pK->v("vW", &m_vW);
+		pK->v("vH", &m_vH);
 		pK->v("vRoi", &m_vRoi);
 		pK->v("vClassRange", &m_vClassRange);
 
-		//draw
-		pK->v("bDrawClass", &m_bDrawClass);
+		// draw
 		pK->v("bDrawText", &m_bDrawText);
 		pK->v("bDrawPos", &m_bDrawPos);
 
-		m_sO.get()->init(pKiss);
-		m_sO.next()->init(pKiss);
+		// buffer
+		int nB = 16;
+		pK->v("nBuf", &nB);
+		m_sO.get()->init(nB);
+		m_sO.next()->init(nB);
 		clear();
 
 		return true;
@@ -73,7 +74,7 @@ namespace kai
 
 	void _Universe::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 
@@ -83,10 +84,10 @@ namespace kai
 
 	_Object *_Universe::add(_Object &o)
 	{
-		IF_N(o.area() < m_rArea.x || o.area() > m_rArea.y);
-		IF_N(o.getWidth() < m_rW.x || o.getWidth() > m_rW.y);
-		IF_N(o.getHeight() < m_rH.x || o.getHeight() > m_rH.y);
-		IF_N(o.getTopClass() < m_vClassRange.x || o.getTopClass() > m_vClassRange.y);
+		IF_N(!m_vArea.bInside(o.area()));
+		IF_N(!m_vW.bInside(o.getWidth()));
+		IF_N(!m_vH.bInside(o.getHeight()));
+		IF_N(!m_vClassRange.bInside(o.getTopClass()));
 
 		vFloat3 p = o.getPos();
 		IF_N(p.x < m_vRoi.x);
@@ -115,14 +116,14 @@ namespace kai
 		((_Console *)pConsole)->addMsg("nObj=" + i2str(m_sO.get()->size()), 1);
 	}
 
-	void _Universe::draw(void* pFrame)
+	void _Universe::draw(void *pFrame)
 	{
 #ifdef USE_OPENCV
 		NULL_(pFrame);
 		this->_ModuleBase::draw(pFrame);
 		IF_(check() < 0);
 
-		Frame *pF = (Frame*)pFrame;
+		Frame *pF = (Frame *)pFrame;
 		Mat *pM = pF->m();
 		IF_(pM->empty());
 
@@ -139,11 +140,11 @@ namespace kai
 			col = colStep * iClass;
 			oCol = Scalar((col + 85) % 255, (col + 170) % 255, col) + bCol;
 
-			//bb
+			// bb
 			Rect r = bb2Rect<vFloat4>(pO->getBB2Dscaled(pM->cols, pM->rows));
 			rectangle(*pM, r, oCol, 1);
 
-			//position
+			// position
 			if (m_bDrawPos)
 			{
 				putText(*pM, f2str(pO->getPos().z),
@@ -151,7 +152,7 @@ namespace kai
 						FONT_HERSHEY_SIMPLEX, 0.6, oCol, 1);
 			}
 
-			//text
+			// text
 			if (m_bDrawText)
 			{
 				string oName = string(pO->getText());
@@ -164,7 +165,7 @@ namespace kai
 			}
 		}
 
-		//roi
+		// roi
 		Rect roi = bb2Rect(bbScale(m_vRoi, pM->cols, pM->rows));
 		rectangle(*pM, roi, Scalar(0, 255, 255), 1);
 #endif

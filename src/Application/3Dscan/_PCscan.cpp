@@ -81,7 +81,7 @@ namespace kai
 	{
 		m_pT->sleepT(0);
 
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 
@@ -126,7 +126,7 @@ namespace kai
 		pPS->startStream();
 
 		removeUIpc();
-		addDummyDome(m_sPC.next(), pPS->nP(), m_rDummyDome);
+		addDummyPoints(m_sPC.next(), pPS->nP(), m_rDummyDome);
 		updatePC();
 		addUIpc(*m_sPC.get());
 		m_fProcess.set(pc_Scanning);
@@ -159,7 +159,8 @@ namespace kai
 	{
 		IF_(check() < 0);
 
-		readAllPC();
+		readAllGeometry();
+		updatePC();
 		PointCloud *pPC = m_sPC.get();
 		pPC->normals_.clear();
 		int n = pPC->points_.size();
@@ -175,7 +176,7 @@ namespace kai
 		PointCloud pc = *pPC;
 		if (n < nP)
 		{
-			addDummyDome(&pc, nP - n, m_rDummyDome);
+			addDummyPoints(&pc, nP - n, m_rDummyDome);
 		}
 		else if (n > nP)
 		{
@@ -247,7 +248,7 @@ namespace kai
 
 	void _PCscan::updateKinematics(void)
 	{
-		while (m_pTk->bRun())
+		while (m_pTk->bAlive())
 		{
 			m_pTk->autoFPSfrom();
 
@@ -297,27 +298,15 @@ namespace kai
 		pW->SetCbVoxelDown(OnVoxelDown, (void *)this);
 
 		m_pWin->UpdateUIstate();
-		m_pWin->SetFullScreen(m_bFullScreen);
+//		m_pWin->SetFullScreen(m_bFullScreen);
 		m_aabb = createDefaultAABB();
 		camBound(m_aabb);
 		updateCamProj();
 		updateCamPose();
 
-		m_pT->wakeUp();
+		m_pT->run();
 		app.Run();
 		exit(0);
-	}
-
-	AxisAlignedBoundingBox _PCscan::createDefaultAABB(void)
-	{
-		PointCloud pc;
-		pc.points_.push_back(Vector3d(0,0,1));
-		pc.points_.push_back(Vector3d(0,0,-1));
-		pc.points_.push_back(Vector3d(0,1,0));
-		pc.points_.push_back(Vector3d(0,-1,0));
-		pc.points_.push_back(Vector3d(1,0,0));
-		pc.points_.push_back(Vector3d(-1,0,0));
-		return pc.GetAxisAlignedBoundingBox();
 	}
 
 	void _PCscan::OnScan(void *pPCV, void *pD)

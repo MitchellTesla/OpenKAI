@@ -2,7 +2,7 @@
 #define OpenKAI_src_Autopilot_AP__AP_base_H_
 
 #include "../../Protocol/_Mavlink.h"
-#include "../../State/_StateBase.h"
+#include "../../State/_StateControl.h"
 
 #define AP_N_CUSTOM_MODE 28
 
@@ -90,17 +90,18 @@ namespace kai
 		}
 	};
 
-	class _AP_base : public _StateBase
+	class _AP_base : public _ModuleBase
 	{
 	public:
 		_AP_base();
 		~_AP_base();
 
-		bool init(void *pKiss);
-		bool start(void);
-		int check(void);
-		void update(void);
-		void console(void *pConsole);
+		virtual bool init(void *pKiss);
+		virtual bool link(void);
+		virtual bool start(void);
+		virtual int check(void);
+		virtual void update(void);
+		virtual void console(void *pConsole);
 
 		void setApMode(uint32_t iMode);
 		void setApArm(bool bArm);
@@ -115,8 +116,12 @@ namespace kai
 		float getApHdg(void);
 		vFloat3 getApSpeed(void);
 		vFloat3 getApAttitude(void);
+		float getBattery(void);
 
-	private:
+		int getWPseq(void);
+		int getWPtotal(void);
+
+	protected:
 		void updateBase(void);
 		static void *getUpdate(void *This)
 		{
@@ -141,6 +146,7 @@ namespace kai
 		vFloat3 m_vSpeed;
 		vFloat3 m_vAtti; //yaw, pitch, roll
 		float m_apHdg;	 //heading in degree
+		float m_battery; //remaining percentage
 	};
 
 }

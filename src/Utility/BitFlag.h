@@ -6,35 +6,39 @@
 namespace kai
 {
 
-struct BIT_FLAG
-{
-	uint64_t m_flag = 0;
-
-	void clearAll(void)
+	struct BIT_FLAG
 	{
-		m_flag = 0;
-	}
+		uint64_t m_flag = 0;
 
-	void set(int i)
-	{
-		m_flag |= (1<<i);
-	}
+		bool bClear(void)
+		{
+			return (m_flag == 0);
+		}
 
-	void clear(int i)
-	{
-		m_flag &= ~(1<<i);
-	}
+		void clearAll(void)
+		{
+			m_flag = 0;
+		}
 
-	bool b(int i, bool bClearAfterRead = false)
-	{
-		bool b = m_flag & (1<<i);
-		if(bClearAfterRead)
-			clear(i);
+		void set(int i)
+		{
+			m_flag |= (1 << i);
+		}
 
-		return b;
-	}
+		void clear(int i)
+		{
+			m_flag &= ~(1 << i);
+		}
 
-};
+		bool b(int i, bool bClearAfterRead = false)
+		{
+			bool b = m_flag & (1 << i);
+			if (bClearAfterRead)
+				clear(i);
+
+			return b;
+		}
+	};
 
 }
 #endif

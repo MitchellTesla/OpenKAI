@@ -14,12 +14,14 @@ namespace kai
 		~_DroneBoxJSON();
 
 		virtual bool init(void *pKiss);
+		virtual bool link(void);
 		virtual bool start(void);
 		virtual int check(void);
 		virtual void console(void *pConsole);
 
 	protected:
 		void send(void);
+	    virtual void sendHeartbeat(void);
 
 		//msg handlers
 		void handleMsg(string &str);
@@ -42,8 +44,7 @@ namespace kai
 			return NULL;
 		}
 
-	public:
-		_Thread *m_Tr;
+	protected:
 		_DroneBox *m_pDB;
 	};
 

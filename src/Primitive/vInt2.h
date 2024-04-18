@@ -29,7 +29,7 @@ struct vInt2
 		y = b;
 	}
 
-	void init(void)
+	void clear(void)
 	{
 		x = 0;
 		y = 0;
@@ -58,6 +58,21 @@ struct vInt2
 
 		return v;
 	}
+
+	bool bInside(int v)
+    {
+        IF_F(v < x);
+        IF_F(v >= y);
+        return true;
+    }
+
+	bool bContain(int v)
+    {
+        IF_F(v < x);
+        IF_F(v > y);
+        return true;
+    }
+
 };
 
 }

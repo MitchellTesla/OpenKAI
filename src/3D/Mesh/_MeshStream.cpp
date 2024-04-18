@@ -29,19 +29,19 @@ namespace kai
     bool _MeshStream::init(void *pKiss)
     {
         IF_F(!this->_GeometryBase::init(pKiss));
-        Kiss *pK = (Kiss *)pKiss;
+		Kiss *pK = (Kiss *)pKiss;
 
         pK->v("bAccept", &m_bAccept);
         pK->v("nP", &m_nP);
         IF_F(m_nP <= 0);
 
-        m_pP = new PC_POINT[m_nP];
+        m_pP = new GEOMETRY_POINT[m_nP];
         NULL_F(m_pP);
         m_iP = 0;
         m_tLastUpdate = 0;
 
         for (int i = 0; i < m_nP; i++)
-            m_pP[i].init();
+            m_pP[i].clear();
 
         return true;
     }
@@ -51,7 +51,7 @@ namespace kai
         return this->_GeometryBase::check();
     }
 
-    void _MeshStream::AcceptAdd(bool b)
+    void _MeshStream::setAccept(bool b)
     {
         m_bAccept = b;
     }
@@ -61,19 +61,6 @@ namespace kai
         NULL__(m_pP, -1);
         IF__(!m_bAccept, -1);
 
-        Vector3d vPa = Vector3d(
-                            vP[m_vAxisIdx.x] * m_vAxisK.x,
-                            vP[m_vAxisIdx.y] * m_vAxisK.y,
-                            vP[m_vAxisIdx.z] * m_vAxisK.z
-                            );
-        IF__(!bRange(vPa), -1);
-
-        PC_POINT *pP = &m_pP[m_iP];
-        pP->m_vP = m_A * vPa;
-        pP->m_tStamp = tStamp;
-
-//        m_iP = iInc(m_iP, m_nP);
-//        m_nPread++;
         return 0;
     }
 
@@ -86,21 +73,6 @@ namespace kai
     {
         NULL_(p);
 
-        _MeshStream* pS = (_MeshStream*)p;
-        PC_POINT* pP = pS->m_pP;
-        uint64_t tFrom = m_pT->getTfrom() - m_pInCtx.m_dT;
-        while (m_pInCtx.m_iPr != pS->m_iP)
-        {
-            PC_POINT po = pP[m_pInCtx.m_iPr];
-
-            if (po.m_tStamp >= tFrom)
-            {
-                m_pP[m_iP] = po;
-//                m_iP = iInc(m_iP, m_nP);
-            }
-
-//            m_pInCtx.m_iPr = iInc(m_pInCtx.m_iPr, pS->m_nP);
-        }
     }
 
     void _MeshStream::getNextFrame(void* p)
@@ -132,7 +104,7 @@ namespace kai
     void _MeshStream::clear(void)
     {
         for(int i=0; i<m_nP; i++)
-            m_pP[i].init();
+            m_pP[i].clear();
 
         m_iP = 0;
     }

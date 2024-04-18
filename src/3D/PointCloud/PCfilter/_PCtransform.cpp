@@ -25,12 +25,12 @@ namespace kai
 		IF_F(!_PCframe::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
 
-		//read from external kiss file if there is one
+		// read from external kiss file if there is one
 		pK->v("paramKiss", &m_paramKiss);
 		IF_T(m_paramKiss.empty());
 
 		_File *pFile = new _File();
-		IF_T(!pFile->open(&m_paramKiss));
+		IF_T(!pFile->open(m_paramKiss));
 
 		string fn;
 		pFile->readAll(&fn);
@@ -57,14 +57,14 @@ namespace kai
 
 	int _PCtransform::check(void)
 	{
-		NULL__(m_pInCtx.m_pPCB, -1);
+//		NULL__(m_pInCtx.m_pPCB, -1);
 
 		return this->_PCframe::check();
 	}
 
 	void _PCtransform::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 
@@ -78,9 +78,9 @@ namespace kai
 	{
 		IF_(check() < 0);
 
-		readPC(m_pInCtx.m_pPCB);
+//		readPC(m_pInCtx.m_pPCB);
 		m_sPC.next()->Transform(m_mTt);
-		updatePC();
+		swapBuffer();
 	}
 
 	void _PCtransform::setTranslationMatrix(Matrix4d_u &mTt)
@@ -110,7 +110,7 @@ namespace kai
 		string k = picojson::value(o).serialize();
 
 		_File *pFile = new _File();
-		IF_(!pFile->open(&m_paramKiss, ios::out));
+		IF_(!pFile->open(m_paramKiss, ios::out));
 		pFile->write((uint8_t *)k.c_str(), k.length());
 		pFile->close();
 	}

@@ -9,6 +9,11 @@ namespace kai
 		m_bSend = false;
 		m_bRawSbus = true;
 
+		m_timeOutUsec = USEC_1SEC;
+		m_tLastRecv = 0;
+		m_bLostFrame = false;
+		m_bFailSafe = false;
+
 		reset();
 	}
 
@@ -20,8 +25,10 @@ namespace kai
 	{
 		IF_F(!this->_ModuleBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
+    	
 
 		pK->v("bSend", &m_bSend);
+		pK->v("timeOutUsec", &m_timeOutUsec);
 		pK->v("bRawSbus", &m_bRawSbus);
 		m_nFrame = (m_bRawSbus) ? 25 : SBUS_NBUF;
 
@@ -45,7 +52,6 @@ namespace kai
 			DEL(m_pTr);
 			return false;
 		}
-		pKt->m_pInst = m_pTr;
 
 		return true;
 	}
@@ -56,9 +62,9 @@ namespace kai
 
 		string n;
 		n = "";
-		F_ERROR_F(pK->v("_IOBase", &n));
-		m_pIO = (_IOBase *)(pK->getInst(n));
-		NULL_Fl(m_pIO, "_IOBase not found");
+		F_ERROR_F(pK->v("_IObase", &n));
+		m_pIO = (_IObase *)(pK->getInst(n));
+		NULL_Fl(m_pIO, "_IObase not found");
 
 		return true;
 	}
@@ -79,14 +85,14 @@ namespace kai
 	int _SBus::check(void)
 	{
 		NULL__(m_pIO, -1);
-		IF__(!m_pIO->isOpen(), -1);
+		IF__(!m_pIO->bOpen(), -1);
 
 		return this->_ModuleBase::check();
 	}
 
 	void _SBus::updateW(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 
@@ -105,7 +111,7 @@ namespace kai
 
 	void _SBus::updateR(void)
 	{
-		while (m_pTr->bRun())
+		while (m_pTr->bAlive())
 		{
 			m_pTr->autoFPSfrom();
 
@@ -116,6 +122,7 @@ namespace kai
 				else
 					decode();
 
+				m_tLastRecv = getApproxTbootUs();
 				reset();
 			}
 
@@ -175,7 +182,7 @@ namespace kai
 		m_pRC[15].set(static_cast<uint16_t>(m_pB[21] >> 5 | m_pB[22] << 3 & 0x07FF));
 
 		m_bLostFrame = m_pB[23] & SBUS_LOST_FRAME_;
-		m_bLostFrame = m_pB[23] & SBUS_FAILSAFE_;
+		m_bFailSafe = m_pB[23] & SBUS_FAILSAFE_;
 	}
 
 	void _SBus::encodeRaw(void)
@@ -259,8 +266,6 @@ namespace kai
 	{
 		m_iB = 0;
 		m_flag = 0;
-		m_bLostFrame = false;
-		m_bFailSafe = false;
 		m_bCh17 = false;
 		m_bCh18 = false;
 	}
@@ -279,20 +284,32 @@ namespace kai
 		return m_pRC[i].v();
 	}
 
+	bool _SBus::bFailSafe(void)
+	{
+		IF_T(m_bFailSafe);
+
+		uint64_t t = getApproxTbootUs();
+		IF_F(t <= m_tLastRecv);
+		IF_T(t - m_tLastRecv > m_timeOutUsec);
+
+		return false;
+	}
+
 	void _SBus::console(void *pConsole)
 	{
 		NULL_(pConsole);
 		this->_ModuleBase::console(pConsole);
 
 		_Console *pC = (_Console *)pConsole;
-		if (!m_pIO->isOpen())
+		if (!m_pIO->bOpen())
 			pC->addMsg("Not connected");
 		else
 			pC->addMsg("Connected");
 
 		pC->addMsg("Raw: " + i2str(m_pRC[0].raw()) + "|" + i2str(m_pRC[1].raw()) + "|" + i2str(m_pRC[2].raw()) + "|" + i2str(m_pRC[3].raw()) + "|" + i2str(m_pRC[4].raw()) + "|" + i2str(m_pRC[5].raw()) + "|" + i2str(m_pRC[6].raw()) + "|" + i2str(m_pRC[7].raw()) + "|" + i2str(m_pRC[8].raw()) + "|" + i2str(m_pRC[9].raw()) + "|" + i2str(m_pRC[10].raw()) + "|" + i2str(m_pRC[11].raw()) + "|" + i2str(m_pRC[12].raw()) + "|" + i2str(m_pRC[13].raw()) + "|" + i2str(m_pRC[14].raw()) + "|" + i2str(m_pRC[15].raw()));
-
 		pC->addMsg("v: " + f2str(m_pRC[0].v(), 2) + "|" + f2str(m_pRC[1].v(), 2) + "|" + f2str(m_pRC[2].v(), 2) + "|" + f2str(m_pRC[3].v(), 2) + "|" + f2str(m_pRC[4].v(), 2) + "|" + f2str(m_pRC[5].v(), 2) + "|" + f2str(m_pRC[6].v(), 2) + "|" + f2str(m_pRC[7].v(), 2) + "|" + f2str(m_pRC[8].v(), 2) + "|" + f2str(m_pRC[9].v(), 2) + "|" + f2str(m_pRC[10].v(), 2) + "|" + f2str(m_pRC[11].v(), 2) + "|" + f2str(m_pRC[12].v(), 2) + "|" + f2str(m_pRC[13].v(), 2) + "|" + f2str(m_pRC[14].v(), 2) + "|" + f2str(m_pRC[15].v(), 2));
+		if(bFailSafe())
+			pC->addMsg("FailSafe");
 	}
 
 }

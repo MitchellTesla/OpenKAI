@@ -31,7 +31,7 @@ namespace kai
     bool _PCregistGlobal::init(void *pKiss)
     {
         IF_F(!_ModuleBase::init(pKiss));
-        Kiss *pK = (Kiss *)pKiss;
+		Kiss *pK = (Kiss *)pKiss;
 
         pK->v("rNormal", &m_rNormal);
         pK->v("rFeature", &m_rFeature);
@@ -75,7 +75,7 @@ namespace kai
 
     void _PCregistGlobal::update(void)
     {
-        while (m_pT->bRun())
+        while (m_pT->bAlive())
         {
             m_pT->autoFPSfrom();
 
@@ -90,9 +90,9 @@ namespace kai
         IF_(check() < 0);
 
         PointCloud pcSrc;
-        m_pSrc->getPC(&pcSrc);
+        m_pSrc->copyTo(&pcSrc);
         PointCloud pcTgt;
-        m_pTgt->getPC(&pcTgt);
+        m_pTgt->copyTo(&pcTgt);
 
         IF_(pcSrc.IsEmpty());
         IF_(pcTgt.IsEmpty());
@@ -100,17 +100,17 @@ namespace kai
         Feature spFpfhSrc = *preprocess(pcSrc);
         Feature spFpfhTgt = *preprocess(pcTgt);
 
-        m_RR = FastGlobalRegistration(
-            pcSrc,
-            pcTgt,
-            spFpfhSrc,
-            spFpfhTgt,
-            FastGlobalRegistrationOption());
+        // m_RR = FastGlobalRegistration(
+        //     pcSrc,
+        //     pcTgt,
+        //     spFpfhSrc,
+        //     spFpfhTgt,
+        //     FastGlobalRegistrationOption());
 
-        IF_(m_RR.fitness_ < m_lastFit);
-        m_lastFit = m_RR.fitness_;
+        // IF_(m_RR.fitness_ < m_lastFit);
+        // m_lastFit = m_RR.fitness_;
 
-        m_pTf->setTranslationMatrix(m_RR.transformation_);
+        // m_pTf->setTranslationMatrix(m_RR.transformation_);
     }
 
     std::shared_ptr<Feature> _PCregistGlobal::preprocess(PointCloud &pc)

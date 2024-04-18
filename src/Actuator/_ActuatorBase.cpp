@@ -79,7 +79,15 @@ namespace kai
 			m_vAxis.push_back(a);
 		}
 
-		IF_F(m_vAxis.size() < m_nMinAxis);
+		IF_d_F(m_vAxis.size() < m_nMinAxis, LOG_E("axis number < nMinAxis"));
+
+		return true;
+	}
+
+	bool _ActuatorBase::link(void)
+	{
+		IF_F(!this->_ModuleBase::link());
+		Kiss *pK = (Kiss *)m_pKiss;
 
 		string n;
 
@@ -135,27 +143,63 @@ namespace kai
 		pthread_mutex_unlock(&m_mutex);
 	}
 
-	void _ActuatorBase::setPtarget(int i, float p)
+	void _ActuatorBase::setPtarget(int i, float p, bool bNormalized)
 	{
 		IF_(i < 0);
 		IF_(i >= m_vAxis.size());
 
 		ACTUATOR_AXIS *pA = &m_vAxis[i];
-		pA->m_p.setTarget(p);
+		if (!bNormalized)
+			pA->m_p.setTarget(p);
+		else
+			pA->m_p.setNormalizedTarget(p);
 
 		m_lastCmdType = actCmd_pos;
 		m_tLastCmd = m_pT->getTfrom();
 	}
 
-	void _ActuatorBase::setStarget(int i, float s)
+	void _ActuatorBase::setStarget(int i, float s, bool bNormalized)
 	{
 		IF_(i < 0);
 		IF_(i >= m_vAxis.size());
 
 		ACTUATOR_AXIS *pA = &m_vAxis[i];
-		pA->m_s.setTarget(s);
+		if (!bNormalized)
+			pA->m_s.setTarget(s);
+		else
+			pA->m_s.setNormalizedTarget(s);
 
 		m_lastCmdType = actCmd_spd;
+		m_tLastCmd = m_pT->getTfrom();
+	}
+
+	void _ActuatorBase::setAtarget(int i, float a, bool bNormalized)
+	{
+		IF_(i < 0);
+		IF_(i >= m_vAxis.size());
+
+		ACTUATOR_AXIS *pA = &m_vAxis[i];
+		if (!bNormalized)
+			pA->m_a.setTarget(a);
+		else
+			pA->m_a.setNormalizedTarget(a);
+
+		m_lastCmdType = actCmd_accel;
+		m_tLastCmd = m_pT->getTfrom();
+	}
+
+	void _ActuatorBase::setBtarget(int i, float b, bool bNormalized)
+	{
+		IF_(i < 0);
+		IF_(i >= m_vAxis.size());
+
+		ACTUATOR_AXIS *pA = &m_vAxis[i];
+		if (!bNormalized)
+			pA->m_b.setTarget(b);
+		else
+			pA->m_b.setNormalizedTarget(b);
+
+		m_lastCmdType = actCmd_brake;
 		m_tLastCmd = m_pT->getTfrom();
 	}
 
@@ -219,7 +263,6 @@ namespace kai
 
 	void _ActuatorBase::console(void *pConsole)
 	{
-#ifdef WITH_UI
 		NULL_(pConsole);
 		this->_ModuleBase::console(pConsole);
 
@@ -262,7 +305,6 @@ namespace kai
 						   ", cE=" + f2str(pA->m_c.m_vErr),
 					   1);
 		}
-#endif
 	}
 
 }

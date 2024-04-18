@@ -1,7 +1,7 @@
 #ifndef OpenKAI_src_Protocol__SBus_H_
 #define OpenKAI_src_Protocol__SBus_H_
 
-#include "../IO/_IOBase.h"
+#include "../IO/_IObase.h"
 #include "../Utility/RC.h"
 
 //SBus definition
@@ -32,6 +32,7 @@ namespace kai
 
 		uint16_t raw(int i);
 		float v(int i);
+		bool bFailSafe(void);
 
 	private:
 		void send(void);
@@ -59,11 +60,13 @@ namespace kai
 
 	public:
 		_Thread *m_pTr;
-		_IOBase *m_pIO;
+		_IObase *m_pIO;
 		bool m_bSend;
-
 		bool m_bRawSbus;
 		int m_nFrame;
+
+		uint64_t m_timeOutUsec;
+		uint64_t m_tLastRecv;
 
 		uint8_t m_pB[SBUS_NBUF];
 		uint8_t m_iB;

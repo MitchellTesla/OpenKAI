@@ -10,9 +10,20 @@
 
 #include "_Thread.h"
 
+#define ON_PAUSE          \
+	if (m_pT->bOnPause()) \
+	{                     \
+		onPause();        \
+	}
+
+#define ON_RESUME          \
+	if (m_pT->bOnResume()) \
+	{                      \
+		onResume();        \
+	}
+
 namespace kai
 {
-
 	class _ModuleBase : public BASE
 	{
 	public:
@@ -24,6 +35,13 @@ namespace kai
 		virtual bool start(void);
 		virtual int check(void);
 		virtual void console(void *pConsole);
+
+		virtual void pause(void);
+		virtual void resume(void);
+
+	protected:
+		virtual void onPause(void);
+		virtual void onResume(void);
 
 	private:
 		void update(void);

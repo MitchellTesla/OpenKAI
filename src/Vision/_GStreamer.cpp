@@ -48,10 +48,10 @@ namespace kai
 			while (!m_gst.read(mCam))
 				;
 		}
-		m_fBGR.copy(mCam);
+		m_fRGB.copy(mCam);
 
-		m_vSize.x = mCam.cols;
-		m_vSize.y = mCam.rows;
+		m_vSizeRGB.x = mCam.cols;
+		m_vSizeRGB.y = mCam.rows;
 
 		m_bOpen = true;
 		return true;
@@ -71,7 +71,7 @@ namespace kai
 
 	void _GStreamer::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			if (!m_bOpen)
 			{
@@ -87,7 +87,7 @@ namespace kai
 			Mat mCam;
 			while (!m_gst.read(mCam))
 				;
-			m_fBGR.copy(mCam);
+			m_fRGB.copy(mCam);
 
 			m_pT->autoFPSto();
 		}

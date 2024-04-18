@@ -24,9 +24,9 @@ namespace kai
 
 	bool _SerialPort::init(void *pKiss)
 	{
-		IF_F(!this->_IOBase::init(pKiss));
+		IF_F(!this->_IObase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
-
+    	
 		pK->v("port", &m_port);
 		pK->v("baud", &m_baud);
 		pK->v("dataBits", &m_dataBits);
@@ -35,7 +35,7 @@ namespace kai
 		pK->v("hardwareControl", &m_hardwareControl);
 
 		Kiss *pKt = pK->child("threadR");
-		IF_F(pKt->empty());
+		IF_d_F(pKt->empty(), LOG_E("threadR not found"));
 
 		m_pTr = new _Thread();
 		if (!m_pTr->init(pKt))
@@ -43,10 +43,16 @@ namespace kai
 			DEL(m_pTr);
 			return false;
 		}
-        pKt->m_pInst = m_pTr;
 
 		return true;
 	}
+
+    bool _SerialPort::link(void)
+    {
+        IF_F(!this->_IObase::link());
+
+        return true;
+    }
 
 	bool _SerialPort::open(void)
 	{
@@ -65,7 +71,7 @@ namespace kai
 		IF_(m_ioStatus != io_opened);
 
 		::close(m_fd);
-		this->_IOBase::close();
+		this->_IObase::close();
 	}
 
 	bool _SerialPort::start(void)
@@ -78,9 +84,9 @@ namespace kai
 
 	void _SerialPort::updateW(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
-			if (!isOpen())
+			if (!bOpen())
 			{
 				if (!open())
 				{
@@ -107,9 +113,9 @@ namespace kai
 
 	void _SerialPort::updateR(void)
 	{
-		while (m_pTr->bRun())
+		while (m_pTr->bAlive())
 		{
-			if (!isOpen())
+			if (!bOpen())
 			{
 				::sleep(1);
 				continue;
@@ -120,7 +126,7 @@ namespace kai
 			IF_CONT(nR <= 0);
 
 			m_fifoR.input(pB, nR);
-			m_pTr->wakeUpAll();
+			m_pTr->runAll();
 
 			LOG_I("read: " + i2str(nR) + " bytes");
 		}
@@ -277,7 +283,7 @@ namespace kai
 	void _SerialPort::console(void *pConsole)
 	{
 		NULL_(pConsole);
-		this->_IOBase::console(pConsole);
+		this->_IObase::console(pConsole);
 
 		NULL_(m_pTr);
 		m_pTr->console(pConsole);

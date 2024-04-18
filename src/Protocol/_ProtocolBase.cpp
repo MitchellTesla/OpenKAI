@@ -20,6 +20,7 @@ namespace kai
 	{
 		IF_F(!this->_ModuleBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
+    	
 
 		pK->v("nBuf", &m_nBuf);
 		m_pBuf = new uint8_t[m_nBuf];
@@ -34,16 +35,24 @@ namespace kai
 			DEL(m_pTr);
 			return false;
 		}
-		pKt->m_pInst = m_pTr;
-
-		string n;
-		n = "";
-		F_ERROR_F(pK->v("_IOBase", &n));
-		m_pIO = (_IOBase *)(pK->getInst(n));
-		NULL_Fl(m_pIO, n + ": not found");
 
 		return true;
 	}
+
+    bool _ProtocolBase::link(void)
+    {
+        IF_F(!this->_ModuleBase::link());
+        IF_F(!m_pTr->link());
+
+		Kiss *pK = (Kiss *)m_pKiss;
+		string n;
+		n = "";
+		F_ERROR_F(pK->v("_IObase", &n));
+		m_pIO = (_IObase *)(pK->getInst(n));
+		NULL_Fl(m_pIO, n + ": not found");
+
+        return true;
+    }
 
 	bool _ProtocolBase::start(void)
 	{
@@ -56,7 +65,7 @@ namespace kai
 	int _ProtocolBase::check(void)
 	{
 		NULL__(m_pIO, -1);
-		IF__(!m_pIO->isOpen(), -1);
+		IF__(!m_pIO->bOpen(), -1);
 		NULL_F(m_pBuf);
 
 		return this->_ModuleBase::check();
@@ -64,7 +73,7 @@ namespace kai
 
 	void _ProtocolBase::updateW(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 
@@ -83,7 +92,7 @@ namespace kai
 
 	void _ProtocolBase::updateR(void)
 	{
-		while (m_pTr->bRun())
+		while (m_pTr->bAlive())
 		{
 			if (!m_pIO)
 			{
@@ -91,7 +100,7 @@ namespace kai
 				continue;
 			}
 
-			if (!m_pIO->isOpen())
+			if (!m_pIO->bOpen())
 			{
 				m_pTr->sleepT(SEC_2_USEC);
 				continue;
@@ -112,6 +121,8 @@ namespace kai
 
 	bool _ProtocolBase::readCMD(void)
 	{
+		IF_F(check() < 0);
+
 		uint8_t b;
 		int nB;
 
@@ -151,7 +162,7 @@ namespace kai
 		this->_ModuleBase::console(pConsole);
 
 		_Console *pC = (_Console *)pConsole;
-		if (!m_pIO->isOpen())
+		if (!m_pIO->bOpen())
 		{
 			pC->addMsg("Not Connected", 1);
 			return;

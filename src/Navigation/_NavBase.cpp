@@ -12,9 +12,10 @@ namespace kai
 
 	_NavBase::_NavBase()
 	{
+		m_scale = 1.0;
 		m_flag.clearAll();
 		m_vAxisIdx.set(0, 1, 2);
-		m_vRoffset.init();
+		m_vRoffset.clear();
 		resetAll();
 	}
 
@@ -27,6 +28,7 @@ namespace kai
 		IF_F(!this->_ModuleBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
 
+		pK->v("scale", &m_scale);
 		pK->v("vAxisIdx", &m_vAxisIdx);
 		pK->v("vRoffset", &m_vRoffset);
 
@@ -38,14 +40,13 @@ namespace kai
 		return m_flag.b(F_OPEN);
 	}
 
-	bool _NavBase::bReady(void)
+	bool _NavBase::bError(void)
 	{
-		return m_flag.b(F_READY);
+		return m_flag.b(F_ERROR);
 	}
 
 	void _NavBase::reset(void)
 	{
-		m_flag.clear(F_READY);
 		m_flag.set(F_RESET);
 	}
 
@@ -56,11 +57,10 @@ namespace kai
 
 	void _NavBase::resetAll(void)
 	{
-		m_flag.clear(F_READY);
-		m_vT.init();
-		m_vV.init();
-		m_vR.init();
-		m_vQ.init();
+		m_vT.clear();
+		m_vV.clear();
+		m_vR.clear();
+		m_vQ.clear();
 		m_mT = Matrix4f::Identity();
 		m_confidence = 0.0;
 	}

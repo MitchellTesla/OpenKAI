@@ -18,6 +18,7 @@ namespace kai
 		~_JSONbase();
 
 		virtual bool init(void *pKiss);
+		virtual bool link(void);
 		virtual bool start(void);
 		virtual int check(void);
 		virtual void console(void *pConsole);
@@ -25,7 +26,7 @@ namespace kai
 	protected:
 		virtual void send(void);
 		virtual bool sendMsg(picojson::object &o);
-		virtual bool sendHeartbeat(void);
+		virtual void sendHeartbeat(void);
 
 		virtual bool recv(void);
 		virtual void handleMsg(string &str);
@@ -47,15 +48,15 @@ namespace kai
 			return NULL;
 		}
 
-	public:
+	protected:
 		_Thread *m_pTr;
-		_IOBase *m_pIO;
+		_IObase *m_pIO;
 
 		string m_msgFinishSend;
 		string m_msgFinishRecv;
 		string m_strB;
 
-		INTERVAL_EVENT m_tIntHeartbeat;
+		INTERVAL_EVENT m_ieSendHB;
 	};
 
 }

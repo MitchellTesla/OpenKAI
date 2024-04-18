@@ -48,7 +48,7 @@ namespace kai
 
 	void _SingleTracker::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 
@@ -62,7 +62,7 @@ namespace kai
 	{
 		IF_(check() < 0);
 
-		Frame *pFrame = m_pV->BGR();
+		Frame *pFrame = m_pV->getFrameRGB();
 		IF_(pFrame->bEmpty());
 		Mat m = *pFrame->m();
 

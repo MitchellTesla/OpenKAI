@@ -16,8 +16,9 @@ namespace kai
 
 	bool _AP_depthVision::init(void *pKiss)
 	{
-		IF_F(!this->_StateBase::init(pKiss));
+		IF_F(!this->_ModuleBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
+    	
 
 		//link
 		string n;
@@ -27,8 +28,8 @@ namespace kai
 		m_pAP = (_AP_base *)(pK->getInst(n));
 
 		n = "";
-		F_INFO(pK->v("_DepthVisionBase", &n));
-		m_pDV = (_DepthVisionBase *)(pK->getInst(n));
+		F_INFO(pK->v("_RGBDbase", &n));
+		m_pDV = (_RGBDbase *)(pK->getInst(n));
 		IF_Fl(!m_pDV, n + " not found");
 
 		m_nROI = 0;
@@ -55,14 +56,12 @@ namespace kai
 
 	void _AP_depthVision::update(void)
 	{
-		this->_StateBase::update();
-
 		NULL_(m_pAP);
 		NULL_(m_pAP->m_pMav);
 		_Mavlink *pMavlink = m_pAP->m_pMav;
 		NULL_(m_pDV);
 
-		vFloat2 range = m_pDV->m_vRange;
+		vFloat2 range = m_pDV->getRangeD();
 		mavlink_distance_sensor_t D;
 
 		for (int i = 0; i < m_nROI; i++)
@@ -91,7 +90,7 @@ namespace kai
 	void _AP_depthVision::draw(void *pFrame)
 	{
 		NULL_(pFrame);
-		this->_StateBase::draw(pFrame);
+		this->_ModuleBase::draw(pFrame);
 		IF_(check() < 0);
 
 		Frame *pF = (Frame *)pFrame;

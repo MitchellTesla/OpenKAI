@@ -5,47 +5,50 @@
  *      Author: yankai
  */
 
-#ifndef OpenKAI_src_Base__DetectorBase_H_
-#define OpenKAI_src_Base__DetectorBase_H_
-#ifdef USE_OPENCV
+#ifndef OpenKAI_src_Detector__DetectorBase_H_
+#define OpenKAI_src_Detector__DetectorBase_H_
 
 #include "../Universe/_Universe.h"
 #include "../Vision/_VisionBase.h"
-#include "../Protocol/_Mavlink.h"
 #include "../Utility/utilCV.h"
 
 namespace kai
 {
 
-class _DetectorBase: public _ModuleBase
-{
-public:
-	_DetectorBase();
-	virtual ~_DetectorBase();
+	class _DetectorBase : public _ModuleBase
+	{
+	public:
+		_DetectorBase();
+		virtual ~_DetectorBase();
 
-	virtual bool init(void *pKiss);
-	virtual int check(void);
-	virtual int getClassIdx(string &className);
-	virtual string getClassName(int iClass);
+		virtual bool init(void *pKiss);
+		virtual bool link(void);
+		virtual int check(void);
+		virtual void console(void *pConsole);
 
-public:
-	//input
-	_VisionBase *m_pV;
-	_DetectorBase *m_pDB;
+		virtual bool loadModel(void);
+		virtual int getClassIdx(string &className);
+		virtual string getClassName(int iClass);
+		virtual _Universe* getU(void);
 
-	//data
-	Frame m_fBGR;
-	_Universe* m_pU;
+	protected:
+		virtual void onPause(void);
 
-	//model
-	string m_fModel;
-	string m_fWeight;
-	string m_fMean;
-	string m_fClass;
-	int m_nClass;
-	vector<OBJ_CLASS> m_vClass;
-};
+	protected:
+		// input
+		_VisionBase *m_pV;
+
+		// data
+		Frame m_fRGB;
+		_Universe *m_pU;
+
+		// model
+		string m_fModel;
+		string m_fWeight;
+		string m_fMean;
+		string m_fClass;
+		vector<string> m_vClass;
+	};
 
 }
-#endif
 #endif

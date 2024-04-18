@@ -15,7 +15,7 @@ namespace kai
 		m_pV = NULL;
 		m_trackerType = "";
 		m_trackState = track_stop;
-		m_bb.init();
+		m_bb.clear();
 		m_iSet = 0;
 		m_iInit = 0;
 		m_margin = 0.0;
@@ -73,7 +73,7 @@ namespace kai
 	bool _TrackerBase::startTrack(vFloat4 &bb)
 	{
 		NULL_F(m_pV);
-		Mat *pM = m_pV->BGR()->m();
+		Mat *pM = m_pV->getFrameRGB()->m();
 		IF_F(pM->empty());
 
 		float mBig = 1.0 + m_margin;

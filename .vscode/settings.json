@@ -90,6 +90,22 @@
         "__atomic_generated": "cpp",
         "filesystem": "cpp",
         "cerrno": "cpp",
-        "regex": "cpp"
-    }
+        "regex": "cpp",
+        "*.inc": "cpp",
+        "dense": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "shared_mutex": "cpp",
+        "cfenv": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "forward_list": "cpp",
+        "span": "cpp",
+        "valarray": "cpp",
+        "__bit_reference": "cpp",
+        "__hash_table": "cpp",
+        "__split_buffer": "cpp",
+        "__tree": "cpp"
+    },
+    "cmake.configureOnOpen": true
 }

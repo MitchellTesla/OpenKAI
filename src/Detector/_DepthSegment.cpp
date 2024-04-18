@@ -32,8 +32,6 @@ namespace kai
 		pK->v<float>("rD", &m_rD);
 		pK->v<float>("rArea", &m_rArea);
 
-		m_nClass = 1;
-
 		return true;
 	}
 
@@ -43,37 +41,34 @@ namespace kai
 		return m_pT->start(getUpdate, this);
 	}
 
-	void _DepthSegment::update(void)
-	{
-		while (m_pT->bRun())
-		{
-			m_pT->autoFPSfrom();
-
-			if (check() >= 0)
-			{
-				detect();
-
-				if (m_pT->bGoSleep())
-					m_pU->clear();
-			}
-
-			m_pT->autoFPSto();
-		}
-	}
-
 	int _DepthSegment::check(void)
 	{
 		NULL__(m_pV, -1);
 		NULL__(m_pU, -1);
-		IF__(m_pV->BGR()->bEmpty(), -1);
+		IF__(m_pV->getFrameRGB()->bEmpty(), -1);
 
 		return this->_DetectorBase::check();
 	}
 
+	void _DepthSegment::update(void)
+	{
+		while (m_pT->bAlive())
+		{
+			m_pT->autoFPSfrom();
+
+			detect();
+
+			ON_PAUSE;
+			m_pT->autoFPSto();
+		}
+	}
+
 	void _DepthSegment::detect(void)
 	{
+		IF_(check() < 0);
+
 		Mat m;
-		m_pV->BGR()->m()->copyTo(m);
+		m_pV->getFrameRGB()->m()->copyTo(m);
 
 		float kx = 1.0 / m.cols;
 		float ky = 1.0 / m.rows;
@@ -93,14 +88,14 @@ namespace kai
 				approxPolyDP(vvC[i], vPoly, 3, true);
 				Rect re = boundingRect(vPoly);
 
-				o.init();
+				o.clear();
 				//			o.m_tStamp = m_pT->getTfrom();
 				o.setBB2D(rect2BB<vFloat4>(re));
 				o.scale(kx, ky);
 				o.setZ(r);
 				o.setTopClass(0, o.area());
 
-				//TODO: classify
+				// TODO: classify
 
 				m_pU->add(o);
 				rArea += o.area();
@@ -113,7 +108,7 @@ namespace kai
 		m_pU->swap();
 	}
 
-	void _DepthSegment::draw(void* pFrame)
+	void _DepthSegment::draw(void *pFrame)
 	{
 		NULL_(pFrame);
 		this->_DetectorBase::draw(pFrame);

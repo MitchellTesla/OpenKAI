@@ -10,25 +10,13 @@
 
 #include "_ObjectArray.h"
 #include "../Primitive/tSwap.h"
+
 #ifdef USE_OPENCV
 #include "../Vision/Frame.h"
 #endif
 
 namespace kai
 {
-
-	struct OBJ_CLASS
-	{
-		string m_name;
-		int m_n;
-
-		void init(void)
-		{
-			m_n = 0;
-			m_name = "";
-		}
-	};
-
 	class _Universe : public _ModuleBase
 	{
 	public:
@@ -65,14 +53,13 @@ namespace kai
 
 		//config
 		float m_minConfidence;
-		vFloat2 m_rArea;
-		vFloat2 m_rW;
-		vFloat2 m_rH;
+		vFloat2 m_vArea;
+		vFloat2 m_vW;
+		vFloat2 m_vH;
 		vFloat4 m_vRoi;
 		vInt2 m_vClassRange;
 
 		//show
-		bool m_bDrawClass;
 		bool m_bDrawText;
 		bool m_bDrawPos;
 	};

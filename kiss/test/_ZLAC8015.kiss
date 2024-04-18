@@ -2,26 +2,30 @@
 	"name":"APP",
 	"class":"Startup",
 	"appName":"OpenKAI",
-	"bWindow":0,
-	"bDraw":1,
 	"bLog":0,
 	"bStdErr":1,
-	"waitKey":30,
 }
 
 {
-	"name":"OK_Console",
+	"name":"console",
 	"class":"_Console",
 	"bON":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"vBASE":["zlac8015_LF","zlac8015_LB","zlac8015_RF","zlac8015_RB"],
 }
 
 {
 	"name":"modbus",
 	"class":"_Modbus",
 	"bON":1,
-	"FPS":30,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
 	"bLog":0,
-	"_Console":"OK_Console",
 	"port":"/dev/ttyUSB0",
 	"baud":115200,
 	"parity":"N",	
@@ -31,9 +35,11 @@
 	"name":"zlac8015_LF",
 	"class":"_ZLAC8015",
 	"bON":1,
-	"FPS":5,
+    {
+		"name":"thread",
+		"FPS":5,
+	}
 	"bLog":1,
-	"_Console":"OK_Console",
 	"_Modbus":"modbus",
 	"iSlave":1,
 
@@ -57,9 +63,11 @@
 	"name":"zlac8015_LB",
 	"class":"_ZLAC8015",
 	"bON":1,
-	"FPS":5,
+    {
+		"name":"thread",
+		"FPS":5,
+	}
 	"bLog":1,
-	"_Console":"OK_Console",
 	"_Modbus":"modbus",
 	"iSlave":2,
 
@@ -83,9 +91,11 @@
 	"name":"zlac8015_RF",
 	"class":"_ZLAC8015",
 	"bON":1,
-	"FPS":5,
+    {
+		"name":"thread",
+		"FPS":5,
+	}
 	"bLog":1,
-	"_Console":"OK_Console",
 	"_Modbus":"modbus",
 	"iSlave":3,
 
@@ -109,9 +119,11 @@
 	"name":"zlac8015_RB",
 	"class":"_ZLAC8015",
 	"bON":1,
-	"FPS":5,
+    {
+		"name":"thread",
+		"FPS":5,
+	}
 	"bLog":1,
-	"_Console":"OK_Console",
 	"_Modbus":"modbus",
 	"iSlave":4,
 

@@ -8,6 +8,9 @@ namespace kai
         m_pMB = NULL;
         m_iSlave = 1;
         m_lastCMD = dbx_unknown;
+
+        m_ID = -1;
+        m_vPos.clear();
     }
 
     _DroneBox::~_DroneBox()
@@ -16,20 +19,30 @@ namespace kai
 
     bool _DroneBox::init(void *pKiss)
     {
-        IF_F(!this->_GCSbase::init(pKiss));
+        IF_F(!this->_DroneBoxState::init(pKiss));
         Kiss *pK = (Kiss *)pKiss;
+		
 
+        pK->v("ID", &m_ID);
+        pK->v("vPos", &m_vPos);
         pK->v("iSlave", &m_iSlave);
 
-        string n;
+        return true;
+    }
 
+	bool _DroneBox::link(void)
+	{
+		IF_F(!this->_DroneBoxState::link());
+		Kiss *pK = (Kiss *)m_pKiss;
+
+        string n;
         n = "";
         pK->v("_Modbus", &n);
         m_pMB = (_Modbus *)(pK->getInst(n));
         IF_Fl(!m_pMB, n + ": not found");
 
-        return true;
-    }
+		return true;
+	}
 
     bool _DroneBox::start(void)
     {
@@ -42,26 +55,26 @@ namespace kai
         NULL__(m_pMB, -1);
         IF__(!m_pMB->bOpen(), -1);
 
-        return this->_GCSbase::check();
+        return this->_DroneBoxState::check();
     }
 
     void _DroneBox::update(void)
     {
-        while (m_pT->bRun())
+        while (m_pT->bAlive())
         {
             m_pT->autoFPSfrom();
-            this->_GCSbase::update();
-            this->_GCSbase::updateGCS();
 
-            updateGCS();
+            updateDroneBox();
 
             m_pT->autoFPSto();
         }
     }
 
-    void _DroneBox::updateGCS(void)
+    void _DroneBox::updateDroneBox(void)
     {
+        this->_DroneBoxState::updateDroneBox();
         IF_(check() < 0);
+
 
         if (m_state.bSTANDBY())
         {
@@ -72,7 +85,7 @@ namespace kai
         //Takeoff procedure
         if (m_state.bTAKEOFF_REQUEST())
         {
-            boxTakeoffPrepare();
+            IF_(!boxTakeoffPrepare());
 
             if (bBoxTakeoffReady())
                 m_pSC->transit(m_state.TAKEOFF_READY);
@@ -94,7 +107,7 @@ namespace kai
         //Landing procedure
         if (m_state.bLANDING_REQUEST())
         {
-            boxLandingPrepare();
+            IF_(!boxLandingPrepare());
 
             if (bBoxLandingReady())
                 m_pSC->transit(m_state.LANDING);
@@ -114,7 +127,7 @@ namespace kai
 
         if (m_state.bLANDED())
         {
-            //        IF_(!boxLandingComplete());
+            IF_(!boxLandingComplete());
 
             m_pSC->transit(m_state.STANDBY);
             return;
@@ -219,6 +232,16 @@ namespace kai
 
         m_lastCMD = dbx_boxRecover;
         return true;
+    }
+
+    int _DroneBox::getID(void)
+    {
+        return m_ID;
+    }
+
+    vDouble2 _DroneBox::getPos(void)
+    {
+        return m_vPos;
     }
 
 }

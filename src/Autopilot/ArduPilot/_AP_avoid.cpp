@@ -16,8 +16,9 @@ namespace kai
 
 	bool _AP_avoid::init(void *pKiss)
 	{
-		IF_F(!this->_StateBase::init(pKiss));
+		IF_F(!this->_ModuleBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
+    	
 
 		string n;
 		n = "";
@@ -49,16 +50,15 @@ namespace kai
 		NULL__(m_pDet, -1);
 		NULL__(m_pMavlink, -1);
 
-		return this->_StateBase::check();
+		return this->_ModuleBase::check();
 	}
 
 	void _AP_avoid::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 
-			this->_StateBase::update();
 			updateTarget();
 
 			m_pT->autoFPSto();
@@ -70,10 +70,10 @@ namespace kai
 		IF_(check() < 0);
 
 		_Object o;
-		o.init();
+		o.clear();
 		_Object *pO;
 		int i = 0;
-		while ((pO = m_pDet->m_pU->get(i++)) != NULL)
+		while ((pO = m_pDet->getU()->get(i++)) != NULL)
 		{
 			o = *pO;
 			o.setTopClass(0);
@@ -81,7 +81,7 @@ namespace kai
 
 		if (o.getTopClass() < 0)
 		{
-			m_obs.init();
+			m_obs.clear();
 			LOG_I("Target not found");
 			return;
 		}
@@ -101,17 +101,17 @@ namespace kai
 	void _AP_avoid::console(void *pConsole)
 	{
 		NULL_(pConsole);
-		this->_StateBase::console(pConsole);
+		this->_ModuleBase::console(pConsole);
 		IF_(check() < 0);
 
-		string msg = "nTarget=" + i2str(m_pDet->m_pU->size());
+		string msg = "nTarget=" + i2str(m_pDet->getU()->size());
 		((_Console *)pConsole)->addMsg(msg);
 	}
 
 	void _AP_avoid::draw(void *pFrame)
 	{
 		NULL_(pFrame);
-		this->_StateBase::draw(pFrame);
+		this->_ModuleBase::draw(pFrame);
 		IF_(check() < 0);
 
 		Frame *pF = (Frame *)pFrame;

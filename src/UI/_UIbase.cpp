@@ -23,6 +23,14 @@ namespace kai
 		IF_F(!this->_ModuleBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
 
+		return true;
+	}
+
+	bool _UIbase::link(void)
+	{
+		IF_F(!this->_ModuleBase::link());
+		Kiss *pK = (Kiss *)m_pKiss;
+
 		vector<string> vB;
 		pK->a("vBASE", &vB);
 		for (string p : vB)
@@ -44,7 +52,7 @@ namespace kai
 
 	void _UIbase::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 

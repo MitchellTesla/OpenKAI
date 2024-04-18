@@ -63,7 +63,7 @@ namespace kai
 		NULL__(m_pV, -1);
 		NULL__(m_pU, -1);
 		NULL__(m_pDN, -1);
-		Frame *pBGR = m_pV->BGR();
+		Frame *pBGR = m_pV->getFrameRGB();
 		NULL__(pBGR, -1);
 		IF__(pBGR->bEmpty(), -1);
 
@@ -99,7 +99,7 @@ namespace kai
 	{
 		open();
 
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 
@@ -114,7 +114,7 @@ namespace kai
 	{
 		IF_(check() < 0);
 
-		*m_pRGBA = m_pV->BGR()->cvtColor(CV_BGR2RGBA);
+		*m_pRGBA = m_pV->getFrameRGB()->cvtColor(CV_BGR2RGBA);
 		*m_pRGBAf = m_pRGBA->cvtTo(CV_32FC4);
 		GpuMat fGMat = *m_pRGBAf->gm();
 
@@ -130,7 +130,7 @@ namespace kai
 			detectNet::Detection *pB = &pBox[i];
 
 			_Object o;
-			o.init();
+			o.clear();
 			o.setTstamp(m_pT->getTfrom());
 			o.setTopClass(pB->ClassID, pB->Confidence);
 			string txt(m_pDN->GetClassDesc(pB->ClassID));

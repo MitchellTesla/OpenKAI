@@ -2,25 +2,26 @@
 	"name":"APP",
 	"class":"Startup",
 	"appName":"OpenKAI",
-	"bWindow":1,
-	"bDraw":1,
 	"bLog":1,
 	"bStdErr":1,
-	"waitKey":30,
 }
 
 {
-	"name":"OK_Console",
+	"name":"console",
 	"class":"_Console",
-	"bON":1,
+	"bON":0,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"vBASE":["Livox2","/LivoxLidar2"],
 }
 
 {
 	"name":"LivoxLidar",
 	"class":"LivoxLidar",
 	"bON":0,
-	"bLog":1,
-	"_Console":"OK_Console",
+	"bLog":0,
 	"/vBroadcastCode":["3JEDHC900100791"],
 	"vBroadcastCode":["3JEDHC900100791"],
 	"bEnableFan":1,
@@ -39,50 +40,112 @@
 		"FPS":30,
 	}
 	"bLog":1,
-	"_Console":"OK_Console",
 	"LivoxLidar":"LivoxLidar",
 	"/broadcastCode":"3JEDHC900100791",
 	"broadcastCode":"3JEDHC900100791",
 	"nP":256000,
 	"vToffset":[0,0,0],
 	"vRoffset":[0,0,0],
-	"bTransform":1,
 }
 
 {
-	"name":"pcv",
-	"class":"_PCviewer",
+	"name":"LivoxLidar2",
+	"class":"LivoxLidar2",
 	"bON":1,
-    {
-		"name":"thread",
-		"FPS":30,
-	}
-	"Window":"OKview",
-	"_Console":"OK_Console",
-	"vWinSize":[1920,1080],
-	"fov":100,
-	"/ctxdT":0,
-	"vPCbase":["Livox"],
-}
-
-{
-	"name":"T265",
-	"class":"_RStracking",
-	"FPS":30,
-	"bON":0,
 	"bLog":1,
-	"Window":"OKview",
-	"_Console":"OK_Console",
-	"vAxisIdx":[0,1,2],
+	"fConfig":"/home/kai/dev/OpenKAI/data/Livox/mid360_config.json",
 }
 
 {
-	"name":"GUI",
-	"class":"GUIwindow",
+	"name":"Livox2",
+	"class":"_Livox2",
+	"bON":0,
+    {
+		"name":"thread",
+		"FPS":1,
+	}
+	"bLog":0,
+	"LivoxLidar2":"LivoxLidar2",
+	"SN":"/47MDL9T0020177",
+	"lidarMode":1,
+	"nP":256000,
+	"vToffset":[0,0,0],
+	"vRoffset":[0,0,0],
+
+	"bWriteSharedMem":0,
+	"bReadSharedMem":0,
+	"sharedMemG":"shmW",
+}
+
+{
+	"name":"shmW",
+	"class":"SharedMem",
+	"bON":0,
+	"shmName":"livox",
+	"nB":256000,
+	"bWriter":1,
+}
+
+{
+	"name":"shmR",
+	"class":"SharedMem",
+	"bON":0,
+	"shmName":"livox",
+	"nB":256000,
+	"bWriter":0,
+}
+
+{
+	"name":"livoxStream",
+	"class":"_PCstream",
 	"bON":0,
     {
 		"name":"thread",
 		"FPS":30,
 	}
+	"bLog":0,
+	"nP":256000,
+
+	"bWriteSharedMem":0,
+	"bReadSharedMem":0,
+	"sharedMemG":"shmR",
 }
 
+{
+	"name":"gv",
+	"class":"_GeometryViewer",
+	"bON":0,
+    {
+		"name":"thread",
+		"FPS":10,
+	}
+    {
+		"name":"threadUI",
+		"FPS":30,
+	}
+	"vWinSize":[1920,1080],
+	"pathRes":"/usr/local/bin/Open3D/resources",
+	"device":"CPU:0",
+	"nPbuf":256000,
+	"vGeometryBase":["Livox2"],
+	"vCamLookAt":[0,0,0],
+	"vCamEye":[0,0,2],
+	"vCamUp":[0,1,0],
+	"vCamAutoLookAt":[0,0,0],
+	"vCamAutoEye":[0,0,2],
+	"vCamAutoUp":[0,1,0],
+	"vCoR":[0,0,0],
+	"camFov":75,
+	"vCamNF":[0, 500],
+	"camFovType":1,
+	"bFullScreen":0,
+	"wPanel":20,
+	"vBtnPadding":[1.6, 2.0],
+	"mouseMode":0,
+	"vDmove":[0.5, 5.0],
+	"rDummyDome":1000.0,
+	"dHiddenRemove":100.0,
+	"dirSave":"/home/kai/Documents/",
+	"/dirSave":"/media/lab/",
+	"rVoxel":0.05,
+}

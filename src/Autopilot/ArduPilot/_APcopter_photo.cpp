@@ -38,8 +38,9 @@ namespace kai
 
 	bool _APcopter_photo::init(void *pKiss)
 	{
-		IF_F(!this->_StateBase::init(pKiss));
+		IF_F(!this->_ModuleBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
+    	
 
 		pK->v("quality", &m_quality);
 		pK->v("dir", &m_dir);
@@ -69,8 +70,8 @@ namespace kai
 		NULL_Fl(m_pAP, n + ": not found");
 
 		n = "";
-		pK->v("_AP_posCtrl", &n);
-		m_pPC = (_AP_posCtrl *)(pK->getInst(n));
+		pK->v("_AP_move", &n);
+		m_pPC = (_AP_move *)(pK->getInst(n));
 		NULL_Fl(m_pPC, n + ": not found");
 
 		n = "";
@@ -83,8 +84,8 @@ namespace kai
 		m_pV = (_VisionBase *)(pK->getInst(n));
 
 		n = "";
-		pK->v("_DepthVisionBase", &n);
-		m_pDV = (_DepthVisionBase *)(pK->getInst(n));
+		pK->v("_RGBDbase", &n);
+		m_pDV = (_RGBDbase *)(pK->getInst(n));
 
 		n = "";
 		pK->v("_GPhoto", &n);
@@ -105,15 +106,14 @@ namespace kai
 		NULL__(m_pPC, -1);
 		NULL__(m_pDS, -1);
 
-		return this->_StateBase::check();
+		return this->_ModuleBase::check();
 	}
 
 	void _APcopter_photo::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
-			this->_StateBase::update();
 
 			if (check() >= 0)
 			{
@@ -139,19 +139,19 @@ namespace kai
 	{
 		IF_(check() < 0);
 
-		m_alt = m_pDS->d(m_iDiv);
-		IF_(m_alt < 0.0);
+		// m_alt = m_pDS->d(m_iDiv);
+		// IF_(m_alt < 0.0);
 
-		if (m_alt - m_lastAlt <= m_dAlt)
-		{
-			m_pPC->m_vP.z = m_speed;
-			return;
-		}
+		// if (m_alt - m_lastAlt <= m_dAlt)
+		// {
+		// 	m_pPC->m_vPvar.z = m_speed;
+		// 	return;
+		// }
 
-		m_lastAlt = floorf(m_alt);
-		if (m_lastAlt < 0.0)
-			m_lastAlt = 0.0;
-		m_pPC->m_vP.z = 0.0;
+		// m_lastAlt = floorf(m_alt);
+		// if (m_lastAlt < 0.0)
+		// 	m_lastAlt = 0.0;
+		// m_pPC->m_vPvar.z = 0.0;
 
 		shutter();
 	}
@@ -186,7 +186,7 @@ namespace kai
 		system(cmd.c_str());
 
 		vDouble4 vP;
-		vP.init();
+		vP.clear();
 		vP = m_pAP->getGlobalPos();
 		string lat = lf2str(vP.x, 7);
 		string lon = lf2str(vP.y, 7);
@@ -197,7 +197,7 @@ namespace kai
 		if (m_pV)
 		{
 			//rgb
-			Frame fBGR = *m_pV->BGR();
+			Frame fBGR = *m_pV->getFrameRGB();
 			if (m_bFlipRGB)
 				fBGR = fBGR.flip(-1);
 			Mat mBGR;
@@ -215,7 +215,7 @@ namespace kai
 		if (m_pDV)
 		{
 			//depth
-			Frame fD = *m_pDV->Depth();
+			Frame fD = *m_pDV->getFrameD();
 			if (m_bFlipD)
 				fD = fD.flip(-1);
 			Mat mD;
@@ -256,9 +256,8 @@ namespace kai
 	void _APcopter_photo::console(void *pConsole)
 	{
 		NULL_(pConsole);
-		this->_StateBase::console(pConsole);
+		this->_ModuleBase::console(pConsole);
 		IF_(check() < 0);
-		msgActive(pConsole);
 
 		_Console *pC = (_Console *)pConsole;
 		pC->addMsg("alt = " + f2str(m_alt) + ", lastAlt = " + f2str(m_lastAlt) + ", dAlt = " + f2str(m_dAlt));

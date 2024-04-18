@@ -12,6 +12,7 @@ namespace kai
 		m_parity = 'E';
 		m_baud = 115200;
 		m_bOpen = false;
+		m_tIntervalUsec = 10000;
 		m_tOutSec = 1;
 		m_tOutUSec = 0;
 	}
@@ -30,10 +31,12 @@ namespace kai
 	{
 		IF_F(!this->_ModuleBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
+    	
 
 		pK->v("port", &m_port);
 		pK->v("parity", &m_parity);
 		pK->v("baud", &m_baud);
+		pK->v("tIntervalUsec", &m_tIntervalUsec);
 		pK->v("tOutSec", &m_tOutSec);
 		pK->v("tOutUSec", &m_tOutUSec);
 
@@ -78,7 +81,7 @@ namespace kai
 
 	void _Modbus::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			if (!m_pMb)
 			{
@@ -105,6 +108,27 @@ namespace kai
 		int r = modbus_send_raw_request(m_pMb, pB, nB);
 		modbus_flush(m_pMb);
 
+		pthread_mutex_unlock(&m_mutex);
+
+		return r;
+	}
+
+	//Function code: 2
+	int _Modbus::readInputBits(int iSlave, int addr, int nB, uint8_t *pB)
+	{
+		IF__(!m_pMb, -1);
+		NULL__(pB, -1);
+
+		int r = -1;
+
+		pthread_mutex_lock(&m_mutex);
+
+		if (modbus_set_slave(m_pMb, iSlave) == 0)
+		{
+			r = modbus_read_input_bits(m_pMb, addr, nB, pB);
+		}
+
+		modbus_flush(m_pMb);
 		pthread_mutex_unlock(&m_mutex);
 
 		return r;
@@ -166,6 +190,9 @@ namespace kai
 		}
 
 		modbus_flush(m_pMb);
+
+		usleep(m_tIntervalUsec);
+
 		pthread_mutex_unlock(&m_mutex);
 
 		return r;

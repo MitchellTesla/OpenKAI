@@ -23,8 +23,9 @@ namespace kai
 
 	bool _AProver_drive::init(void *pKiss)
 	{
-		IF_F(!this->_StateBase::init(pKiss));
+		IF_F(!this->_ModuleBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
+    	
 
 		pK->v("bSetYawSpeed", &m_bSetYawSpeed);
 		pK->v("yawMode", &m_yawMode);
@@ -94,32 +95,35 @@ namespace kai
 		NULL__(m_pAP->m_pMav, -1);
 		NULL__(m_pD, -1);
 
-		return this->_StateBase::check();
+		return this->_ModuleBase::check();
 	}
 
 	void _AProver_drive::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 
 			updateDrive();
 
+			ON_PAUSE;
 			m_pT->autoFPSto();
 		}
+	}
+
+	void _AProver_drive::onPause(void)
+	{
+		this->_ModuleBase::onPause();
+
+		IF_(!m_bRcChanOverride);
+		*m_pRcYaw = 0;
+		*m_pRcThrottle = 0;
+		m_pAP->m_pMav->rcChannelsOverride(m_rcOverride);
 	}
 
 	bool _AProver_drive::updateDrive(void)
 	{
 		IF_F(check() < 0);
-		if (!bActive())
-		{
-			IF_F(!m_bRcChanOverride);
-			*m_pRcYaw = 0;
-			*m_pRcThrottle = 0;
-			m_pAP->m_pMav->rcChannelsOverride(m_rcOverride);
-			return false;
-		}
 
 		float nSpd = m_pD->getSpeed() * m_pD->getDirection();
 		float nStr = m_pD->getSteering();
@@ -156,8 +160,7 @@ namespace kai
 	void _AProver_drive::console(void *pConsole)
 	{
 		NULL_(pConsole);
-		this->_StateBase::console(pConsole);
-		msgActive(pConsole);
+		this->_ModuleBase::console(pConsole);
 
 		NULL_(m_pRcYaw);
 		NULL_(m_pRcThrottle);

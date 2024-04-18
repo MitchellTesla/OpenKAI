@@ -19,6 +19,7 @@ namespace kai
 		bool bOpen(void);
 
 		int rawRequest(uint8_t *pB, int nB);
+		int readInputBits(int iSlave, int addr, int nB, uint8_t *pB);
 		int readRegisters(int iSlave, int addr, int nRegister, uint16_t *pB);
 		int writeBit(int iSlave, int addr, bool bStatus);
 		int writeRegister(int iSlave, int addr, int v);
@@ -39,6 +40,7 @@ namespace kai
 		int m_baud;
 		bool m_bOpen;
 
+		uint64_t m_tIntervalUsec;
 		uint32_t m_tOutSec;
 		uint32_t m_tOutUSec;
 

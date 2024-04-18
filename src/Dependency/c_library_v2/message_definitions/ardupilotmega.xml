@@ -4,6 +4,8 @@
   <!-- Vendors -->
   <include>uAvionix.xml</include>
   <include>icarous.xml</include>
+  <include>cubepilot.xml</include>
+  <include>csAirLink.xml</include>
   <dialect>2</dialect>
   <!-- Note that ArduPilot-specific messages should use the command id range from 150 to 250, to leave plenty of room for growth of common.xml If you prototype a message here, then you should consider if it is general enough to move into common.xml later -->
   <enums>
@@ -20,10 +22,6 @@
     <enum name="HEADING_TYPE">
       <entry value="0" name="HEADING_TYPE_COURSE_OVER_GROUND"/>
       <entry value="1" name="HEADING_TYPE_HEADING"/>
-    </enum>
-    <enum name="SPEED_TYPE">
-      <entry value="0" name="SPEED_TYPE_AIRSPEED"/>
-      <entry value="1" name="SPEED_TYPE_GROUNDSPEED"/>
     </enum>
     <!-- ardupilot specific MAV_CMD_* commands -->
     <enum name="MAV_CMD">
@@ -331,6 +329,7 @@
         <param index="6">Empty</param>
         <param index="7">Empty</param>
       </entry>
+      <!-- 43003 MAV_CMD_EXTERNAL_POSITION_ESTIMATE moved to common.xml -->
     </enum>
     <enum name="SCRIPTING_CMD">
       <entry value="0" name="SCRIPTING_CMD_REPL_START">

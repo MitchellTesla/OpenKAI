@@ -7,7 +7,7 @@
 }
 
 {
-	"name":"OKconsole",
+	"name":"console",
 	"class":"_Console",
 	"bON":1,
     {
@@ -18,7 +18,7 @@
 }
 
 {
-	"name":"OKview",
+	"name":"view",
 	"class":"_WindowCV",
 	"bON":1,
     {
@@ -26,7 +26,7 @@
 		"FPS":30,
 	}
 	"bFullScreen":0,
-	"vBASE":["cam"],
+	"vBASE":["cam","/crop","iRay","/contrast"],
 }
 
 {
@@ -38,7 +38,32 @@
 		"FPS":30,
 	}
 	"deviceID":0,
-	"vSize":[640,480],
+	"vSizeRGB":[640,480],
+}
+
+{
+	"name":"iRay",
+	"class":"_InfiRay",
+	"bON":0,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"deviceID":4,
+	"vSize":[256,196],
+}
+
+{
+	"name":"contrast",
+	"class":"_Contrast",
+	"bON":0,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"_VisionBase":"iRay",
+	"alpha":2.5,
+	"beta":0.0,
 }
 
 {
@@ -49,7 +74,7 @@
 		"name":"thread",
 		"FPS":30,
 	}
-	"pipeline":"nvarguscamsrc ! video/x-raw(memory:NVMM), width=1920, height=1080, format=(string)NV12, framerate=(fraction)30/1 ! nvvidconv flip-method=0 ! video/x-raw, width=(int)1920, height=(int)1080, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink",
+	"/pipeline":"nvarguscamsrc ! video/x-raw(memory:NVMM), width=1920, height=1080, format=(string)NV12, framerate=(fraction)30/1 ! nvvidconv flip-method=0 ! video/x-raw, width=(int)1920, height=(int)1080, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink",
 	"/pipeline":"nvarguscamsrc ! video/x-raw(memory:NVMM), width=1920, height=1080, format=(string)NV12, framerate=(fraction)30/1 ! nvvidconv flip-method=0 ! video/x-raw, width=(int)640, height=(int)360, format=(string)BGRx ! tee name=t t. ! queue ! videoconvert ! video/x-raw, format=(string)BGR ! appsink t. ! queue ! videoconvert ! omxh264enc insert-sps-pps=true ! rtph264pay mtu=1500 config-interval=1 pt=96 ! udpsink host=10.0.0.4 port=5678 auto-multicast=false",
 	"/pipeline":"nvarguscamsrc ! video/x-raw(memory:NVMM), width=640, height=480, format=(string)NV12, framerate=(fraction)60/1 ! nvvidconv flip-method=0 ! video/x-raw, width=(int)640, height=(int)480, format=(string)BGRx ! tee name=t t. ! queue ! videoconvert ! video/x-raw, format=(string)BGR ! appsink t. ! queue ! videoconvert ! omxh264enc insert-sps-pps=true ! rtph264pay mtu=1500 config-interval=1 pt=96 ! udpsink host=192.168.1.253 port=5678 auto-multicast=false",
 	"/pipeline":"rpicamsrc bitrate=1000000 preview=0 rotation=180 ! video/x-raw,width=1280,height=720,framerate=30/1 ! tee name=t t. ! queue ! videoconvert ! appsink t. ! queue ! videoconvert ! omxh264enc ! queue ! rtph264pay mtu=1400 config-interval=1 pt=96 ! udpsink host=224.1.1.1 port=5678 auto-multicast=true",
@@ -63,9 +88,37 @@
 	"/pipeline":"rtspsrc location=rtsp://admin:admin@192.168.100.2/webcam latency=0 ! decodebin ! videoconvert ! appsink",
 	"/pipeline":"nvarguscamsrc ! video/x-raw(memory:NVMM), width=1280, height=720, format=(string)NV12, framerate=(fraction)30/1 ! nvvidconv flip-method=0 ! video/x-raw, width=(int)640, height=(int)360, format=(string)BGRx ! tee name=t t. ! queue ! videoconvert ! video/x-raw, format=(string)BGR ! appsink t. ! queue ! videoconvert ! omxh264enc insert-sps-pps=true ! rtph264pay mtu=1500 config-interval=1 pt=96 ! udpsink host=192.168.16.198 port=5678 auto-multicast=false",
 	"/pipeline":"v4l2src device=/dev/video0 ! videoflip method=0 ! video/x-raw,width=1280,height=720,framerate=30/1 ! tee name=t t. ! queue ! videoconvert ! appsink t. ! queue ! videoscale ! video/x-raw,width=640,height=360 ! videoconvert ! omxh264enc insert-sps-pps=true ! rtph264pay mtu=1400 config-interval=1 pt=96 ! udpsink host=224.1.1.1 port=5678 auto-multicast=false",
-	"/pipeline":"libcamsrc ! video/x-raw,width=1280,height=720,framerate=30/1 ! videoconvert ! videoflip method=0 ! tee name=t t. ! queue ! videoconvert ! appsink t. ! queue ! videoscale ! video/x-raw,width=640,height=360 ! videoconvert ! v4l2h264enc ! h264parse ! rtph264pay mtu=1400 config-interval=1 pt=96 ! udpsink host=10.0.0.4 port=5678 auto-multicast=false",
-	"/pipeline":"libcamsrc ! video/x-raw,format=RGB,width=1280,height=720,framerate=30/1 ! tee name=t t. ! queue ! v4l2convert ! appsink t. ! queue ! v4l2convert ! fbdevsink",
-	"/pipeline":"libcamsrc ! video/x-raw,format=RGB,width=1280,height=720,framerate=30/1 ! v4l2convert ! appsink",
+	"/pipeline":"libcamerasrc ! video/x-raw,width=1280,height=720,framerate=30/1 ! videoconvert ! videoflip method=0 ! tee name=t t. ! queue ! videoconvert ! appsink t. ! queue ! videoscale ! video/x-raw,width=640,height=360 ! videoconvert ! v4l2h264enc ! h264parse ! rtph264pay mtu=1400 config-interval=1 pt=96 ! udpsink host=10.0.0.4 port=5678 auto-multicast=false",
+	"/pipeline":"libcamerasrc ! video/x-raw,format=RGB,width=1280,height=720,framerate=30/1 ! tee name=t t. ! queue ! v4l2convert ! appsink t. ! queue ! v4l2convert ! fbdevsink",
+	"/pipeline":"libcamerasrc ! video/x-raw,format=RGB,width=1280,height=720,framerate=30/1 ! v4l2convert ! appsink",
+	"/pipeline":"rtspsrc location=rtsp://admin:admin@192.168.100.2/webcam latency=0 ! decodebin ! videoconvert ! appsink",
+	"/pipeline":"rtspsrc location=rtsp://192.168.144.108:554/stream=0 latency=0 ! decodebin ! videoconvert ! appsink", /* C10 mini: set host PC IP to 192.168.144.100 */
+	"/pipeline":"rtspsrc latency=0 location=rtsp://192.168.144.108:554/stream=0 ! queue ! rtph264depay ! queue ! avdec_h264 ! queue ! videoconvert ! appsink", /* C10 mini: set host PC IP to 192.168.144.100 */
+	"/pipeline":"rtspsrc latency=0 location=rtsp://192.168.144.108:554/stream=0 ! queue ! rtph264depay ! queue ! avdec_h264 ! video/x-raw, width=1280, height=720, format=I420 ! appsink", /* C10 mini, using YUV, Y chan only */
+	"pipeline":"rtspsrc location=rtsp://192.168.10.1:8554/video ! queue ! rtph264depay ! queue ! avdec_h264 ! appsink",
+
+	"/pipeline":"rtspsrc latency=0 location=rtsp://192.168.144.108:554/stream=0 ! queue ! rtph264depay ! queue ! avdec_h264 ! queue ! videoconvert ! appsink max-buffers=1 drop=true", /* C10 mini: set host PC IP to 192.168.144.100 */
+	"/pipeline":"rtspsrc latency=0 location=rtsp://192.168.144.108:554/stream=0 ! queue ! rtph264depay ! queue ! avdec_h264 ! video/x-raw, width=1280, height=720, format=I420 ! appsink max-buffers=1 sync=false drop=true", /* C10 mini, using YUV, Y chan only */
+	"/pipeline":"rtspsrc latency=0 location=rtsp://192.168.144.108:554/stream=0 ! queue ! rtph264depay ! queue ! avdec_h264 ! video/x-raw, width=1280, height=720, format=I420 ! tee name=t t. appsink max-buffers=1 sync=false drop=true t. ! queue ! rtph264pay mtu=1400 config-interval=1 pt=96 ! udpsink host=127.0.0.1 port=5678 auto-multicast=false",
+
+	"/pipeline":"videotestsrc ! x264enc ! rtph264pay ! queue ! rtph264depay ! queue ! avdec_h264 ! videoconvert ! video/x-raw, format=BGR ! appsink", /* test */
+	"/pipeline":"videotestsrc ! x264enc ! rtph264pay ! queue ! rtph264depay ! queue ! avdec_h264 ! videoconvert ! video/x-raw, format=RGBA ! appsink", /* test */
+	"/pipeline":"videotestsrc ! x264enc ! rtph264pay ! queue ! rtph264depay ! queue ! avdec_h264 ! video/x-raw, format=RGBA ! appsink", /* test */
+	"/pipeline":"videotestsrc ! video/x-raw, width=1280, height=720 ! x264enc ! rtph264pay ! queue ! rtph264depay ! queue ! avdec_h264 ! video/x-raw, width=1280, height=720 ! videoconvert ! appsink",
+	"/pipeline":"videotestsrc ! video/x-raw, width=1280, height=720, format=I420 ! x264enc ! rtph264pay ! queue ! rtph264depay ! queue ! avdec_h264 ! video/x-raw, width=1280, height=720, format=I420 ! videoconvert ! appsink",
+	"/pipeline":"videotestsrc ! video/x-raw, width=1280, height=720, format=I420 ! x264enc ! rtph264pay ! queue ! rtph264depay ! queue ! avdec_h264 ! video/x-raw, width=1280, height=720, format=I420 ! appsink",
+}
+
+{
+	"name":"crop",
+	"class":"_Crop",
+	"bON":0,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"_VisionBase":"cam",
+	"vRoi":[0,0,1280,720],
 }
 
 {

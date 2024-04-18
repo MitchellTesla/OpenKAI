@@ -15,9 +15,7 @@ namespace kai
 		m_type = vision_crop;
 		m_pV = NULL;
 
-		m_roi.init();
-		m_roi.z = 1.0;
-		m_roi.w = 1.0;
+		m_vRoi.clear();
 	}
 
 	_Crop::~_Crop()
@@ -30,7 +28,15 @@ namespace kai
 		IF_F(!_VisionBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
 
-		pK->v("roi", &m_roi);
+		pK->v("vRoi", &m_vRoi);
+
+		return true;
+	}
+
+	bool _Crop::link(void)
+	{
+		IF_F(!this->_VisionBase::link());
+		Kiss *pK = (Kiss *)m_pKiss;
 
 		string n;
 		n = "";
@@ -62,7 +68,7 @@ namespace kai
 
 	void _Crop::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			if (!m_bOpen)
 				open();
@@ -80,18 +86,19 @@ namespace kai
 
 	void _Crop::filter(void)
 	{
-		IF_(m_pV->BGR()->bEmpty());
+		IF_(m_pV->getFrameRGB()->bEmpty());
 
-		Mat mIn = *m_pV->BGR()->m();
-		Rect r(m_roi.x * mIn.cols,
-			   m_roi.y * mIn.rows,
-			   m_roi.width() * mIn.cols,
-			   m_roi.height() * mIn.rows);
+		Mat mIn = *m_pV->getFrameRGB()->m();
+		Rect r;
+		r.x = constrain(m_vRoi.x, 0, mIn.cols);
+		r.y = constrain(m_vRoi.y, 0, mIn.rows);
+		r.width = m_vRoi.z - r.x;
+		r.height = m_vRoi.w - r.y;
 
-		m_vSize.x = r.width;
-		m_vSize.y = r.height;
+		m_vSizeRGB.x = r.width;
+		m_vSizeRGB.y = r.height;
 
-		m_fBGR.copy(mIn(r));
+		m_fRGB.copy(mIn(r));
 	}
 
 }

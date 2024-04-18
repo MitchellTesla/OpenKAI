@@ -2,7 +2,7 @@
 #define OpenKAI_src_Actuator_Articulated__S6H4D_H_
 
 #include "../_ActuatorBase.h"
-#include "../../IO/_IOBase.h"
+#include "../../IO/_IObase.h"
 
 #define S6H4D_CMD_N 48
 #define S6H4D_MOV_BEGIN 0xee
@@ -90,11 +90,11 @@ struct S6H4D_VOL
 	{
 		m_type = vol_ball;
 		m_bInside = false;
-		m_vX.init();
-		m_vY.init();
-		m_vZ.init();
-		m_vC.init();
-		m_vR.init();
+		m_vX.clear();
+		m_vY.clear();
+		m_vZ.clear();
+		m_vC.clear();
+		m_vR.clear();
 	}
 
 	bool bValid(vFloat3& vP)
@@ -178,7 +178,7 @@ protected:
 	}
 
 public:
-	_IOBase *m_pIO;
+	_IObase *m_pIO;
 	S6H4D_CMD_STATE m_state;
 
 	bool m_bOrder;

@@ -7,7 +7,8 @@
 #include "../../Filter/Average.h"
 #include "../../Filter/Predict.h"
 #include "../../Filter/Hold.h"
-#include "_AP_posCtrl.h"
+#include "../../Control/PID.h"
+#include "_AP_move.h"
 
 namespace kai
 {
@@ -40,18 +41,25 @@ namespace kai
 		}
 	};
 
-	class _AP_follow : public _AP_posCtrl
+	class _AP_follow : public _AP_move
 	{
 	public:
 		_AP_follow();
 		~_AP_follow();
 
 		virtual bool init(void *pKiss);
+		virtual bool link(void);
 		virtual int check(void);
 		virtual bool start(void);
 		virtual void update(void);
+		virtual void console(void *pConsole);
+		virtual void draw(void *pFrame);
 
 	protected:
+		virtual void onPause(void);
+
+		virtual void clearPID(void);
+		virtual void updatePID(void);
 		virtual bool updateTarget(void);
 		virtual bool findTarget(void);
 		static void *getUpdate(void *This)
@@ -60,21 +68,33 @@ namespace kai
 			return NULL;
 		}
 
-	public:
+	protected:
 		_Universe *m_pU;
 		_TrackerBase *m_pTracker;
 		int m_iClass;
 		bool m_bTarget;
 		vFloat4 m_vTargetBB;
 
+		// Target detection pos filter
 		FOLLOW_TARGET_FILT m_fX;
 		FOLLOW_TARGET_FILT m_fY;
-		FOLLOW_TARGET_FILT m_fR;
-		FOLLOW_TARGET_FILT m_fH;
+		FOLLOW_TARGET_FILT m_fZ;
+		FOLLOW_TARGET_FILT m_fH;		
 
+		// PID control
+		// make sure var and sp are in the same coordinate unit
+		vFloat4 m_vPvar; // variable in pitch, roll, alt, yaw (NEDH)
+		vFloat4 m_vPsp;	 // correspondent set point
+		vFloat4 m_vSpd;	 // PID output that goes into speed ctrl
+		uint64_t m_tLastPIDupdate;
+
+		PID *m_pPitch;
+		PID *m_pRoll;
+		PID *m_pAlt;
+		PID *m_pYaw;
+		
+		// Gimbal mount
 		AP_MOUNT m_apMount;
-
-		//	INTERVAL_EVENT m_ieSend;
 	};
 
 }

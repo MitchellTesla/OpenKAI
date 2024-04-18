@@ -28,7 +28,7 @@ namespace kai
     bool _PCregistICP::init(void *pKiss)
     {
         IF_F(!_ModuleBase::init(pKiss));
-        Kiss *pK = (Kiss *)pKiss;
+		Kiss *pK = (Kiss *)pKiss;
 
         pK->v("est", (int *)&m_est);
         pK->v("thr", &m_thr);
@@ -70,7 +70,7 @@ namespace kai
 
     void _PCregistICP::update(void)
     {
-        while (m_pT->bRun())
+        while (m_pT->bAlive())
         {
             m_pT->autoFPSfrom();
 
@@ -85,9 +85,9 @@ namespace kai
         IF_(check() < 0);
 
         PointCloud pcSrc;
-        m_pSrc->getPC(&pcSrc);
+        m_pSrc->copyTo(&pcSrc);
         PointCloud pcTgt;
-        m_pTgt->getPC(&pcTgt);
+        m_pTgt->copyTo(&pcTgt);
 
         IF_(pcSrc.IsEmpty());
         IF_(pcTgt.IsEmpty());
@@ -123,12 +123,11 @@ namespace kai
         m_pTf->setTranslationMatrix(m_RR.transformation_);
     }
 
-    void _PCregistICP::console(void* pConsole)
+    void _PCregistICP::console(void *pConsole)
     {
         NULL_(pConsole);
         this->_ModuleBase::console(pConsole);
-        ((_Console*)pConsole)->addMsg("Fitness = " + f2str((float)m_RR.fitness_) +
-               ", Inliner_rmse = " + f2str((float)m_RR.inlier_rmse_));
+        ((_Console *)pConsole)->addMsg("Fitness = " + f2str((float)m_RR.fitness_) + ", Inliner_rmse = " + f2str((float)m_RR.inlier_rmse_));
     }
 
 }

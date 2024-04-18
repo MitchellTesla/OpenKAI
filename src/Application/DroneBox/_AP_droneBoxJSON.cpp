@@ -5,8 +5,10 @@ namespace kai
 
     _AP_droneBoxJSON::_AP_droneBoxJSON()
     {
-        m_Tr = NULL;
-        m_pAPgcs = NULL;
+        m_pAPdroneBox = NULL;
+
+        m_ID = -1;
+        m_vPos.clear();
     }
 
     _AP_droneBoxJSON::~_AP_droneBoxJSON()
@@ -19,24 +21,24 @@ namespace kai
         IF_F(!this->_JSONbase::init(pKiss));
         Kiss *pK = (Kiss *)pKiss;
 
-        string n;
-        n = "";
-        pK->v("_AP_gcs", &n);
-        m_pAPgcs = (_AP_gcs *)(pK->getInst(n));
-        IF_Fl(!m_pAPgcs, n + ": not found");
-
-        Kiss *pKt = pK->child("threadR");
-        IF_F(pKt->empty());
-
-        m_pTr = new _Thread();
-        if (!m_pTr->init(pKt))
-        {
-            DEL(m_pTr);
-            return false;
-        }
-
         return true;
     }
+
+	bool _AP_droneBoxJSON::link(void)
+	{
+		IF_F(!this->_JSONbase::link());
+		IF_F(!m_pTr->link());
+
+		Kiss *pK = (Kiss *)m_pKiss;
+
+        string n;
+        n = "";
+        pK->v("_AP_droneBox", &n);
+        m_pAPdroneBox = (_AP_droneBox *)(pK->getInst(n));
+        IF_Fl(!m_pAPdroneBox, n + ": not found");
+
+		return true;
+	}
 
     bool _AP_droneBoxJSON::start(void)
     {
@@ -48,14 +50,14 @@ namespace kai
 
     int _AP_droneBoxJSON::check(void)
     {
-        NULL__(m_pAPgcs, -1);
+        NULL__(m_pAPdroneBox, -1);
 
         return this->_JSONbase::check();
     }
 
     void _AP_droneBoxJSON::updateW(void)
     {
-        while (m_pT->bRun())
+        while (m_pT->bAlive())
         {
             if (!m_pIO)
             {
@@ -63,7 +65,7 @@ namespace kai
                 continue;
             }
 
-            if (!m_pIO->isOpen())
+            if (!m_pIO->bOpen())
             {
                 if (!m_pIO->open())
                 {
@@ -86,7 +88,7 @@ namespace kai
 
         this->_JSONbase::send();
 
-        GCS_STATE *pState = m_pAPgcs->getState();
+        DRONEBOX_STATE *pState = m_pAPdroneBox->getState();
 
         object o;
         JO(o, "id", (double)1);
@@ -95,7 +97,7 @@ namespace kai
         if (pState->bSTANDBY())
         {
             JO(o, "cmd", "stat");
-            JO(o, "stat", "standby");
+            JO(o, "stat", "STANDBY");
             sendMsg(o);
             return;
         }
@@ -111,10 +113,13 @@ namespace kai
         if (pState->bAIRBORNE())
         {
             JO(o, "cmd", "stat");
-            JO(o, "stat", "airborne");
+            JO(o, "stat", "AIRBORNE");
             sendMsg(o);
             return;
         }
+
+
+//        IF_(m_pAPdroneBox->getTargetDroneBoxID() != m_ID);
 
         if (pState->bLANDING_REQUEST())
         {
@@ -127,7 +132,7 @@ namespace kai
         if (pState->bLANDED())
         {
             JO(o, "cmd", "stat");
-            JO(o, "stat", "landed");
+            JO(o, "stat", "LANDED");
             sendMsg(o);
             return;
         }
@@ -135,7 +140,7 @@ namespace kai
 
     void _AP_droneBoxJSON::updateR(void)
     {
-        while (m_pTr->bRun())
+        while (m_pTr->bAlive())
         {
             m_pTr->autoFPSfrom();
 
@@ -161,6 +166,8 @@ namespace kai
 
         if (cmd == "heartbeat")
             heartbeat(jo);
+        else if (cmd == "stat")
+            stat(jo);
         else if (cmd == "ack")
             ack(jo);
     }
@@ -168,6 +175,25 @@ namespace kai
     void _AP_droneBoxJSON::heartbeat(picojson::object &o)
     {
         IF_(check() < 0);
+        IF_(!o["id"].is<double>());
+        IF_(!o["lat"].is<double>());
+        IF_(!o["lng"].is<double>());
+
+        m_ID = o["id"].get<double>();
+        m_vPos.x = o["lat"].get<double>();
+        m_vPos.y = o["lng"].get<double>();
+    }
+
+    void _AP_droneBoxJSON::stat(picojson::object &o)
+    {
+        IF_(check() < 0);
+        IF_(!o["id"].is<double>());
+        IF_(!o["stat"].is<string>());
+
+        int vID = o["id"].get<double>();
+        string stat = o["stat"].get<string>();
+
+        m_pAPdroneBox->m_boxState = stat;
     }
 
     void _AP_droneBoxJSON::ack(picojson::object &o)
@@ -183,11 +209,11 @@ namespace kai
         string d = o["do"].get<string>();
         if (d == "takeoff")
         {
-            m_pAPgcs->takeoffReady(bReady);
+            m_pAPdroneBox->takeoffReady(bReady);
         }
         else if (d == "landing")
         {
-            m_pAPgcs->landingReady(bReady);
+            m_pAPdroneBox->landingReady(bReady);
         }
     }
 

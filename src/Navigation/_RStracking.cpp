@@ -74,11 +74,10 @@ namespace kai
 	void _RStracking::close(void)
 	{
 		IF_(!m_flag.b(F_OPEN));
+		m_flag.clear(F_OPEN);
 
 		try
 		{
-			m_flag.clear(F_READY);
-			m_flag.clear(F_OPEN);
 			m_rsPipe.stop();
 		}
 		catch (const rs2::camera_disconnected_error &e)
@@ -99,10 +98,11 @@ namespace kai
 	{
 		IF_(!m_flag.b(F_OPEN));
 
+		m_flag.clear(F_RESET);
+		m_flag.clear(F_OPEN);
+
 		try
 		{
-			m_flag.clear(F_READY);
-			m_flag.clear(F_OPEN);
 			rs2::device dev = m_rsProfile.get_device();
 			dev.hardware_reset();
 			m_pT->sleepT(SEC_2_USEC);
@@ -129,7 +129,7 @@ namespace kai
 
 	void _RStracking::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			if (!m_flag.b(F_OPEN))
 			{
@@ -152,7 +152,13 @@ namespace kai
 			m_pT->autoFPSfrom();
 
 			if (updateRS())
-				m_flag.set(F_READY);
+			{
+				m_flag.clear(F_ERROR);
+			}
+			else
+			{
+				m_flag.set(F_ERROR);
+			}
 
 			m_pT->autoFPSto();
 		}
@@ -165,11 +171,11 @@ namespace kai
 			auto frames = m_rsPipe.wait_for_frames();
 			auto f = frames.first_or_default(RS2_STREAM_POSE);
 			auto pose = f.as<rs2::pose_frame>().get_pose_data();
-			m_confidence = (float)pose.tracker_confidence * 0.333;
+			m_confidence = (float)pose.tracker_confidence * (100.0 / 3);
 
-			*m_vT.v(m_vAxisIdx.x) = pose.translation.x;
-			*m_vT.v(m_vAxisIdx.y) = pose.translation.y;
-			*m_vT.v(m_vAxisIdx.z) = pose.translation.z;
+			*m_vT.v(m_vAxisIdx.x) = pose.translation.x * m_scale;
+			*m_vT.v(m_vAxisIdx.y) = pose.translation.y * m_scale;
+			*m_vT.v(m_vAxisIdx.z) = pose.translation.z * m_scale;
 
 			m_vQ.x = pose.rotation.x;
 			m_vQ.y = pose.rotation.y;
@@ -189,6 +195,10 @@ namespace kai
 			mT(1, 3) = m_vT.y;
 			mT(2, 3) = m_vT.z;
 			m_mT = mT;
+
+			m_vV.x = pose.velocity.x;
+			m_vV.y = pose.velocity.y;
+			m_vV.z = pose.velocity.z;
 
 			//TODO: calc with mR
 			// float w = m_vQ.w;

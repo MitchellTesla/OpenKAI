@@ -29,7 +29,7 @@ struct vDouble2
 		y = b;
 	}
 
-	void init(void)
+	void clear(void)
 	{
 		x = 0.0;
 		y = 0.0;
@@ -123,6 +123,13 @@ struct vDouble2
 	{
 		return ((x+y)==0);
 	}
+
+	bool bInside(double v)
+    {
+        IF_F(v < x);
+        IF_F(v >= y);
+        return true;
+    }
 };
 
 }

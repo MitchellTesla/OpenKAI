@@ -12,7 +12,7 @@ namespace kai
 		m_nW = 368;
 		m_nH = 368;
 		m_bSwapRB = false;
-		m_vMean.init();
+		m_vMean.clear();
 		m_scale = 1.0 / 255.0;
 		m_thr = 0.1;
 
@@ -52,40 +52,37 @@ namespace kai
 		return m_pT->start(getUpdate, this);
 	}
 
-	void _OpenPose::update(void)
-	{
-		while (m_pT->bRun())
-		{
-			m_pT->autoFPSfrom();
-
-			if (check() >= 0)
-			{
-				detect();
-
-				if (m_pT->bGoSleep())
-					m_pU->clear();
-			}
-
-			m_pT->autoFPSto();
-		}
-	}
-
 	int _OpenPose::check(void)
 	{
 		NULL__(m_pV, -1);
-		Frame *pBGR = m_pV->BGR();
+		Frame *pBGR = m_pV->getFrameRGB();
 		NULL__(pBGR, -1);
 		IF__(pBGR->bEmpty(), -1);
-		IF__(pBGR->tStamp() <= m_fBGR.tStamp(), -1);
+		IF__(pBGR->tStamp() <= m_fRGB.tStamp(), -1);
 
 		return this->_DetectorBase::check();
 	}
 
+	void _OpenPose::update(void)
+	{
+		while (m_pT->bAlive())
+		{
+			m_pT->autoFPSfrom();
+
+			detect();
+
+			ON_PAUSE;
+			m_pT->autoFPSto();
+		}
+	}
+
 	void _OpenPose::detect(void)
 	{
-		Frame *pBGR = m_pV->BGR();
-		m_fBGR.copy(*pBGR);
-		Mat mIn = *m_fBGR.m();
+		IF_(check() < 0);
+
+		Frame *pBGR = m_pV->getFrameRGB();
+		m_fRGB.copy(*pBGR);
+		Mat mIn = *m_fRGB.m();
 
 		m_blob = blobFromImage(mIn, m_scale, Size(m_nW, m_nH),
 							   Scalar(m_vMean.x, m_vMean.y, m_vMean.z), m_bSwapRB, false);

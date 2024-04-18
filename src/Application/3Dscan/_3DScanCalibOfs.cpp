@@ -13,11 +13,11 @@ namespace kai
 	_3DScanCalibOfs::_3DScanCalibOfs()
 	{
 		m_pV = NULL;
-		m_pW = NULL;
+//		m_pW = NULL;
 
 		m_step = 0.01;
 		m_drawCol = Scalar(0, 255, 0);
-		m_pFt = NULL;
+//		m_pFt = NULL;
 	}
 
 	_3DScanCalibOfs::~_3DScanCalibOfs()
@@ -26,7 +26,7 @@ namespace kai
 
 	bool _3DScanCalibOfs::init(void *pKiss)
 	{
-		IF_F(!this->_StateBase::init(pKiss));
+		IF_F(!this->_ModuleBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
 
 		string n;
@@ -36,10 +36,10 @@ namespace kai
 		m_pV = (_VisionBase *)(pK->getInst(n));
 		IF_Fl(!m_pV, n + " not found");
 
-		n = "";
-		pK->v("_WindowCV", &n);
-		m_pW = (_WindowCV *)(pK->getInst(n));
-		IF_Fl(!m_pW, n + " not found");
+		// n = "";
+		// pK->v("_WindowCV", &n);
+		// m_pW = (_WindowCV *)(pK->getInst(n));
+		// IF_Fl(!m_pW, n + " not found");
 
 		return true;
 	}
@@ -52,20 +52,20 @@ namespace kai
 
 	int _3DScanCalibOfs::check(void)
 	{
-		NULL__(m_pW, -1);
+//		NULL__(m_pW, -1);
 		NULL__(m_pV, -1);
-		IF__(m_pV->BGR()->bEmpty(), -1);
+		IF__(m_pV->getFrameRGB()->bEmpty(), -1);
 
 		return 0;
 	}
 
 	void _3DScanCalibOfs::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 
-			this->_StateBase::update();
+			this->_ModuleBase::update();
 			updateCalib();
 
 			m_pT->autoFPSto();
@@ -74,16 +74,16 @@ namespace kai
 
 	void _3DScanCalibOfs::updateCalib(void)
 	{
-			m_pW->setCbBtn("Save", sOnBtnSave, this);
-			m_pW->setCbBtn("Clear", sOnBtnClear, this);
-			m_pW->setCbBtn("Xi", sOnBtnXi, this);
-			m_pW->setCbBtn("Xd", sOnBtnXd, this);
-			m_pW->setCbBtn("Yi", sOnBtnYi, this);
-			m_pW->setCbBtn("Yd", sOnBtnYd, this);
-			m_pW->setCbBtn("Zi", sOnBtnZi, this);
-			m_pW->setCbBtn("Zd", sOnBtnZd, this);
-			m_pW->setCbBtn("Si", sOnBtnSi, this);
-			m_pW->setCbBtn("Sd", sOnBtnSd, this);
+			// m_pW->setCbBtn("Save", sOnBtnSave, this);
+			// m_pW->setCbBtn("Clear", sOnBtnClear, this);
+			// m_pW->setCbBtn("Xi", sOnBtnXi, this);
+			// m_pW->setCbBtn("Xd", sOnBtnXd, this);
+			// m_pW->setCbBtn("Yi", sOnBtnYi, this);
+			// m_pW->setCbBtn("Yd", sOnBtnYd, this);
+			// m_pW->setCbBtn("Zi", sOnBtnZi, this);
+			// m_pW->setCbBtn("Zd", sOnBtnZd, this);
+			// m_pW->setCbBtn("Si", sOnBtnSi, this);
+			// m_pW->setCbBtn("Sd", sOnBtnSd, this);
 	}
 
 	// callbacks
@@ -151,7 +151,7 @@ namespace kai
 	void _3DScanCalibOfs::clear(void)
 	{
 		vFloat3 v;
-		v.init(0);
+//		v.init(0);
 //		m_pA->setDofsP(v);
 	}
 
@@ -255,16 +255,16 @@ namespace kai
 		NULL_(pFrame);
 		IF_(!bActive());
 
-		this->_StateBase::draw(pFrame);
+		this->_ModuleBase::draw(pFrame);
 		IF_(check() < 0);
 
 		Frame *pF = (Frame*)pFrame;
 		Mat *pMw = pF->m();
 		IF_(pMw->empty());
-		m_pFt = pWin->getFont();
+//		m_pFt = pWin->getFont();
 
 		Mat mV;
-		m_pV->BGR()->m()->copyTo(mV);
+		m_pV->getFrameRGB()->m()->copyTo(mV);
 
 		Rect r;
 		r.x = 0;

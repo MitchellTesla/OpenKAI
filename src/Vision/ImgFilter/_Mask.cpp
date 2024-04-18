@@ -26,11 +26,19 @@ namespace kai
 		IF_F(!_VisionBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
 
-		string n;
+		return true;
+	}
 
+	bool _Mask::link(void)
+	{
+		IF_F(!this->_VisionBase::link());
+
+		Kiss *pK = (Kiss *)m_pKiss;
+
+		string n;
 		n = "";
 		pK->v("_VisionBase", &n);
-		m_pV = (_VisionBase *)(pK->parent()->getInst(n));
+		m_pV = (_VisionBase *)(pK->getInst(n));
 		IF_Fl(!m_pV, n + ": not found");
 
 		n = "";
@@ -67,7 +75,7 @@ namespace kai
 
 	void _Mask::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			if (!m_bOpen)
 				open();
@@ -76,7 +84,7 @@ namespace kai
 
 			if (m_bOpen)
 			{
-				if (m_fIn.tStamp() < m_pV->BGR()->tStamp())
+				if (m_fIn.tStamp() < m_pV->getFrameRGB()->tStamp())
 				{
 					filter();
 				}
@@ -88,11 +96,11 @@ namespace kai
 
 	void _Mask::filter(void)
 	{
-		IF_(m_pV->BGR()->bEmpty());
-		IF_(m_pVmask->BGR()->bEmpty());
+		IF_(m_pV->getFrameRGB()->bEmpty());
+		IF_(m_pVmask->getFrameRGB()->bEmpty());
 
-		m_fIn.copy(*m_pV->BGR());
-		m_fMask.copy(*m_pVmask->BGR());
+		m_fIn.copy(*m_pV->getFrameRGB());
+		m_fMask.copy(*m_pVmask->getFrameRGB());
 
 		Mat mV = *m_fIn.m();
 		Mat mM = *m_fMask.m();
@@ -100,7 +108,7 @@ namespace kai
 		mBg.zeros(mV.rows, mV.cols, mV.type());
 
 		mV.copyTo(mBg, mM);
-		m_fBGR.copy(mBg);
+		m_fRGB.copy(mBg);
 	}
 
 }

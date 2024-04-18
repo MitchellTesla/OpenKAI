@@ -20,6 +20,7 @@ namespace kai
 		virtual ~_InRange();
 
 		bool init(void *pKiss);
+		bool link(void);
 		bool start(void);
 		bool open(void);
 		void close(void);
@@ -35,8 +36,8 @@ namespace kai
 
 	public:
 		_VisionBase *m_pV;
-		double m_rFrom;
-		double m_rTo;
+		vInt3 m_vL;
+		vInt3 m_vH;
 	};
 
 }

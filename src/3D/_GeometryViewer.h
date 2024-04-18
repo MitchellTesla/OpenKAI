@@ -8,21 +8,28 @@
 #ifndef OpenKAI_src_3D__GeometryViewer_H_
 #define OpenKAI_src_3D__GeometryViewer_H_
 
+#include "PointCloud/_PCstream.h"
 #include "PointCloud/_PCframe.h"
+#include "PointCloud/_PCgrid.h"
 #include "../UI/O3DUI.h"
 
 namespace kai
 {
     enum PC_THREAD_ACTION
 	{
-		pc_Scanning = 0,
-		pc_ScanStart = 1,
-		pc_ScanStop = 2,
-		pc_VoxelDown = 3,
-		pc_HiddenRemove = 4,
-		pc_ResetPC = 5,
-		pc_CamAuto = 6,
-		pc_RefreshCol = 7,
+		pc_ScanReset,
+		pc_ScanSet,
+		pc_ScanStart,
+		pc_ScanStop,
+		pc_ScanTake,
+		pc_SavePC,
+		pc_Scanning,
+		pc_VoxelDown,
+		pc_HiddenRemove,
+		pc_ResetPC,
+		pc_CamAuto,
+		pc_CamCtrl,
+		pc_RefreshCol,
 	};
 
 	struct CAM_PROJ
@@ -39,25 +46,38 @@ namespace kai
 		vFloat3 m_vUp = {0,1,0};
 	};
 
-	class _GeometryViewer : public _PCframe
+	class _GeometryViewer : public _GeometryBase
 	{
 	public:
 		_GeometryViewer();
 		virtual ~_GeometryViewer();
 
 		virtual bool init(void *pKiss);
+		virtual bool link(void);
 		virtual bool start(void);
 		virtual int check(void);
 
 		virtual void resetCamPose(void);
 
+        virtual void getPCstream(void* p, const uint64_t& tExpire);
+        virtual void getPCframe(void* p);
+        virtual void getPCgrid(void* p);
+
 	protected:
-		//data
-		void addUIpc(const PointCloud& pc);
-		void updateUIpc(const PointCloud& pc);
-		void removeUIpc(void);
-		void readAllPC(void);
-		void addDummyDome(PointCloud* pPC, int n, float r, Vector3d vCol = {0,0,0});
+		void readAllGeometry(void);
+
+		// point cloud
+		void addUIpc(const PointCloud& pc, const string& name);
+		void updateUIpc(const PointCloud& pc, const string& name);
+		void removeUIpc(const string& name);
+		void adjustNpoints(PointCloud* pPC, int nP, int nPbuf);
+		void addDummyPoints(PointCloud* pPC, int n, float r, Vector3d vCol = {0,0,0});
+
+		// line set
+		void addUIlineSet(const LineSet &ls, const string& name);
+
+		// update thread
+		virtual void updateGeometry(void);
 		virtual void update(void);
 		static void *getUpdate(void *This)
 		{
@@ -65,10 +85,12 @@ namespace kai
 			return NULL;
 		}
 
-		//UI
+		// UI
 		void updateCamProj(void);
 		void updateCamPose(void);
 		void camBound(const AxisAlignedBoundingBox& aabb);
+		AxisAlignedBoundingBox createDefaultAABB(void);
+		
 		virtual void updateUI(void);
 		static void *getUpdateUI(void *This)
 		{
@@ -77,6 +99,14 @@ namespace kai
 		}
 
 	protected:
+		// point cloud
+		int m_nPbuf;
+		PointCloud m_PC;
+
+		// line set
+		LineSet m_lineSet;
+
+
 		O3DUI* m_pWin;
 		UIState* m_pUIstate;
 		_Thread *m_pTui;
@@ -101,6 +131,7 @@ namespace kai
 		PC_CAM m_camDefault;
 		PC_CAM m_camAuto;
 		vFloat3 m_vCoR;
+		AxisAlignedBoundingBox m_aabb;
 
 		vector<_GeometryBase *> m_vpGB;
 	};

@@ -1,16 +1,16 @@
 #ifndef OpenKAI_src_Autopilot_AP__APcopter_photo_H_
 #define OpenKAI_src_Autopilot_AP__APcopter_photo_H_
 
-#include "../../Vision/_DepthVisionBase.h"
+#include "../../Vision/RGBD/_RGBDbase.h"
 #include "../../Vision/_GPhoto.h"
-#include "../../Sensor/_DistSensorBase.h"
+#include "../../Sensor/Distance/_DistSensorBase.h"
 #include "_AP_base.h"
-#include "_AP_posCtrl.h"
+#include "_AP_move.h"
 
 namespace kai
 {
 
-	class _APcopter_photo : public _StateBase
+	class _APcopter_photo : public _ModuleBase
 	{
 	public:
 		_APcopter_photo();
@@ -34,13 +34,13 @@ namespace kai
 
 	private:
 		_AP_base *m_pAP;
-		_AP_posCtrl *m_pPC;
+		_AP_move *m_pPC;
 		_DistSensorBase *m_pDS;
 		int m_iDiv;
 		float m_speed;
 
 		_VisionBase *m_pV;
-		_DepthVisionBase *m_pDV;
+		_RGBDbase *m_pDV;
 		_GPhoto *m_pG;
 
 		int m_iRCshutter;

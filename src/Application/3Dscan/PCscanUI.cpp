@@ -418,7 +418,7 @@ namespace open3d
                 par.compressed = io::WritePointCloudOption::Compressed::Uncompressed;
 
                 shared_ptr<t::geometry::PointCloud> spTpc = GetGeometry(m_modelName).m_sTgeometry;
-                io::WritePointCloudToPLY(plyName.c_str(), spTpc->ToLegacyPointCloud(), par);
+                io::WritePointCloudToPLY(plyName.c_str(), spTpc->ToLegacy(), par);
 
                 ShowMsg("File Save", "Saved model to USB memory", true);
 

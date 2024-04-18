@@ -21,7 +21,7 @@ namespace kai
         virtual bool init(void *pKiss);
         virtual int check(void);
 
-        virtual void AcceptAdd(bool b);
+        virtual void setAccept(bool b);
         virtual int nP(void);
         virtual int iP(void);
 
@@ -38,7 +38,7 @@ namespace kai
         virtual void getLattice(void *p);
 
     public:
-        PC_POINT *m_pP;
+        GEOMETRY_POINT *m_pP;
         int m_nP;
         int m_iP;
         uint64_t m_tLastUpdate;

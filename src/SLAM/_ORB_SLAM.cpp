@@ -71,7 +71,7 @@ namespace kai
 	int _ORB_SLAM::check(void)
 	{
 		NULL__(m_pV, -1);
-		NULL__(m_pV->BGR(), -1);
+		NULL__(m_pV->getFrameRGB(), -1);
 		NULL__(m_pOS, -1);
 
 		return this->_ModuleBase::check();
@@ -90,7 +90,7 @@ namespace kai
 
 	void _ORB_SLAM::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 
@@ -107,7 +107,7 @@ namespace kai
 		static const double usecBase = 1.0 / ((double)SEC_2_USEC);
 
 		Mat mGray;
-		m_pV->BGR()->m()->copyTo(mGray);
+		m_pV->getFrameRGB()->m()->copyTo(mGray);
 		IF_(mGray.empty());
 
 		uint64_t tNow = getApproxTbootUs();
@@ -116,7 +116,7 @@ namespace kai
 
 		double t = ((double)(tNow - m_tStartup)) * usecBase;
 
-		m_pose = m_pOS->TrackMonocular(mGray, t);
+//		m_pose = m_pOS->TrackMonocular(mGray, t);
 		if (m_pose.empty())
 		{
 			m_bTracking = false;

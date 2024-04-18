@@ -65,7 +65,6 @@ namespace kai
 		static void OnHiddenRemove(void *pPCV, void* pD);
 		static void OnResetPC(void *pPCV, void* pD);
 
-		AxisAlignedBoundingBox createDefaultAABB(void);
 
 	protected:
 //		_PCstream* m_pPS;
@@ -74,7 +73,6 @@ namespace kai
 
 		bool m_bSlam;
 		float m_dHiddenRemove;
-		AxisAlignedBoundingBox m_aabb;
 
 		//filter flags
 		BIT_FLAG m_fProcess;

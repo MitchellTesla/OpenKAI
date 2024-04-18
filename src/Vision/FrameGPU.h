@@ -9,6 +9,8 @@
 #define OpenKAI_src_Vision_FrameGPU_H_
 
 #include "../Base/common.h"
+#include "../Base/cv.h"
+
 using namespace cv::cuda;
 
 namespace kai
@@ -27,14 +29,14 @@ namespace kai
 		virtual FrameGPU warpAffine(Mat &mWA);
 		virtual FrameGPU flip(int iOpt);
 		virtual FrameGPU remap(const Mat &mX, const Mat &mY);
-		virtual FrameGPU crop(Rect bb);
+		virtual FrameGPU crop(cv::Rect bb);
 		virtual FrameGPU resize(int w, int h);
 		virtual FrameGPU resize(double scaleW, double scaleH);
 		virtual FrameGPU cvtTo(int rType);
 		virtual FrameGPU cvtColor(int code);
 
 		virtual Mat *m(void);
-		virtual Size size(void);
+		virtual cv::Size size(void);
 		virtual bool bEmpty(void);
 
 		virtual void operator=(const GpuMat &m);

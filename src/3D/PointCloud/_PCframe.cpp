@@ -7,7 +7,7 @@
 
 #include "_PCframe.h"
 #include "_PCstream.h"
-#include "_PClattice.h"
+#include "_PCgrid.h"
 
 namespace kai
 {
@@ -15,30 +15,23 @@ namespace kai
     _PCframe::_PCframe()
     {
         m_type = pc_frame;
-
-        pthread_mutex_init(&m_mutexPC, NULL);
+        m_nPresv = 0;
+        m_nPresvNext = 0;
+        m_tStamp = NULL;
     }
 
     _PCframe::~_PCframe()
     {
-        pthread_mutex_destroy(&m_mutexPC);
     }
 
     bool _PCframe::init(void *pKiss)
     {
         IF_F(!this->_GeometryBase::init(pKiss));
-        Kiss *pK = (Kiss *)pKiss;
+		Kiss *pK = (Kiss *)pKiss;
 
-        //frame buf
-        int nPCreserve = 0;
-        pK->v("nPCreserve", &nPCreserve);
-        if (nPCreserve > 0)
-        {
-            m_sPC.get()->points_.reserve(nPCreserve);
-            m_sPC.get()->colors_.reserve(nPCreserve);
-            m_sPC.next()->points_.reserve(nPCreserve);
-            m_sPC.next()->colors_.reserve(nPCreserve);
-        }
+        pK->v("nPresv", &m_nPresv);
+        m_nPresvNext = m_nPresv;
+        pK->v("nPresvNext", &m_nPresvNext);
 
         return true;
     }
@@ -48,67 +41,123 @@ namespace kai
         return this->_GeometryBase::check();
     }
 
-    void _PCframe::getPC(PointCloud *pPC)
+    bool _PCframe::initBuffer(void)
     {
-        NULL_(pPC);
+        mutexLock();
 
-        pthread_mutex_lock(&m_mutexPC);
-        *pPC = *m_sPC.get();
-        pthread_mutex_unlock(&m_mutexPC);
+        if (m_nPresv > 0)
+        {
+            m_sPC.get()->points_.reserve(m_nPresv);
+            m_sPC.get()->colors_.reserve(m_nPresv);
+        }
+        if (m_nPresvNext > 0)
+        {
+            m_sPC.next()->points_.reserve(m_nPresvNext);
+            m_sPC.next()->colors_.reserve(m_nPresvNext);
+        }
+
+        mutexUnlock();
+
+        return true;
     }
 
-    void _PCframe::updatePC(void)
+    void _PCframe::swapBuffer(void)
     {
-        m_sPC.next()->Transform(m_mT);
+        mutexLock();
 
-        pthread_mutex_lock(&m_mutexPC);
         m_sPC.swap();
         m_sPC.next()->points_.clear();
         m_sPC.next()->colors_.clear();
         m_sPC.next()->normals_.clear();
-        pthread_mutex_unlock(&m_mutexPC);
+
+        mutexUnlock();
     }
 
-    void _PCframe::getStream(void *p)
+    PointCloud* _PCframe::getBuffer(void)
     {
+        return m_sPC.get();
+    }
+
+    PointCloud* _PCframe::getNextBuffer(void)
+    {
+        return m_sPC.next();
+    }
+
+    void _PCframe::clear(void)
+    {
+        mutexLock();
+
+        m_sPC.get()->points_.clear();
+        m_sPC.get()->colors_.clear();
+        m_sPC.get()->normals_.clear();
+
+        m_sPC.next()->points_.clear();
+        m_sPC.next()->colors_.clear();
+        m_sPC.next()->normals_.clear();
+
+        mutexUnlock();
+    }
+
+    void _PCframe::getPCstream(void *p, const uint64_t &tExpire)
+    {
+        IF_(check() < 0);
         NULL_(p);
-
         _PCstream *pS = (_PCstream *)p;
-        PointCloud *pPC = m_sPC.next();
-        uint64_t tFrom = m_pT->getTfrom() - m_pInCtx.m_dT;
-        if (m_pInCtx.m_dT >= UINT64_MAX)
-            tFrom = 0;
 
-        for (int i = 0; i < pS->m_nP; i++)
+        mutexLock();
+
+        PointCloud *pPC = m_sPC.next();
+        uint64_t tNow = getApproxTbootUs();
+
+        for (int i = 0; i < pS->nP(); i++)
         {
-            PC_POINT *pP = &pS->m_pP[i];
-            IF_CONT(pP->m_tStamp <= tFrom);
+            GEOMETRY_POINT *pP = pS->get(i);
+            if (tExpire)
+            {
+                IF_CONT(bExpired(pP->m_tStamp, tExpire, tNow));
+            }
 
             pPC->points_.push_back(pP->m_vP);
             pPC->colors_.push_back(pP->m_vC.cast<double>());
-            m_nPread++;
         }
+
+        mutexUnlock();
     }
 
-    void _PCframe::getNextFrame(void *p)
+    void _PCframe::getPCframe(void *p)
     {
         NULL_(p);
 
         _PCframe *pF = (_PCframe *)p;
         PointCloud pc;
-        pF->getPC(&pc);
+        pF->copyTo(&pc);
 
         *m_sPC.next() += pc;
-        m_nPread += pc.points_.size();
     }
 
-    void _PCframe::getLattice(void *p)
+    void _PCframe::getPCgrid(void *p)
     {
     }
 
-    int _PCframe::size(void)
+    void _PCframe::copyTo(PointCloud *pPC)
+    {
+        IF_(check() < 0);
+        NULL_(pPC);
+
+        pPC->Clear();
+        pPC->points_.clear();
+        pPC->colors_.clear();
+
+        *pPC = *m_sPC.get();
+    }
+
+    int _PCframe::nP(void)
     {
         return m_sPC.get()->points_.size();
     }
 
+    int _PCframe::nPnext(void)
+    {
+        return m_sPC.next()->points_.size();
+    }
 }

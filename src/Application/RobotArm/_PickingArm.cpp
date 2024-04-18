@@ -18,9 +18,9 @@ namespace kai
 		m_pU = NULL;
 
 		m_baseAngle = 0.0;
-		m_vP.init(0.5, 0.5, 0.0);
-		m_vPtarget.init(0.5, 0.5, 0.0);
-		m_vZrange.init(0.0, 0.06, 0.15, 30.0);
+		m_vP.set(0.5, 0.5, 0.0);
+		m_vPtarget.set(0.5, 0.5, 0.0);
+		m_vZrange.set(0.0, 0.06, 0.15, 30.0);
 		m_zSpeed = 0.2;
 		m_zrK = 1.0;
 
@@ -28,12 +28,12 @@ namespace kai
 		m_pYpid = NULL;
 		m_pZpid = NULL;
 
-		m_vS.init(0.5);
-		m_vR.init(0.5);
+		m_vS.set(0.5);
+		m_vR.set(0.5);
 
-		m_vPrecover.init(0.0, 0.0, 0.0);
-		m_vPdeliver.init(-200, 300.0, 0.0);
-		m_vPdescend.init(-200, 300.0, -100.0);
+		m_vPrecover.init();
+		m_vPdeliver.set(-200, 300.0, 0.0);
+		m_vPdescend.set(-200, 300.0, -100.0);
 
 		m_oTstamp = 0;
 		m_oTimeout = SEC_2_USEC;
@@ -45,7 +45,7 @@ namespace kai
 
 	bool _PickingArm::init(void *pKiss)
 	{
-		IF_F(!this->_StateBase::init(pKiss));
+		IF_F(!this->_ModuleBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
 
 		pK->v("vPtarget", &m_vPtarget);
@@ -140,16 +140,16 @@ namespace kai
 		NULL__(m_pYpid, -1);
 		NULL__(m_pZpid, -1);
 
-		return this->_StateBase::check();
+		return this->_ModuleBase::check();
 	}
 
 	void _PickingArm::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 
-			this->_StateBase::update();
+			this->_ModuleBase::update();
 			updateArm();
 
 			m_pT->autoFPSto();
@@ -424,7 +424,7 @@ namespace kai
 	void _PickingArm::console(void *pConsole)
 	{
 		NULL_(pConsole);
-		this->_StateBase::console(pConsole);
+		this->_ModuleBase::console(pConsole);
 
 		_Console *pC = (_Console *)pConsole;
 		pC->addMsg("vS = (" + f2str(m_vS.x) + ", " + f2str(m_vS.y) + ", " + f2str(m_vS.z) + ")");
@@ -437,7 +437,7 @@ namespace kai
 	void _PickingArm::draw(void *pFrame)
 	{
 		NULL_(pFrame);
-		this->_StateBase::draw(pFrame);
+		this->_ModuleBase::draw(pFrame);
 		IF_(check() < 0);
 
 		Frame *pF = (Frame*)pFrame;

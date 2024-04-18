@@ -25,7 +25,7 @@
 		"name":"thread",
 		"FPS":30,
 	}
-	"vBASE":["/cam","/RSdepth","/d2g","/thr","/inRange","mask"],
+	"vBASE":["cam","/RSdepth","/d2g","/thr","/inRange","mask"],
 }
 
 {
@@ -98,31 +98,31 @@
 }
 
 {
-	"name":"RSdepth",
-	"class":"_RSdepth",
+	"name":"DepthShow",
+	"class":"_DepthShow",
 	"bON":0,
     {
 		"name":"thread",
 		"FPS":30,
 	}
-	"_RealSense":"cam",
+	"_RGBDbase":"cam",
 }
 
 {
 	"name":"d2g",
 	"class":"_Depth2Gray",
-	"bON":1,
+	"bON":0,
     {
 		"name":"thread",
 		"FPS":30,
 	}
-	"_DepthVisionBase":"cam",
+	"_RGBDbase":"cam",
 }
 
 {
 	"name":"inRange",
 	"class":"_InRange",
-	"bON":1,
+	"bON":0,
     {
 		"name":"thread",
 		"FPS":30,

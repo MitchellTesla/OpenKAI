@@ -11,8 +11,7 @@ namespace kai
 	{
 		m_thr = 0.5;
 		m_nms = 0.4;
-		m_nW = 320;
-		m_nH = 320;
+		m_vBlobSize.set(320, 320);
 		m_vMean.x = 123.68;
 		m_vMean.y = 116.78;
 		m_vMean.z = 103.94;
@@ -37,8 +36,7 @@ namespace kai
 
 		pK->v("thr", &m_thr);
 		pK->v("nms", &m_nms);
-		pK->v("nW", &m_nW);
-		pK->v("nH", &m_nH);
+		pK->v("vBlobSize", &m_vBlobSize);
 		pK->v("iBackend", &m_iBackend);
 		pK->v("iTarget", &m_iTarget);
 		pK->v("bSwapRB", &m_bSwapRB);
@@ -79,47 +77,44 @@ namespace kai
 		return m_pT->start(getUpdate, this);
 	}
 
-	void _DNNtext::update(void)
-	{
-		while (m_pT->bRun())
-		{
-			m_pT->autoFPSfrom();
-
-			if (check() >= 0)
-			{
-				if (m_bDetect)
-					detect();
-
-				ocr();
-
-				if (m_pT->bGoSleep())
-					m_pU->clear();
-			}
-
-			m_pT->autoFPSto();
-		}
-	}
-
 	int _DNNtext::check(void)
 	{
 		NULL__(m_pU, -1);
 		NULL__(m_pV, -1);
-		Frame *pBGR = m_pV->BGR();
+		Frame *pBGR = m_pV->getFrameRGB();
 		NULL__(pBGR, -1);
 		IF__(pBGR->bEmpty(), -1);
-		IF__(pBGR->tStamp() <= m_fBGR.tStamp(), -1);
+		IF__(pBGR->tStamp() <= m_fRGB.tStamp(), -1);
 
 		return this->_DetectorBase::check();
 	}
 
+	void _DNNtext::update(void)
+	{
+		while (m_pT->bAlive())
+		{
+			m_pT->autoFPSfrom();
+
+			if (m_bDetect)
+				detect();
+
+			ocr();
+
+			ON_PAUSE;
+			m_pT->autoFPSto();
+		}
+	}
+
 	void _DNNtext::detect(void)
 	{
-		m_fBGR.copy(*m_pV->BGR());
-		if (m_fBGR.m()->channels() < 3)
-			m_fBGR.copy(m_fBGR.cvtColor(8));
+		IF_(check() < 0);
 
-		Mat mIn = *m_fBGR.m();
-		m_blob = blobFromImage(mIn, m_scale, Size(m_nW, m_nH),
+		m_fRGB.copy(*m_pV->getFrameRGB());
+		if (m_fRGB.m()->channels() < 3)
+			m_fRGB.copy(m_fRGB.cvtColor(8));
+
+		Mat mIn = *m_fRGB.m();
+		m_blob = blobFromImage(mIn, m_scale, Size(m_vBlobSize.x, m_vBlobSize.y),
 							   Scalar(m_vMean.x, m_vMean.y, m_vMean.z), m_bSwapRB, false);
 		m_net.setInput(m_blob);
 
@@ -140,17 +135,17 @@ namespace kai
 		cs.x = mIn.cols;
 		cs.y = mIn.rows;
 
-		float kx = (float)mIn.cols / (float)m_nW;
-		float ky = (float)mIn.rows / (float)m_nH;
+		float kx = (float)mIn.cols / (float)m_vBlobSize.x;
+		float ky = (float)mIn.rows / (float)m_vBlobSize.y;
 
 		for (size_t i = 0; i < vIndices.size(); i++)
 		{
 			_Object o;
-			o.init();
+			o.clear();
 			//		o.m_tStamp = m_pT->getTfrom();
 			o.setTopClass(0, 1.0);
 
-			Point2f pP[4]; //in pixel unit
+			Point2f pP[4]; // in pixel unit
 			RotatedRect &box = vBoxes[vIndices[i]];
 			box.points(pP);
 
@@ -226,7 +221,7 @@ namespace kai
 #ifdef USE_OCR
 		NULL_(m_pOCR);
 
-		Mat mIn = *m_pV->BGR()->m();
+		Mat mIn = *m_pV->getFrameRGB()->m();
 
 		if (!m_bWarp)
 		{
@@ -294,7 +289,7 @@ namespace kai
 		Point2f RT = Point2f((float)(p.x * mImg.cols),
 							 (float)(p.y * mImg.rows));
 
-		//LT, LB, RB, RT
+		// LT, LB, RB, RT
 		Point2f ptsFrom[] = {LT, LB, RB, RT};
 		Point2f ptsTo[] =
 			{cv::Point2f(0, 0),
@@ -306,13 +301,13 @@ namespace kai
 		return mP;
 	}
 
-	void _DNNtext::draw(void* pFrame)
+	void _DNNtext::draw(void *pFrame)
 	{
 		NULL_(pFrame);
 		this->_DetectorBase::draw(pFrame);
 		IF_(check() < 0);
 
-		Frame *pF = (Frame*)pFrame;
+		Frame *pF = (Frame *)pFrame;
 
 		Mat *pM = pF->m();
 		IF_(pM->empty());

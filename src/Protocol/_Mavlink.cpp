@@ -18,7 +18,7 @@ namespace kai
 		m_nRead = 0;
 		m_iRead = 0;
 
-		//msg register
+		// msg register
 		m_vpMsg.push_back(&m_attitude);
 		m_vpMsg.push_back(&m_batteryStatus);
 		m_vpMsg.push_back(&m_commandAck);
@@ -48,6 +48,7 @@ namespace kai
 	{
 		IF_F(!this->_ModuleBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
+    	
 
 		pK->v("mySystemID", &m_mySystemID);
 		pK->v("myComponentID", &m_myComponentID);
@@ -66,12 +67,20 @@ namespace kai
 
 		m_status.packet_rx_drop_count = 0;
 
+		return true;
+	}
+
+	bool _Mavlink::link(void)
+	{
+		IF_F(!this->_ModuleBase::link());
+
+		Kiss *pK = (Kiss *)m_pKiss;
 		string n;
 
 		n = "";
-		pK->v("_IOBase", &n);
-		m_pIO = (_IOBase *)(pK->getInst(n));
-		IF_Fl(!m_pIO, "_IOBase not found");
+		pK->v("_IObase", &n);
+		m_pIO = (_IObase *)(pK->getInst(n));
+		IF_Fl(!m_pIO, "_IObase not found");
 
 		Kiss *pR = pK->child("routing");
 		IF_T(pR->empty());
@@ -99,7 +108,7 @@ namespace kai
 			m_vPeer.push_back(mP);
 		}
 
-		//cmd routing
+		// cmd routing
 		vector<int> vNoRouteCmd;
 		pK->a("noRouteCmd", &vNoRouteCmd);
 		for (int i = 0; i < vNoRouteCmd.size(); i++)
@@ -118,7 +127,7 @@ namespace kai
 
 	void _Mavlink::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			if (!m_pIO)
 			{
@@ -126,7 +135,7 @@ namespace kai
 				continue;
 			}
 
-			if (!m_pIO->isOpen())
+			if (!m_pIO->bOpen())
 			{
 				m_pT->sleepT(SEC_2_USEC);
 				continue;
@@ -488,16 +497,6 @@ namespace kai
 
 	void _Mavlink::visionPositionEstimate(mavlink_vision_position_estimate_t &D)
 	{
-		/*
-	 uint64_t usec; // Timestamp (microseconds, synced to UNIX time or since system boot)
-	 float x; // Global X position
-	 float y; // Global Y position
-	 float z; // Global Z position
-	 float roll; // Roll angle in rad
-	 float pitch; // Pitch angle in rad
-	 float yaw; // Yaw angle in rad
-	 */
-
 		mavlink_message_t msg;
 		D.usec = getTbootMs();
 
@@ -509,7 +508,20 @@ namespace kai
 			"<- VISION_POSITION_ESTIMATE T=" + i2str(D.usec) + ", x=" + f2str(D.x) + ", y=" + f2str(D.y) + ", z=" + f2str(D.z) + "; roll=" + f2str(D.roll) + ", pitch=" + f2str(D.pitch) + ", yaw=" + f2str(D.yaw));
 	}
 
-	//CMD_LONG
+	void _Mavlink::visionSpeedEstimate(mavlink_vision_speed_estimate_t &D)
+	{
+		mavlink_message_t msg;
+		D.usec = getTbootMs();
+
+		mavlink_msg_vision_speed_estimate_encode(m_mySystemID, m_myComponentID,
+												 &msg, &D);
+
+		writeMessage(msg);
+		LOG_I(
+			"<- VISION_SPEED_ESTIMATE T=" + i2str(D.usec) + ", x=" + f2str(D.x) + ", y=" + f2str(D.y) + ", z=" + f2str(D.z));
+	}
+
+	// CMD_LONG
 
 	void _Mavlink::clComponentArmDisarm(bool bArm)
 	{
@@ -517,7 +529,14 @@ namespace kai
 		D.target_system = m_devSystemID;
 		D.target_component = m_devComponentID;
 		D.command = MAV_CMD_COMPONENT_ARM_DISARM;
+		D.confirmation = 0;
 		D.param1 = (bArm) ? 1 : 0;
+		D.param2 = 0;
+		D.param3 = 0;
+		D.param4 = 0;
+		D.param5 = 0;
+		D.param6 = 0;
+		D.param7 = 0;
 
 		mavlink_message_t msg;
 		mavlink_msg_command_long_encode(m_mySystemID, m_myComponentID, &msg, &D);
@@ -532,7 +551,14 @@ namespace kai
 		D.target_system = m_mySystemID;
 		D.target_component = m_devComponentID;
 		D.command = MAV_CMD_DO_SET_MODE;
+		D.confirmation = 0;
 		D.param1 = mode;
+		D.param2 = 0;
+		D.param3 = 0;
+		D.param4 = 0;
+		D.param5 = 0;
+		D.param6 = 0;
+		D.param7 = 0;
 
 		mavlink_message_t msg;
 		mavlink_msg_command_long_encode(m_mySystemID, m_myComponentID, &msg, &D);
@@ -551,6 +577,10 @@ namespace kai
 		D.param1 = yaw;
 		D.param2 = speed;
 		D.param3 = yawMode;
+		D.param4 = 0;
+		D.param5 = 0;
+		D.param6 = 0;
+		D.param7 = 0;
 
 		mavlink_message_t msg;
 		mavlink_msg_command_long_encode(m_mySystemID, m_myComponentID, &msg, &D);
@@ -565,8 +595,14 @@ namespace kai
 		D.target_system = m_devSystemID;
 		D.target_component = m_devComponentID;
 		D.command = MAV_CMD_DO_SET_SERVO;
+		D.confirmation = 0;
 		D.param1 = iServo;
 		D.param2 = (float)PWM;
+		D.param3 = 0;
+		D.param4 = 0;
+		D.param5 = 0;
+		D.param6 = 0;
+		D.param7 = 0;
 
 		mavlink_message_t msg;
 		mavlink_msg_command_long_encode(m_mySystemID, m_myComponentID, &msg, &D);
@@ -582,8 +618,14 @@ namespace kai
 		D.target_system = m_devSystemID;
 		D.target_component = m_devComponentID;
 		D.command = MAV_CMD_DO_SET_RELAY;
+		D.confirmation = 0;
 		D.param1 = iRelay;
 		D.param2 = (bRelay) ? 1.0 : 0.0;
+		D.param3 = 0;
+		D.param4 = 0;
+		D.param5 = 0;
+		D.param6 = 0;
+		D.param7 = 0;
 
 		mavlink_message_t msg;
 		mavlink_msg_command_long_encode(m_mySystemID, m_myComponentID, &msg, &D);
@@ -599,6 +641,14 @@ namespace kai
 		D.target_system = m_devSystemID;
 		D.target_component = m_devComponentID;
 		D.command = MAV_CMD_GET_HOME_POSITION;
+		D.confirmation = 0;
+		D.param1 = 0;
+		D.param2 = 0;
+		D.param3 = 0;
+		D.param4 = 0;
+		D.param5 = 0;
+		D.param6 = 0;
+		D.param7 = 0;
 
 		mavlink_message_t msg;
 		mavlink_msg_command_long_encode(m_mySystemID, m_myComponentID, &msg, &D);
@@ -613,6 +663,13 @@ namespace kai
 		D.target_system = m_devSystemID;
 		D.target_component = m_devComponentID;
 		D.command = MAV_CMD_NAV_TAKEOFF;
+		D.confirmation = 0;
+		D.param1 = 0;
+		D.param2 = 0;
+		D.param3 = 0;
+		D.param4 = 0;
+		D.param5 = 0;
+		D.param6 = 0;
 		D.param7 = alt;
 
 		mavlink_message_t msg;
@@ -622,14 +679,41 @@ namespace kai
 		LOG_I("<- cmdNavTakeoff");
 	}
 
+	void _Mavlink::clNavRTL(void)
+	{
+		mavlink_command_long_t D;
+		D.target_system = m_devSystemID;
+		D.target_component = m_devComponentID;
+		D.command = MAV_CMD_NAV_RETURN_TO_LAUNCH;
+		D.confirmation = 0;
+		D.param1 = 0;
+		D.param2 = 0;
+		D.param3 = 0;
+		D.param4 = 0;
+		D.param5 = 0;
+		D.param6 = 0;
+		D.param7 = 0;
+
+		mavlink_message_t msg;
+		mavlink_msg_command_long_encode(m_mySystemID, m_myComponentID, &msg, &D);
+
+		writeMessage(msg);
+		LOG_I("<- cmdNavRTL");
+	}
+
 	void _Mavlink::clSetMessageInterval(float id, float interval, float responseTarget)
 	{
 		mavlink_command_long_t D;
 		D.target_system = m_devSystemID;
 		D.target_component = m_devComponentID;
 		D.command = MAV_CMD_SET_MESSAGE_INTERVAL;
+		D.confirmation = 0;
 		D.param1 = id;
 		D.param2 = interval;
+		D.param3 = 0;
+		D.param4 = 0;
+		D.param5 = 0;
+		D.param6 = 0;
 		D.param7 = responseTarget;
 
 		mavlink_message_t msg;
@@ -680,13 +764,13 @@ namespace kai
 
 			if (result == 1)
 			{
-				//Good message decoded
+				// Good message decoded
 				m_status = status;
 				return true;
 			}
 			else if (result == 2)
 			{
-				//Bad CRC
+				// Bad CRC
 				LOG_I(" -> DROPPED PACKETS:" + i2str(status.packet_rx_drop_count));
 			}
 		}
@@ -710,7 +794,7 @@ namespace kai
 			IF_CONT(msg.sysid != m_devSystemID);
 			IF_CONT(msg.compid != m_devComponentID);
 
-			//Decode
+			// Decode
 			bool bDecoded = false;
 			for (MavMsgBase *pM : m_vpMsg)
 			{
@@ -725,10 +809,10 @@ namespace kai
 			if (!bDecoded)
 				LOG_I(" -> Unknown MSG_ID:" + i2str(msg.msgid));
 
-			//Routing
+			// Routing
 			for (MAVLINK_PEER &p : m_vPeer)
 			{
-				IF_CONT(!p.bCmdRoute(msg.msgid));
+				//				IF_CONT(!p.bCmdRoute(msg.msgid));
 
 				_Mavlink *pM = (_Mavlink *)p.m_pPeer;
 				IF_CONT(!pM);
@@ -750,15 +834,17 @@ namespace kai
 		this->_ModuleBase::console(pConsole);
 
 		_Console *pC = (_Console *)pConsole;
-		if (!m_pIO->isOpen())
+		if (!m_pIO->bOpen())
 		{
 			pC->addMsg("Not Connected", 0);
 			return;
 		}
 
 		pC->addMsg("Connected", 0);
-		pC->addMsg("mySysID=" + i2str(m_mySystemID) + " myComID=" + i2str(m_myComponentID) + " myType=" + i2str(m_myType));
-		pC->addMsg("devSysID=" + i2str(m_devSystemID) + " devComID=" + i2str(m_devComponentID) + " devType=" + i2str(m_devType));
+		pC->addMsg("mySysID = " + i2str(m_mySystemID) + " myComID = " + i2str(m_myComponentID) + " myType = " + i2str(m_myType));
+		pC->addMsg("devSysID = " + i2str(m_devSystemID) + " devComID = " + i2str(m_devComponentID) + " devType = " + i2str(m_devType));
+
+		pC->addMsg("Mission seq=" + i2str(m_missionCurrent.m_msg.seq) + " tot=" + i2str(m_missionCurrent.m_msg.total) + " mode = " + i2str(m_missionCurrent.m_msg.mission_mode) + " state = " + i2str(m_missionCurrent.m_msg.mission_state));
 	}
 
 }

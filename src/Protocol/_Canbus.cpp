@@ -18,6 +18,7 @@ namespace kai
 	{
 		IF_F(!this->_ModuleBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
+    	
 
 		m_nCanData = 0;
 		while (1)
@@ -34,9 +35,9 @@ namespace kai
 
 		string n;
 		n = "";
-		F_ERROR_F(pK->v("_IOBase", &n));
+		F_ERROR_F(pK->v("_IObase", &n));
 		m_pIO = (_SerialPort *)(pK->getInst(n));
-		NULL_Fl(m_pIO, "_IOBase not found");
+		NULL_Fl(m_pIO, "_IObase not found");
 
 		return true;
 	}
@@ -49,7 +50,7 @@ namespace kai
 
 	void _Canbus::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			if (!m_pIO)
 			{
@@ -57,7 +58,7 @@ namespace kai
 				continue;
 			}
 
-			if (!m_pIO->isOpen())
+			if (!m_pIO->bOpen())
 			{
 				if (!m_pIO->open())
 				{
@@ -159,7 +160,7 @@ namespace kai
 	void _Canbus::send(unsigned long addr, unsigned char len, unsigned char *pData)
 	{
 		IF_(len + 8 > CAN_BUF);
-		IF_(!m_pIO->isOpen());
+		IF_(!m_pIO->bOpen());
 
 		unsigned char pBuf[CAN_BUF];
 
@@ -189,7 +190,7 @@ namespace kai
 
 	void _Canbus::pinOut(uint8_t pin, uint8_t output)
 	{
-		IF_(!m_pIO->isOpen());
+		IF_(!m_pIO->bOpen());
 
 		unsigned char pBuf[CAN_BUF];
 
@@ -213,7 +214,7 @@ namespace kai
 		this->_ModuleBase::console(pConsole);
 
 		string msg = *this->getName();
-		if (m_pIO->isOpen())
+		if (m_pIO->bOpen())
 			msg += ": CONNECTED";
 		else
 			msg += ": Not connected";

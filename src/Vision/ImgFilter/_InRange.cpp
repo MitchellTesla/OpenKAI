@@ -14,8 +14,8 @@ namespace kai
 	{
 		m_type = vision_inRange;
 		m_pV = NULL;
-		m_rFrom = 0.0;
-		m_rTo = 15.0;
+		m_vL.set(0, 0, 0);
+		m_vH.set(255, 255, 255);
 	}
 
 	_InRange::~_InRange()
@@ -28,8 +28,17 @@ namespace kai
 		IF_F(!_VisionBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
 
-		pK->v("rFrom", &m_rFrom);
-		pK->v("rTo", &m_rTo);
+		pK->v("vL", &m_vL);
+		pK->v("vH", &m_vH);
+
+		return true;
+	}
+
+	bool _InRange::link(void)
+	{
+		IF_F(!this->_VisionBase::link());
+
+		Kiss *pK = (Kiss *)m_pKiss;
 
 		string n;
 		n = "";
@@ -61,7 +70,7 @@ namespace kai
 
 	void _InRange::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			if (!m_bOpen)
 				open();
@@ -79,11 +88,14 @@ namespace kai
 
 	void _InRange::filter(void)
 	{
-		IF_(m_pV->BGR()->bEmpty());
+		IF_(m_pV->getFrameRGB()->bEmpty());
 
 		Mat m;
-		cv::inRange(*m_pV->BGR()->m(), m_rFrom, m_rTo, m);
-		m_fBGR.copy(m);
+		cv::inRange(*m_pV->getFrameRGB()->m(),
+					cv::Scalar(m_vL.x, m_vL.y, m_vL.z),
+					cv::Scalar(m_vH.x, m_vH.y, m_vH.z), m);
+
+		m_fRGB.copy(m);
 	}
 
 }

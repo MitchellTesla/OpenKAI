@@ -62,7 +62,7 @@ namespace kai
 
 	void _Contrast::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			if (!m_bOpen)
 				open();
@@ -80,11 +80,11 @@ namespace kai
 
 	void _Contrast::filter(void)
 	{
-		IF_(m_pV->BGR()->bEmpty());
+		IF_(m_pV->getFrameRGB()->bEmpty());
 
 		Mat m;
-		m_pV->BGR()->m()->convertTo(m, -1, m_alpha, m_beta);
-		m_fBGR.copy(m);
+		m_pV->getFrameRGB()->m()->convertTo(m, -1, m_alpha, m_beta);
+		m_fRGB.copy(m);
 	}
 
 }

@@ -37,14 +37,14 @@ bool _PCdownSample::start(void)
 
 int _PCdownSample::check(void)
 {
-	NULL__(m_pInCtx.m_pPCB, -1);
+//	NULL__(m_pInCtx.m_pPCB, -1);
 
 	return _GeometryBase::check();
 }
 
 void _PCdownSample::update(void)
 {
-	while(m_pT->bRun())
+	while(m_pT->bAlive())
 	{
 		m_pT->autoFPSfrom();
 

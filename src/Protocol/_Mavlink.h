@@ -3,7 +3,7 @@
 
 #include "../Dependency/c_library_v2/ardupilotmega/mavlink.h"
 #include "../Dependency/c_library_v2/mavlink_conversions.h"
-#include "../IO/_IOBase.h"
+#include "../IO/_IObase.h"
 #include "../IO/_WebSocket.h"
 
 #define MAV_N_PEER 16
@@ -219,6 +219,7 @@ namespace kai
 			m_id = MAVLINK_MSG_ID_MISSION_CURRENT;
 
 			m_msg.seq = 0;
+			m_msg.total = 0;
 		}
 
 		void decode(mavlink_message_t *pM)
@@ -490,9 +491,10 @@ namespace kai
 		_Mavlink();
 		~_Mavlink();
 
-		bool init(void *pKiss);
-		bool start(void);
-		void console(void *pConsole);
+		virtual bool init(void *pKiss);
+		virtual bool link(void);
+		virtual bool start(void);
+		virtual void console(void *pConsole);
 
 		//Receive
 		void handleMessages();
@@ -522,6 +524,7 @@ namespace kai
 		void setPositionTargetLocalNED(mavlink_set_position_target_local_ned_t &D);
 		void setPositionTargetGlobalINT(mavlink_set_position_target_global_int_t &D);
 		void visionPositionEstimate(mavlink_vision_position_estimate_t &D);
+		void visionSpeedEstimate(mavlink_vision_speed_estimate_t &D);
 
 		//Cmd long
 		void clComponentArmDisarm(bool bArm);
@@ -531,6 +534,7 @@ namespace kai
 		void clGetHomePosition(void);
 		void clNavSetYawSpeed(float yaw, float speed, float yawMode);
 		void clNavTakeoff(float alt);
+		void clNavRTL(void);
 		void clSetMessageInterval(float id, float interval, float responseTarget);
 
 		//Msg routing
@@ -574,7 +578,7 @@ namespace kai
 		vector<MavMsgBase *> m_vpMsg;
 
 	private:
-		_IOBase *m_pIO;
+		_IObase *m_pIO;
 		int m_mySystemID;
 		int m_myComponentID;
 		int m_myType;

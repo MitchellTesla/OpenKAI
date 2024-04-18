@@ -28,34 +28,39 @@ namespace kai
         virtual ~_PCstream();
 
         virtual bool init(void *pKiss);
+        virtual bool start(void);
         virtual int check(void);
 
-        virtual void AcceptAdd(bool b);
-        virtual void add(const Vector3d &vP, const Vector3f &vC, uint64_t tStamp = UINT64_MAX);
+		virtual bool initBuffer(void);
+        virtual void clear(void);
+        
+        virtual void getPCstream(void* p, const uint64_t& tExpire);
+//        virtual void getPCframe(void* p);
+//        virtual void getPCgrid(void* p);
+
+   		virtual void copyTo(PointCloud *pPC, const uint64_t& tExpire);
+        virtual void add(const Vector3d &vP, const Vector3f &vC, const uint64_t& tStamp);
+        virtual GEOMETRY_POINT* get(int i);
         virtual int nP(void);
         virtual int iP(void);
 
-        virtual void clear(void);
-        virtual void refreshCol(void);
-
-        virtual void startStream(void);
-        virtual void stopStream(void);
+        virtual void writeToSharedMem(void);
+        virtual void readFromSharedMem(void);
 
     protected:
-        virtual void getStream(void *p);
-        virtual void getNextFrame(void *p);
-        virtual void getLattice(void *p);
+        void updatePCstream(void);
+        void update(void);
+        static void *getUpdate(void *This)
+        {
+            ((_PCstream *)This)->update();
+            return NULL;
+        }
 
-    public:
+    protected:
         //ring buf
-        PC_POINT *m_pP;
+        GEOMETRY_POINT *m_pP;
         int m_nP;
         int m_iP;
-        uint64_t m_tLastUpdate;
-        bool m_bAccept;
-
-        //pipeline input src
-
     };
 
 }

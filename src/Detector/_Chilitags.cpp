@@ -24,7 +24,7 @@ namespace kai
     bool _Chilitags::init(void *pKiss)
     {
         IF_F(!this->_DetectorBase::init(pKiss));
-        Kiss *pK = (Kiss *)pKiss;
+		Kiss *pK = (Kiss *)pKiss;
 
         pK->v("persistence", &m_persistence);
         pK->v("gain", &m_gain);
@@ -51,25 +51,20 @@ namespace kai
 
     void _Chilitags::update(void)
     {
-        while (m_pT->bRun())
+        while (m_pT->bAlive())
         {
             m_pT->autoFPSfrom();
 
-            if (check() >= 0)
-            {
-                detect();
+            detect();
 
-                if (m_pT->bGoSleep())
-                    m_pU->clear();
-            }
-
+            ON_PAUSE;
             m_pT->autoFPSto();
         }
     }
 
     void _Chilitags::detect(void)
     {
-        Mat m = *m_pV->BGR()->m();
+        Mat m = *m_pV->getFrameRGB()->m();
         IF_(m.empty());
 
         // The resulting map associates tag ids (between 0 and 1023)
@@ -84,7 +79,7 @@ namespace kai
 
         for (const std::pair<int, chilitags::Quad> &tag : tags)
         {
-            o.init();
+            o.clear();
             //        o.m_tStamp = m_pT->getTfrom();
             o.setTopClass(tag.first, 1.0);
 
@@ -102,11 +97,11 @@ namespace kai
             o.scale(kx, ky);
 
             // distance
-            if (m_pDV)
-            {
-                vFloat4 bb = o.getBB2D();
-                o.setZ(m_pDV->d(&bb));
-            }
+            // if (m_pDV)
+            // {
+            //     vFloat4 bb = o.getBB2D();
+            //     o.setZ(m_pDV->d(&bb));
+            // }
 
             // center position
             dx = (float)(pV[0].x + pV[1].x + pV[2].x + pV[3].x) * 0.25;
@@ -153,13 +148,14 @@ namespace kai
         this->_DetectorBase::draw(pFrame);
         IF_(check() < 0);
 
-        Frame *pF = (Frame*)pFrame;
+        Frame *pF = (Frame *)pFrame;
         Mat *pM = pF->m();
         IF_(pM->empty());
 
         IF_(m_pU->size() <= 0);
 
         int i = 0;
+        _Object* pO;
         while ((pO = m_pU->get(i++)) != NULL)
         {
             Point pCenter = Point(pO->getX() * pM->cols,

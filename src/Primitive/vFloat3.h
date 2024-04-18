@@ -31,7 +31,7 @@ struct vFloat3
 		z = c;
 	}
 
-	void init(void)
+	void clear(void)
 	{
 		x = 0.0;
 		y = 0.0;
@@ -50,6 +50,11 @@ struct vFloat3
 		x = a;
 		y = b;
 		z = c;
+	}
+
+	inline float& operator[](int i)
+	{
+		return (&x)[i];
 	}
 
 	inline vFloat3 operator+(vFloat3 r)

@@ -17,12 +17,11 @@ namespace kai
         m_pP = NULL;
         m_nP = 256;
         m_iP = 0;
-        m_tLastUpdate = 0;
-        m_bAccept = true;
     }
 
     _PCstream::~_PCstream()
     {
+        m_iP = 0;
         m_nP = 0;
         DEL(m_pP);
     }
@@ -30,126 +29,133 @@ namespace kai
     bool _PCstream::init(void *pKiss)
     {
         IF_F(!this->_GeometryBase::init(pKiss));
-        Kiss *pK = (Kiss *)pKiss;
+		Kiss *pK = (Kiss *)pKiss;
 
-        pK->v("bAccept", &m_bAccept);
         pK->v("nP", &m_nP);
         IF_F(m_nP <= 0);
 
-        m_pP = new PC_POINT[m_nP];
-        NULL_F(m_pP);
-        m_iP = 0;
-        m_tLastUpdate = 0;
+        return initBuffer();
+    }
 
-        for (int i = 0; i < m_nP; i++)
-            m_pP[i].init();
+    bool _PCstream::start(void)
+    {
+        NULL_F(m_pT);
+        return m_pT->start(getUpdate, this);
+    }
 
-        return true;
+    void _PCstream::update(void)
+    {
+        while (m_pT->bAlive())
+        {
+            m_pT->autoFPSfrom();
+
+            updatePCstream();
+
+            m_pT->autoFPSto();
+        }
     }
 
     int _PCstream::check(void)
     {
+        NULL__(m_pP, -1);
+
         return this->_GeometryBase::check();
     }
 
-    void _PCstream::AcceptAdd(bool b)
+    void _PCstream::updatePCstream(void)
     {
-        m_bAccept = b;
+        IF_(check() < 0);
+
+        readFromSharedMem();
+        writeToSharedMem();
     }
 
-    void _PCstream::add(const Vector3d &vP, const Vector3f &vC, uint64_t tStamp)
+    bool _PCstream::initBuffer(void)
     {
-        NULL_(m_pP);
-        IF_(!m_bAccept);
+        mutexLock();
 
-        // lidar to Nav coordinate
-        Vector3d vPnav = Vector3d(
-                            vP[m_vAxisIdx.x] * m_vAxisK.x,
-                            vP[m_vAxisIdx.y] * m_vAxisK.y,
-                            vP[m_vAxisIdx.z] * m_vAxisK.z
-                            );
-        IF_(!bRange(vPnav));
+        m_pP = new GEOMETRY_POINT[m_nP];
+        NULL_F(m_pP);
+        m_iP = 0;
 
-        Vector3f vCrgb = vC;
-        if(m_pR)
-        {
-            IF_(!getColor(vP, &vCrgb));
-        }
+        for (int i = 0; i < m_nP; i++)
+            m_pP[i].clear();
 
-        PC_POINT *pP = &m_pP[m_iP];
-        pP->m_vP = m_A * vPnav;   // m_A incorporates the offset in Nav coordinate
-        pP->m_vC = vCrgb;
-        pP->m_tStamp = tStamp;
+        mutexUnlock();
 
-        m_iP = iInc(m_iP, m_nP);
-        m_nPread++;
-    }
-
-    void _PCstream::getStream(void* p)
-    {
-        NULL_(p);
-
-        _PCstream* pS = (_PCstream*)p;
-        PC_POINT* pP = pS->m_pP;
-        uint64_t tFrom = m_pT->getTfrom() - m_pInCtx.m_dT;
-        while (m_pInCtx.m_iPr != pS->m_iP)
-        {
-            PC_POINT po = pP[m_pInCtx.m_iPr];
-
-            if (po.m_tStamp >= tFrom)
-            {
-                m_pP[m_iP] = po;
-                m_iP = iInc(m_iP, m_nP);
-            }
-
-            m_pInCtx.m_iPr = iInc(m_pInCtx.m_iPr, pS->m_nP);
-        }
-    }
-
-    void _PCstream::getNextFrame(void* p)
-    {
-    }
-
-    void _PCstream::getLattice(void* p)
-    {
+        return true;
     }
 
     void _PCstream::clear(void)
     {
-        for(int i=0; i<m_nP; i++)
-            m_pP[i].init();
+        mutexLock();
+
+        for (int i = 0; i < m_nP; i++)
+            m_pP[i].clear();
 
         m_iP = 0;
+
+        mutexUnlock();
     }
 
-    void _PCstream::refreshCol(void)
+    void _PCstream::getPCstream(void *p, const uint64_t& tExpire)
     {
-        NULL_(m_pP);
-        NULL_(m_pR);
+        IF_(check() < 0);
+        NULL_(p);
+        _PCstream *pS = (_PCstream *)p;
 
-        vDouble3 vTr, vRr;
-        vTr.init(-m_vToffset.x, -m_vToffset.y, -m_vToffset.z);
-        vRr.init(-m_vRoffset.x, -m_vRoffset.y, -m_vRoffset.z);
-        Eigen::Affine3d aRev;
-        aRev = getTranslationMatrix(vTr, vRr);
+        mutexLock();
+
+        uint64_t tNow = getApproxTbootUs();
+
+        for (int i = 0; i < pS->m_nP; i++)
+        {
+            GEOMETRY_POINT* pP = &pS->m_pP[i];
+            IF_CONT(bExpired(pP->m_tStamp, tExpire, tNow));
+
+            m_pP[m_iP] = *pP;
+            m_iP = iInc(m_iP, m_nP);
+        }
+
+        mutexUnlock();
+    }
+
+    void _PCstream::copyTo(PointCloud *pPC, const uint64_t& tExpire)
+    {
+        IF_(check() < 0);
+        NULL_(pPC);
+
+        pPC->Clear();
+        pPC->points_.clear();
+        pPC->colors_.clear();
+
+        uint64_t tNow = getApproxTbootUs();
 
         for (int i = 0; i < m_nP; i++)
         {
-            PC_POINT *pP = &m_pP[i];
-            IF_CONT(pP->m_tStamp <= 0);
+            GEOMETRY_POINT* pP = &m_pP[i];
+            IF_CONT(bExpired(pP->m_tStamp, tExpire, tNow));
 
-            Vector3d vPr = aRev * pP->m_vP;
-            Vector3d vP;
-            vP[m_vAxisIdx.x] = vPr[0] / m_vAxisK.x;
-            vP[m_vAxisIdx.y] = vPr[1] / m_vAxisK.y;
-            vP[m_vAxisIdx.z] = vPr[2] / m_vAxisK.z;            
-
-            Vector3f vC;
-            if(getColor(vP, &vC))
-                pP->m_vC = vC;
-            else
-                pP->m_vC = Vector3f(0,0,0);
+        	pPC->points_.push_back(pP->m_vP);
+        	pPC->colors_.push_back(pP->m_vC.cast<double>());
         }
+    }
+
+    void _PCstream::add(const Vector3d &vP, const Vector3f &vC, const uint64_t& tStamp)
+    {
+        GEOMETRY_POINT *pP = &m_pP[m_iP];
+        pP->m_vP = vP;
+        pP->m_vC = vC;
+        pP->m_tStamp = tStamp;
+
+        m_iP = iInc(m_iP, m_nP);
+    }
+
+    GEOMETRY_POINT* _PCstream::get(int i)
+    {
+        IF_N(i >= m_nP);
+
+        return &m_pP[i];
     }
 
     int _PCstream::nP(void)
@@ -162,12 +168,22 @@ namespace kai
         return m_iP;
     }
 
-    void _PCstream::startStream(void)
+    void _PCstream::writeToSharedMem(void)
     {
+        IF_(!m_bWriteSharedMem);
+        NULL_(m_psmG);
+        IF_(!m_psmG->bOpen());
+
+		memcpy(m_psmG->p(), m_pP, m_nP * sizeof(GEOMETRY_POINT));
     }
 
-    void _PCstream::stopStream(void)
+    void _PCstream::readFromSharedMem(void)
     {
+        IF_(!m_bReadSharedMem);
+        NULL_(m_psmG);
+        IF_(!m_psmG->bOpen());
+
+		memcpy(m_pP, m_psmG->p(), m_nP * sizeof(GEOMETRY_POINT));
     }
 
 }

@@ -1,8 +1,8 @@
 #ifndef OpenKAI_src_Application_DroneBox__DroneBox_H_
 #define OpenKAI_src_Application_DroneBox__DroneBox_H_
 
-#include "../../GCS/_GCSbase.h"
 #include "../../Protocol/_Modbus.h"
+#include "_DroneBoxState.h"
 
 namespace kai
 {
@@ -19,16 +19,21 @@ namespace kai
         dbx_boxRecover = 6,
     };
 
-    class _DroneBox : public _GCSbase
+    class _DroneBox : public _DroneBoxState
     {
     public:
         _DroneBox();
         ~_DroneBox();
 
         virtual bool init(void *pKiss);
+		virtual bool link(void);
         virtual bool start(void);
         virtual int check(void);
         virtual void update(void);
+
+        // general
+        int getID(void);
+        vDouble2 getPos(void);
 
         //Drone Box mechanical control
         bool boxLandingPrepare(void);
@@ -40,7 +45,7 @@ namespace kai
         bool boxRecover(void);
 
     protected:
-        virtual void updateGCS(void);
+        virtual void updateDroneBox(void);
         static void *getUpdate(void *This)
         {
             ((_DroneBox *)This)->update();
@@ -52,6 +57,9 @@ namespace kai
         int m_iSlave;
 
         DRONEBOX_LAST_CMD m_lastCMD;
+
+        int m_ID;
+        vDouble2 m_vPos;
     };
 
 }

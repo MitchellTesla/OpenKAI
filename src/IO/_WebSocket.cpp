@@ -32,7 +32,7 @@ namespace kai
 
 	bool _WebSocket::init(void *pKiss)
 	{
-		IF_F(!this->_IOBase::init(pKiss));
+		IF_F(!this->_IObase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
 
 		pK->v("fifoIn", &m_fifoIn);
@@ -49,7 +49,6 @@ namespace kai
 			DEL(m_pTr);
 			return false;
 		}
-        pKt->m_pInst = m_pTr;
 
 		return true;
 	}
@@ -74,7 +73,7 @@ namespace kai
 		::close(m_fdR);
 		m_fdW = 0;
 		m_fdR = 0;
-		this->_IOBase::close();
+		this->_IObase::close();
 	}
 
 	bool _WebSocket::start(void)
@@ -87,9 +86,9 @@ namespace kai
 
 	void _WebSocket::updateW(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
-			if (!isOpen())
+			if (!bOpen())
 			{
 				if (!open())
 				{
@@ -119,9 +118,9 @@ namespace kai
 
 	void _WebSocket::updateR(void)
 	{
-		while (m_pTr->bRun())
+		while (m_pTr->bAlive())
 		{
-			if (!isOpen())
+			if (!bOpen())
 			{
 				::sleep(1);
 				continue;
@@ -137,7 +136,7 @@ namespace kai
 
 			m_fifoR.input(pB, nR);
 			decodeMsg();
-			m_pTr->wakeUpAll();
+			m_pTr->runAll();
 		}
 	}
 
@@ -171,8 +170,8 @@ namespace kai
 		pack_uint32(&pHeader[8], nB);
 
 		pthread_mutex_lock(&m_mutexW);
-		this->_IOBase::write(pHeader, WS_N_HEADER);
-		this->_IOBase::write(pBuf, nB);
+		this->_IObase::write(pHeader, WS_N_HEADER);
+		this->_IObase::write(pBuf, nB);
 		pthread_mutex_unlock(&m_mutexW);
 
 		return true;
@@ -199,7 +198,7 @@ namespace kai
 		static uint8_t pMB[WS_N_BUF];
 		int i;
 
-		//move data to front
+		// move data to front
 		if (m_iB > 0)
 		{
 			if (m_nB > m_iB)
@@ -217,17 +216,17 @@ namespace kai
 			m_iB = 0;
 		}
 
-		int iR = this->_IOBase::read(&pMB[m_nB], N_IO_BUF);
+		int iR = this->_IObase::read(&pMB[m_nB], N_IO_BUF);
 		if (iR > 0)
 			m_nB += iR;
 		IF_(m_nB <= 0);
 
-		//decode new msg
+		// decode new msg
 		if (m_iMsg >= m_nMsg)
 		{
 			IF_(m_nB - m_iB < WS_N_HEADER);
 
-			//decode header
+			// decode header
 			uint32_t id = unpack_uint32(&pMB[m_iB]);
 			m_pC = findClientById(id);
 			if (!m_pC)
@@ -240,7 +239,7 @@ namespace kai
 				LOG_I("Created new client id: " + i2str(id));
 			}
 
-			//decode payload
+			// decode payload
 			m_nMsg = WS_N_HEADER + unpack_uint32(&pMB[m_iB + 8]);
 			m_iMsg = WS_N_HEADER;
 			m_iB += WS_N_HEADER;
@@ -254,7 +253,7 @@ namespace kai
 			LOG_I("Received from: " + i2str(id) + ", size: " + i2str(m_nMsg));
 		}
 
-		//payload decoding
+		// payload decoding
 		while (m_iMsg < m_nMsg)
 		{
 			IF_(m_iB >= m_nB);
@@ -301,7 +300,7 @@ namespace kai
 	{
 #ifdef WITH_UI
 		NULL_(pConsole);
-		this->_IOBase::console(pConsole);
+		this->_IObase::console(pConsole);
 
 		NULL_(m_pTr);
 		m_pTr->console(pConsole);

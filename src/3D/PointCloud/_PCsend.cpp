@@ -35,9 +35,9 @@ bool _PCsend::init(void *pKiss)
 
 	string n;
 	n = "";
-	F_ERROR_F(pK->v("_IOBase", &n));
-	m_pIO = (_IOBase*) (pK->getInst(n));
-	NULL_Fl(m_pIO, "_IOBase not found");
+	F_ERROR_F(pK->v("_IObase", &n));
+	m_pIO = (_IObase*) (pK->getInst(n));
+	NULL_Fl(m_pIO, "_IObase not found");
 
 	return true;
 }
@@ -50,16 +50,15 @@ bool _PCsend::start(void)
 
 int _PCsend::check(void)
 {
-	NULL__(m_pInCtx.m_pPCB, -1);
 	NULL__(m_pIO, -1);
-	IF__(!m_pIO->isOpen(),-1);
+	IF__(!m_pIO->bOpen(),-1);
 
 	return this->_GeometryBase::check();
 }
 
 void _PCsend::update(void)
 {
-	while(m_pT->bRun())
+	while(m_pT->bAlive())
 	{
 		m_pT->autoFPSfrom();
 

@@ -2,65 +2,98 @@
 	"name":"APP",
 	"class":"Startup",
 	"appName":"OpenKAI",
-	"bWindow":0,
-	"bDraw":0,
 	"bLog":1,
-	"b_Console":0,
 	"bStdErr":1,
-	"waitKey":30,
 }
 
 {
-	"name":"OKview",
-	"class":"Window",
-	"bON":0,
-	"bFullScreen":0,
+	"name":"console",
+	"class":"_Console",
+	"bON":1,
+    {
+		"name":"thread",
+		"FPS":10,
+	}
+	"vBASE":["arduIO","PWMio","arduServo"],
 }
 
 {
 	"name":"arduIO",
 	"class":"_SerialPort",
-	"bON":0,
-	"FPS":30,
+	"bON":1,
 	"bLog":0,
-	"Window":"OKview",
-	"bStream":1,
-	"port":"/dev/ttyUSB0",
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+    {
+		"name":"threadR",
+		"FPS":30,
+		"/vTwakeUp":["arduServo.threadR"],
+	}
+	"/port":"/dev/ttyUSB0",
+	"port":"/dev/ttyACM0",
 	"baud":115200,
-	"_wakeUp":"arduServo",
 }
 
 {
 	"name":"arduIO",
 	"class":"_UDP",
-	"bON":1,
-	"FPS":30,
+	"bON":0,
 	"bLog":1,
-	"Window":"OKview",
+    {
+		"name":"thread",
+		"FPS":30,
+	}
 	"addr":"192.168.1.100",
 	"port":8888,
 	"_wakeUp":"arduServo",
 }
 
 {
+	"name":"PWMio",
+	"class":"_PWMio",
+	"bON":0,
+	"bLog":0,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+    {
+		"name":"threadR",
+		"FPS":30,
+	}
+	"_IObase":"arduIO",
+	"nCr":5,
+	"nCw":2,
+	"vPWM":[1500,1500],
+}
+
+{
 	"name":"arduServo",
 	"class":"_ArduServo",
 	"bON":1,
-	"FPS":30,
-	"bLog":1,
-	"Window":"OKview",
-	"_IOBase":"arduIO",
-	
-	"vNormTargetPos":[1.0],
-	
-	{
-		"pwmL":1600,
-		"pwmH":2200,
-		"dir":-1,
+	"bLog":0,
+    {
+		"name":"thread",
+		"FPS":30,
 	}
+	"_IObase":"arduIO",
 	{
-		"pwmL":800,
-		"pwmH":1500,
-		"dir":1,
+		"name":"axis",
+		{
+			"name":"H",
+			"pOrigin":1500.0,
+			"pTarget":500.0,
+			"pRange":[500,2500],
+			"pErr":1,
+		}
+		{
+			"name":"V",
+			"pOrigin":1500.0,
+			"pTarget":500.0,
+			"pRange":[500,2500],
+			"pErr":1,
+		}
 	}
 }

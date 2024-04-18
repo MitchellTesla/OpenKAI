@@ -16,6 +16,7 @@ namespace kai
 	{
 		IF_F(!this->_ProtocolBase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
+    	
 
 		pK->v("nCr", &m_nCr);
 		pK->v("nCw", &m_nCw);
@@ -42,7 +43,7 @@ namespace kai
 
 	void _PWMio::updateW(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 
@@ -74,7 +75,7 @@ namespace kai
 
 	void _PWMio::updateR(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			if (!m_pIO)
 			{
@@ -82,7 +83,7 @@ namespace kai
 				continue;
 			}
 
-			if (!m_pIO->isOpen())
+			if (!m_pIO->bOpen())
 			{
 				m_pT->sleepT(SEC_2_USEC);
 				continue;
@@ -139,7 +140,7 @@ namespace kai
 		this->_ProtocolBase::console(pConsole);
 
 		_Console *pC = (_Console *)pConsole;
-		if (!m_pIO->isOpen())
+		if (!m_pIO->bOpen())
 		{
 			pC->addMsg("Not Connected", 1);
 			return;

@@ -7,7 +7,7 @@
 namespace kai
 {
 
-	class _AProver_drive : public _StateBase
+	class _AProver_drive : public _ModuleBase
 	{
 	public:
 		_AProver_drive();
@@ -22,6 +22,8 @@ namespace kai
 		virtual void setYawMode(bool bRelative);
 
 	protected:
+		virtual void onPause(void);
+
 		bool updateDrive(void);
 		static void *getUpdate(void *This)
 		{

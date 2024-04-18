@@ -34,7 +34,7 @@ bool _ImageNet::init(void* pKiss)
 {
 	IF_F(!this->_DetectorBase::init(pKiss));
 	Kiss* pK = (Kiss*) pKiss;
-
+  	
 	KISSm(pK,maxPix);
 	KISSm(pK,nBatch);
 	KISSm(pK,blobIn);
@@ -74,7 +74,7 @@ void _ImageNet::update(void)
 
 	IF_(m_mode == noThread);
 
-	while(m_pT->bRun())
+	while(m_pT->bAlive())
 	{
 		m_pT->autoFPSfrom();
 

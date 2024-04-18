@@ -14,25 +14,21 @@ namespace kai
 
     _JSONbase::~_JSONbase()
     {
+        DEL(m_pTr);
     }
 
     bool _JSONbase::init(void *pKiss)
     {
         IF_F(!this->_ModuleBase::init(pKiss));
         Kiss *pK = (Kiss *)pKiss;
+    	
 
         pK->v("msgFinishSend", &m_msgFinishSend);
         pK->v("msgFinishRecv", &m_msgFinishRecv);
 
         int v = SEC_2_USEC;
-        pK->v("tIntHeartbeat", &v);
-        m_tIntHeartbeat.init(v);
-
-        string n;
-        n = "";
-        F_ERROR_F(pK->v("_IOBase", &n));
-        m_pIO = (_IOBase *)(pK->getInst(n));
-        NULL_Fl(m_pIO, "_IOBase not found");
+        pK->v("ieSendHB", &v);
+        m_ieSendHB.init(v);
 
         Kiss *pKt = pK->child("threadR");
         IF_F(pKt->empty());
@@ -47,6 +43,22 @@ namespace kai
         return true;
     }
 
+	bool _JSONbase::link(void)
+	{
+		IF_F(!this->_ModuleBase::link());
+        IF_F(!m_pTr->link());
+
+		Kiss *pK = (Kiss *)m_pKiss;
+
+        string n;
+        n = "";
+        F_ERROR_F(pK->v("_IObase", &n));
+        m_pIO = (_IObase *)(pK->getInst(n));
+        NULL_Fl(m_pIO, "_IObase not found");
+
+		return true;
+	}
+
     bool _JSONbase::start(void)
     {
         NULL_F(m_pT);
@@ -59,28 +71,19 @@ namespace kai
     {
         NULL__(m_pTr, -1);
         NULL__(m_pIO, -1);
-        IF__(!m_pIO->isOpen(), -1);
+        IF__(!m_pIO->bOpen(), -1);
 
         return this->_ModuleBase::check();
     }
 
     void _JSONbase::updateW(void)
     {
-        while (m_pT->bRun())
+        while (m_pT->bAlive())
         {
             if (!m_pIO)
             {
                 m_pT->sleepT(SEC_2_USEC);
                 continue;
-            }
-
-            if (!m_pIO->isOpen())
-            {
-                if (!m_pIO->open())
-                {
-                    m_pT->sleepT(SEC_2_USEC);
-                    continue;
-                }
             }
 
             m_pT->autoFPSfrom();
@@ -95,9 +98,9 @@ namespace kai
     {
         IF_(check() < 0);
 
-        if (m_tIntHeartbeat.update(m_pT->getTfrom()))
+        if (m_ieSendHB.update(m_pT->getTfrom()))
         {
-            sendHeartbeat();
+//            sendHeartbeat();
         }
     }
 
@@ -114,19 +117,19 @@ namespace kai
         return m_pIO->write((unsigned char *)msg.c_str(), msg.size());
     }
 
-    bool _JSONbase::sendHeartbeat(void)
+    void _JSONbase::sendHeartbeat(void)
     {
         object o;
         JO(o, "id", i2str(1));
         JO(o, "cmd", "heartbeat");
         JO(o, "t", li2str(m_pT->getTfrom()));
 
-        return sendMsg(o);
+        sendMsg(o);
     }
 
     void _JSONbase::updateR(void)
     {
-        while (m_pTr->bRun())
+        while (m_pTr->bAlive())
         {
             m_pTr->autoFPSfrom();
 
@@ -135,7 +138,6 @@ namespace kai
                 handleMsg(m_strB);
                 m_strB.clear();
             }
-            //        m_pT->sleepT ( 0 ); //wait for the IObase to wake me up when received data
 
             m_pTr->autoFPSto();
         }
@@ -201,7 +203,7 @@ namespace kai
         this->_ModuleBase::console(pConsole);
 
         string msg;
-        if (m_pIO->isOpen())
+        if (m_pIO->bOpen())
             msg = "Connected";
         else
             msg = "Not connected";

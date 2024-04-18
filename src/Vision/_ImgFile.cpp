@@ -39,9 +39,9 @@ namespace kai
 			return false;
 		}
 
-		m_fBGR.copy(m);
-		m_vSize.x = m.cols;
-		m_vSize.y = m.rows;
+		m_fRGB.copy(m);
+		m_vSizeRGB.x = m.cols;
+		m_vSizeRGB.y = m.rows;
 
 		m_bOpen = true;
 		return true;
@@ -55,7 +55,7 @@ namespace kai
 
 	void _ImgFile::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			if (!m_bOpen)
 			{

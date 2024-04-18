@@ -28,7 +28,7 @@ namespace kai
 
 	bool _UDP::init(void *pKiss)
 	{
-		IF_F(!this->_IOBase::init(pKiss));
+		IF_F(!this->_IObase::init(pKiss));
 		Kiss *pK = (Kiss *)pKiss;
 
 		pK->v("addr", &m_addr);
@@ -43,7 +43,6 @@ namespace kai
 			DEL(m_pTr);
 			return false;
 		}
-		pKt->m_pInst = m_pTr;
 
 		return true;
 	}
@@ -79,7 +78,7 @@ namespace kai
 		IF_(m_ioStatus != io_opened);
 
 		::close(m_socket);
-		this->_IOBase::close();
+		this->_IObase::close();
 	}
 
 	bool _UDP::start(void)
@@ -92,9 +91,9 @@ namespace kai
 
 	void _UDP::updateW(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
-			if (!isOpen())
+			if (!bOpen())
 			{
 				if (!open())
 				{
@@ -126,9 +125,9 @@ namespace kai
 
 	void _UDP::updateR(void)
 	{
-		while (m_pTr->bRun())
+		while (m_pTr->bAlive())
 		{
-			while (!isOpen())
+			while (!bOpen())
 			{
 				::sleep(1);
 			}
@@ -143,7 +142,7 @@ namespace kai
 			}
 
 			m_fifoR.input(pB, nR);
-			m_pTr->wakeUpAll();
+			m_pTr->runAll();
 
 			LOG_I("Received " + i2str(nR) + " bytes from ip:" + string(inet_ntoa(m_sAddr.sin_addr)) + ", port:" + i2str(ntohs(m_sAddr.sin_port)));
 		}
@@ -152,7 +151,7 @@ namespace kai
 	void _UDP::console(void *pConsole)
 	{
 		NULL_(pConsole);
-		this->_IOBase::console(pConsole);
+		this->_IObase::console(pConsole);
 
 		NULL_(m_pTr);
 		m_pTr->console(pConsole);

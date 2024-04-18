@@ -31,9 +31,9 @@ namespace kai
 		Kiss *pK = (Kiss *)pKiss;
 
 		string n = "";
-		F_ERROR_F(pK->v("_IOBase", &n));
-		m_pIO = (_IOBase *)(pK->getInst(n));
-		IF_Fl(!m_pIO, "_IOBase not found");
+		F_ERROR_F(pK->v("_IObase", &n));
+		m_pIO = (_IObase *)(pK->getInst(n));
+		IF_Fl(!m_pIO, "_IObase not found");
 
 		return true;
 	}
@@ -46,7 +46,7 @@ namespace kai
 
 	void _GPS::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 
@@ -226,7 +226,7 @@ namespace kai
 		this->_ModuleBase::console(pConsole);
 
 		_Console *pC = (_Console *)pConsole;
-		if (!m_pIO->isOpen())
+		if (!m_pIO->bOpen())
 		{
 			pC->addMsg("Not connected");
 			return;

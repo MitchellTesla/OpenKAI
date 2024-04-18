@@ -8,12 +8,12 @@
 #ifndef OpenKAI_src_Application_3Dscan__3DScanCalibOfs_H_
 #define OpenKAI_src_Application_3Dscan__3DScanCalibOfs_H_
 
-#include "../../State/_StateBase.h"
+#include "../../Base/_ModuleBase.h"
 #include "../../Vision/_VisionBase.h"
 
 namespace kai
 {
-	class _3DScanCalibOfs : public _StateBase
+	class _3DScanCalibOfs : public _ModuleBase
 	{
 	public:
 		_3DScanCalibOfs(void);
@@ -60,13 +60,13 @@ namespace kai
 
 	private:
 		_VisionBase *m_pV;
-		_WindowCV *m_pW;
+//		_WindowCV *m_pW;
 
 		float m_step;
 
 		// draw
 		Scalar m_drawCol;
-		cv::Ptr<freetype::FreeType2> m_pFt;
+//		cv::Ptr<freetype::FreeType2> m_pFt;
 	};
 
 }

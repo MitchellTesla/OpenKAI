@@ -84,28 +84,28 @@ namespace open3d
 
 			struct UIState
 			{
-				//general
+				// general
 				bool m_bSceneCache = false;
 				bool m_bShowPanel = true;
 				bool m_bShowAxes = true;
 				string m_dirSave = "";
 
-				//render
+				// render
 				int m_wPanel = 15;
 				int m_sPoint = 2;
-				int m_wLine = 15;
+				int m_wLine = 1;
 				float m_btnPaddingV = 0.5;
 				float m_btnPaddingH = 0.5;
 				Vector4f m_vBgCol = {0.0f, 0.0f, 0.0f, 0.0f};
 				Vector3f m_vSunDir = {0.0f, 0.0f, 0.0f};
 				Vector3d m_vAreaLineCol = {1.0, 0.0, 1.0};
 
-				//filter
+				// filter
 				double m_sVoxel = 0.01;
 				int m_oRemovN = 10;
 				double m_oRemovD = 0.1;
 
-				//interactive
+				// interactive
 				Vector3f m_vCamPos;
 				float m_sMove = 0.5;
 				SceneWidget::Controls m_mouseMode = SceneWidget::Controls::ROTATE_CAMERA;

@@ -27,7 +27,7 @@ namespace kai
 
 		m_sizeOverhead.x = 400;
 		m_sizeOverhead.y = 300;
-		m_vSize.init();
+		m_vSize.clear();
 		m_binMed = 3;
 
 		m_nFilter = 0;
@@ -137,9 +137,17 @@ namespace kai
 		return m_pT->start(getUpdate, this);
 	}
 
+	int _Lane::check(void)
+	{
+		NULL__(m_pV, -1);
+		IF__(m_pV->getFrameRGB()->m()->empty(), -1);
+
+		return this->_ModuleBase::check();
+	}
+
 	void _Lane::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 
@@ -149,18 +157,10 @@ namespace kai
 		}
 	}
 
-	int _Lane::check(void)
-	{
-		NULL__(m_pV, -1);
-		IF__(m_pV->BGR()->m()->empty(), -1);
-
-		return this->_ModuleBase::check();
-	}
-
 	void _Lane::detect(void)
 	{
 		IF_(check() < 0);
-		Mat *pM = m_pV->BGR()->m();
+		Mat *pM = m_pV->getFrameRGB()->m();
 
 		//Warp transform to get overhead view
 		if (m_vSize.x != pM->cols || m_vSize.y != pM->rows)

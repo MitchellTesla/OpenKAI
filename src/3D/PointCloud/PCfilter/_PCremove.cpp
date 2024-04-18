@@ -39,14 +39,14 @@ bool _PCremove::start(void)
 
 int _PCremove::check(void)
 {
-	NULL__(m_pInCtx.m_pPCB, -1);
+//	NULL__(m_pInCtx.m_pPCB, -1);
 
 	return _GeometryBase::check();
 }
 
 void _PCremove::update(void)
 {
-	while(m_pT->bRun())
+	while(m_pT->bAlive())
 	{
 		m_pT->autoFPSfrom();
 

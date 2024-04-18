@@ -2,113 +2,124 @@
  *  Created on: Sept 28, 2016
  *      Author: yankai
  */
-#ifdef USE_OPENCV
 #include "_DetectorBase.h"
 
 namespace kai
 {
 
-_DetectorBase::_DetectorBase()
-{
-	m_pV = NULL;
-	m_pDB = NULL;
-	m_pU = NULL;
-
-	m_fModel = "";
-	m_fWeight = "";
-	m_fMean = "";
-	m_fClass = "";
-	m_nClass = 0;
-}
-
-_DetectorBase::~_DetectorBase()
-{
-}
-
-bool _DetectorBase::init(void* pKiss)
-{
-	IF_F(!this->_ModuleBase::init(pKiss));
-	Kiss* pK = (Kiss*) pKiss;
-
-	//general
-
-	//model
-	pK->v("fModel", &m_fModel);
-	pK->v("fWeight", &m_fWeight);
-	pK->v("fMean", &m_fMean);
-	pK->v("fClass", &m_fClass);
-
-	//statistics
-	string s;
-	pK->v("classFile", &s);
-	if(!s.empty())
+	_DetectorBase::_DetectorBase()
 	{
-		ifstream ifs(s.c_str());
-	    IF_Fl(!ifs.is_open(),"File " + s + " not found");
+		m_pV = NULL;
+		m_pU = NULL;
 
-	    string line;
-		while (std::getline(ifs, line))
+		m_fModel = "";
+		m_fWeight = "";
+		m_fMean = "";
+		m_fClass = "";
+	}
+
+	_DetectorBase::~_DetectorBase()
+	{
+	}
+
+	bool _DetectorBase::init(void *pKiss)
+	{
+		IF_F(!this->_ModuleBase::init(pKiss));
+		Kiss *pK = (Kiss *)pKiss;
+
+		// model
+		pK->v("fModel", &m_fModel);
+		pK->v("fWeight", &m_fWeight);
+		pK->v("fMean", &m_fMean);
+		pK->v("fClass", &m_fClass);
+
+		// statistics
+		if (!m_fClass.empty())
 		{
-			OBJ_CLASS oc;
-			oc.init();
-			oc.m_name = line;
-			m_vClass.push_back(oc);
+			ifstream ifs(m_fClass.c_str());
+			IF_Fl(!ifs.is_open(), "File " + m_fClass + " not found");
+
+			string line;
+			while (std::getline(ifs, line))
+			{
+				m_vClass.push_back(line);
+			}
+
+			ifs.close();
+		}
+		else
+		{
+			pK->a("vClass", &m_vClass);
 		}
 
-		m_nClass = m_vClass.size();
-		ifs.close();
+		return true;
 	}
-	else
-	{
-		vector<string> vClassList;
-		m_nClass = pK->a("classList", &vClassList);
 
-		for(int i=0; i<m_nClass; i++)
+	bool _DetectorBase::link(void)
+	{
+		IF_F(!this->_ModuleBase::link());
+
+		Kiss *pK = (Kiss *)m_pKiss;
+		string n = "";
+		F_INFO(pK->v("_VisionBase", &n));
+		m_pV = (_VisionBase *)(pK->getInst(n));
+
+		n = "";
+		pK->v("_Universe", &n);
+		m_pU = (_Universe *)(pK->getInst(n));
+
+		return true;
+	}
+
+	bool _DetectorBase::loadModel(void)
+	{
+		return true;
+	}
+
+	int _DetectorBase::check(void)
+	{
+		return this->_ModuleBase::check();
+	}
+
+	void _DetectorBase::onPause(void)
+	{
+		this->_ModuleBase::onPause();
+		m_pU->clear();
+	}
+
+	int _DetectorBase::getClassIdx(string &className)
+	{
+		for (int i = 0; i < m_vClass.size(); i++)
 		{
-			OBJ_CLASS oc;
-			oc.init();
-			oc.m_name = vClassList[i];
-			m_vClass.push_back(oc);
+			if (m_vClass[i] == className)
+				return i;
 		}
+
+		return -1;
 	}
 
-	string n = "";
-	F_INFO(pK->v("_VisionBase", &n));
-	m_pV = (_VisionBase*) (pK->getInst(n));
-
-	n = "";
-	pK->v("_DetectorBase", &n);
-	m_pDB = (_DetectorBase*) (pK->getInst(n));
-
-	n = "";
-	pK->v("_Universe", &n);
-	m_pU = (_Universe*) (pK->getInst(n));
-
-	return true;
-}
-
-int _DetectorBase::check(void)
-{
-	return this->_ModuleBase::check();
-}
-
-int _DetectorBase::getClassIdx(string& className)
-{
-	for(int i=0; i<m_nClass; i++)
+	string _DetectorBase::getClassName(int iClass)
 	{
-		if(m_vClass[i].m_name == className)return i;
+		if (iClass < 0)
+			return "";
+		if (iClass >= m_vClass.size())
+			return "";
+
+		return m_vClass[iClass];
 	}
 
-	return -1;
-}
+	_Universe* _DetectorBase::getU(void)
+	{
+		return m_pU;
+	}
 
-string _DetectorBase::getClassName(int iClass)
-{
-	if(iClass < 0)return "";
-	if(iClass >= m_nClass)return "";
+	void _DetectorBase::console(void *pConsole)
+	{
+		NULL_(pConsole);
+		this->_ModuleBase::console(pConsole);
 
-	return m_vClass[iClass].m_name;
-}
+		_Console *pC = (_Console *)pConsole;
+//		pC->addMsg("nState: " + i2str(m_vStates.size()), 0);
+	}
 
 }
-#endif

@@ -9,7 +9,7 @@ namespace kai
 
 	_Object::_Object()
 	{
-		init();
+		clear();
 	}
 
 	_Object::~_Object()
@@ -24,13 +24,13 @@ namespace kai
 		return true;
 	}
 
-	void _Object::init(void)
+	void _Object::clear(void)
 	{
-		m_vPos.init();
-		m_vAtti.init();
-		m_vDim.init();
-		m_vSpeed.init();
-		m_vAccel.init();
+		m_vPos.clear();
+		m_vAtti.clear();
+		m_vDim.clear();
+		m_vSpeed.clear();
+		m_vAccel.clear();
 		m_mFlag = 0;
 		m_pTracker = NULL;
 		m_tStamp = 0;
@@ -46,7 +46,7 @@ namespace kai
 
 	void _Object::update(void)
 	{
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 

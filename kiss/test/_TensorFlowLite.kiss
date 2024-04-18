@@ -1,0 +1,114 @@
+{
+	"name":"APP",
+	"class":"Startup",
+	"appName":"OpenKAI",
+	"bLog":0,
+	"bStdErr":1,
+}
+
+{
+	"name":"console",
+	"class":"_Console",
+	"bON":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"vBASE":["cam","univ","tfMN"],
+}
+
+{
+	"name":"RGBview",
+	"class":"_WindowCV",
+	"bON":0,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"bFullScreen":0,
+	"vBASE":["cam","univ"],
+	"bShow":1,
+	"/gstOutput":"appsrc ! videoconvert ! x264enc tune=zerolatency byte-stream=true ! h264parse ! rtph264pay config-interval=1 pt=96 ! udpsink host=127.0.0.1 port=5678 auto-multicast=false",
+	"/gstOutput":"appsrc ! videoconvert ! omxh264enc insert-sps-pps=true ! rtph264pay mtu=1400 config-interval=1 pt=96 ! udpsink host=10.0.0.4 port=5678 auto-multicast=false",
+}
+
+{
+	"name":"FB",
+	"class":"_GstOutput",
+	"bON":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"vBASE":["camCrop"],
+	"gstOutput":"appsrc ! v4l2convert ! fbdevsink",
+	"vSize":[1280,720],
+}
+
+{
+	"name":"cam",
+	"class":"_Camera",
+	"bON":0,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"deviceID":0,
+	"vSize":[640,480],
+}
+
+{
+	"name":"cam",
+	"class":"_GStreamer",
+	"bON":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"/pipeline":"rtspsrc latency=0 location=rtsp://192.168.144.108:554/stream=0 ! queue ! rtph264depay ! queue ! avdec_h264 ! videoconvert ! appsink max-buffers=1 sync=false drop=true", /* C10 mini, using YUV, Y chan only */
+	"pipeline":"rtspsrc latency=0 location=rtsp://192.168.144.108:554/stream=0 ! queue ! rtph264depay ! queue ! avdec_h264 ! video/x-raw, width=1280, height=720, format=I420 ! appsink max-buffers=1 sync=false drop=true", /* C10 mini, using YUV, Y chan only */
+}
+
+{
+	"name":"camCrop",
+	"class":"_Crop",
+	"bON":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"_VisionBase":"cam",
+	"vRoi":[0,0,1280,720],
+}
+
+{
+	"name":"univ",
+	"class":"_Universe",
+	"bON":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+}
+
+{
+	"name":"tfMN",
+	"class":"_TFmobileNet",
+	"bON":1,
+    {
+		"name":"thread",
+		"FPS":30,
+	}
+	"bDraw":1,
+	"bLog":1,
+	"_VisionBase":"cam",
+	"_Universe":"univ",
+	"nThreads":4,
+	"confidence":0.5,
+	"/fModel":"/home/kai/dev/models/TFliteMobileNet/detect.tflite",
+	"fModel":"/home/lab/dev/models/TFliteMobileNet/detect.tflite",
+	"/fClass":"/home/kai/dev/models/TFliteMobileNet/COCO_labels.txt",
+	"fClass":"/home/lab/dev/models/TFliteMobileNet/COCO_labels.txt",
+	"iClassDraw":-1,
+}
+

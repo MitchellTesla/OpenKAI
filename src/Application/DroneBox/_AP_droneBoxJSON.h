@@ -2,7 +2,7 @@
 #define OpenKAI_src_Application_DroneBox__AP_droneBoxJSON_H_
 
 #include "../../Protocol/_JSONbase.h"
-#include "../../Autopilot/ArduPilot/_AP_gcs.h"
+#include "_AP_droneBox.h"
 
 namespace kai
 {
@@ -14,6 +14,7 @@ namespace kai
 		~_AP_droneBoxJSON();
 
 		virtual bool init(void *pKiss);
+		virtual bool link(void);
 		virtual bool start(void);
 		virtual int check(void);
 		virtual void console(void *pConsole);
@@ -24,6 +25,7 @@ namespace kai
 		//msg handlers
 		void handleMsg(string &str);
 		void heartbeat(picojson::object &o);
+		void stat(picojson::object &o);
 		void ack(picojson::object &o);
 
 	private:
@@ -42,8 +44,10 @@ namespace kai
 		}
 
 	public:
-		_Thread *m_Tr;
-		_AP_gcs *m_pAPgcs;
+		_AP_droneBox *m_pAPdroneBox;
+
+		int m_ID;
+		vDouble2 m_vPos;
 	};
 
 }

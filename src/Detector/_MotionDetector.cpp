@@ -64,34 +64,34 @@ namespace kai
 		return m_pT->start(getUpdate, this);
 	}
 
-	void _MotionDetector::update(void)
-	{
-		while (m_pT->bRun())
-		{
-			m_pT->autoFPSfrom();
-
-			if (check() >= 0)
-			{
-				m_pU->swap();
-				detect();
-			}
-
-			m_pT->autoFPSto();
-		}
-	}
-
 	int _MotionDetector::check(void)
 	{
 		NULL__(m_pU, -1);
 		NULL__(m_pV, -1);
-		IF__(m_pV->BGR()->bEmpty(), -1);
+		IF__(m_pV->getFrameRGB()->bEmpty(), -1);
 
 		return this->_DetectorBase::check();
 	}
 
+	void _MotionDetector::update(void)
+	{
+		while (m_pT->bAlive())
+		{
+			m_pT->autoFPSfrom();
+
+			m_pU->swap();
+			detect();
+
+			ON_PAUSE;
+			m_pT->autoFPSto();
+		}
+	}
+
 	void _MotionDetector::detect(void)
 	{
-		Mat m = *m_pVision->BGR()->m();
+		IF_(check() < 0);
+
+		Mat m = *m_pVision->getFrameRGB()->m();
 
 		m_pBS->apply(m, m_mFG, m_learningRate);
 
@@ -110,7 +110,7 @@ namespace kai
 			Rect r = boundingRect(Mat(vContourPoly));
 			vContourPoly.clear();
 
-			o.init();
+			o.clear();
 			o.setTopClass(-1, 0);
 			//		o.m_tStamp = m_pT->getTfrom();
 			o.setBB2D(rect2BB<vFloat4>(r));
@@ -120,7 +120,7 @@ namespace kai
 		}
 	}
 
-	void _MotionDetector::draw(void* pFrame)
+	void _MotionDetector::draw(void *pFrame)
 	{
 		NULL_(pFrame);
 		this->_DetectorBase::draw(pFrame);

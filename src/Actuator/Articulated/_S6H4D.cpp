@@ -12,10 +12,10 @@ namespace kai
 		m_mode = 1;
 		m_vSpeedRange.set(0.0, 5000);
 		m_speed = 2000;
-		m_vOriginTarget.init();
+		m_vOriginTarget.clear();
 		m_vOrigin.set(FLT_MAX);
-		m_vLastValidP.init();
-		m_vPgoing.init();
+		m_vLastValidP.clear();
+		m_vPgoing.clear();
 		m_pErr = 0.1;
 
 		m_nMinAxis = 6;
@@ -62,8 +62,8 @@ namespace kai
 		}
 
 		string n = "";
-		F_ERROR_F(pK->v("_IOBase", &n));
-		m_pIO = (_IOBase *)(pK->getInst(n));
+		F_ERROR_F(pK->v("_IObase", &n));
+		m_pIO = (_IObase *)(pK->getInst(n));
 		IF_Fl(!m_pIO, n + " not found");
 
 		return true;
@@ -78,7 +78,7 @@ namespace kai
 	int _S6H4D::check(void)
 	{
 		NULL__(m_pIO, -1);
-		IF__(!m_pIO->isOpen(), -1);
+		IF__(!m_pIO->bOpen(), -1);
 
 		return this->_ActuatorBase::check();
 	}
@@ -99,7 +99,7 @@ namespace kai
 		stickRelease();
 		updatePos();
 
-		while (m_pT->bRun())
+		while (m_pT->bAlive())
 		{
 			m_pT->autoFPSfrom();
 
